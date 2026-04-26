@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en" style="--accent: oklch(0.62 0.13 48); --bg: #F5F2EC;">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Captura — Find your street moments (Reference)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─── Design Tokens ─────────────────────────────────────────────────── */
+  :root {
+    --bg:          #F5F2EC;
+    --bg-soft:     #FBFAF6;
+    --ink:         #141311;
+    --ink-soft:    #6B6660;
+    --ink-faint:   #A29D95;
+    --line:        #E6E1D7;
+    --line-soft:   #EEEAE0;
+    --accent:      oklch(0.62 0.13 48);  /* muted terracotta */
+    --accent-soft: oklch(0.92 0.04 65);
+    --serif: "Instrument Serif", "Times New Roman", serif;
+    --sans:  "Geist", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    --mono:  "Geist Mono", ui-monospace, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    letter-spacing: -0.005em;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+  img { max-width: 100%; display: block; }
+
+  /* ─── Nav ──────────────────────────────────────────────────────────── */
+  nav.top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 40px;
+    mix-blend-mode: multiply;
+    transition: background 300ms ease, backdrop-filter 300ms ease, padding 300ms ease;
+  }
+  nav.top.scrolled {
+    background: rgba(245, 242, 236, 0.72);
+    backdrop-filter: blur(14px);
+    mix-blend-mode: normal;
+    padding: 14px 40px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .brand {
+    font-family: var(--serif);
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .nav-links {
+    display: flex; gap: 36px;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+  .nav-links a { transition: opacity .2s; }
+  .nav-links a:hover { opacity: 0.55; }
+  .nav-cta {
+    font-size: 13.5px;
+    line-height: 1;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg-soft);
+    display: inline-flex; align-items: center;
+    transition: transform .25s ease, background .25s ease;
+  }
+  .nav-cta:hover { transform: translateY(-1px); background: #000; }
+
+  /* ─── Layout ───────────────────────────────────────────────────────── */
+  section { position: relative; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 40px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .eyebrow::before {
+    content: ""; width: 18px; height: 1px; background: var(--ink-soft);
+  }
+
+  /* ─── Hero ─────────────────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    padding: 140px 0 80px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 60px;
+    align-items: center;
+    width: 100%;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(56px, 8vw, 116px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero h1 .line {
+    display: block; overflow: hidden;
+    padding-bottom: 0.08em;
+    white-space: nowrap;
+  }
+  .hero h1 .line > span {
+    display: inline-block;
+    transform: translateY(110%);
+    animation: riseUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    white-space: nowrap;
+  }
+  .hero h1 .line:nth-child(2) > span { animation-delay: 0.12s; }
+  .hero h1 .line:nth-child(3) > span { animation-delay: 0.24s; }
+  @keyframes riseUp { to { transform: translateY(0); } }
+
+  .hero-sub {
+    margin-top: 34px;
+    max-width: 440px;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.6s forwards;
+  }
+  .cta-row {
+    display: flex; gap: 14px; margin-top: 38px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.75s forwards;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 15px 26px;
+    font-size: 14.5px;
+    font-weight: 500;
+    border-radius: 999px;
+    transition: transform .25s ease, background .25s ease, color .25s ease;
+  }
+  .btn-primary { background: var(--ink); color: var(--bg-soft); }
+  .btn-primary:hover { transform: translateY(-2px); background: #000; }
+  .btn-secondary {
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-secondary:hover { background: var(--ink); color: var(--bg-soft); border-color: var(--ink); }
+  .btn .arrow { transition: transform .3s ease; }
+  .btn:hover .arrow { transform: translateX(4px); }
+
+  .hero-meta {
+    margin-top: 72px;
+    display: flex; gap: 48px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.9s forwards;
+  }
+  .hero-meta .m-num {
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--ink);
+    display: block;
+    letter-spacing: -0.02em;
+  }
+
+  /* ─── Hero Scene (right side) ──────────────────────────────────────── */
+  .scene {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    border-radius: 8px;
+    overflow: visible;
+  }
+  .scene-image {
+    position: absolute; inset: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #E8E2D5;
+    box-shadow: 0 30px 80px -30px rgba(20,19,17,0.25),
+                0 2px 8px -2px rgba(20,19,17,0.08);
+  }
+  .scene-image .stripes {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(20,19,17,0.08) 0%, rgba(20,19,17,0) 50%, rgba(20,19,17,0.18) 100%),
+      repeating-linear-gradient(135deg,
+        #D8D2C4 0 2px,
+        #CFC9BB 2px 14px);
+  }
+  .scene-image .label {
+    position: absolute; bottom: 14px; left: 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    background: rgba(251,250,246,0.85);
+    backdrop-filter: blur(6px);
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+
+  /* Floating annotation chips */
+  .chip {
+    position: absolute;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 13px;
+    font-size: 12.5px;
+    box-shadow: 0 10px 30px -10px rgba(20,19,17,0.18);
+    display: flex; align-items: center; gap: 10px;
+    animation: float 6s ease-in-out infinite;
+    will-change: transform;
+  }
+  .chip .dot-mini {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(183, 101, 61, 0.15);
+  }
+  .chip .icon {
+    width: 14px; height: 14px;
+    stroke: var(--ink); fill: none; stroke-width: 1.5;
+  }
+  .chip .k {
+    font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .chip .v { color: var(--ink); font-weight: 500; }
+
+  .chip-location { top: 8%;  left: -8%; animation-delay: 0s; }
+  .chip-time     { top: 30%; right: -6%; animation-delay: 1.2s; }
+  .chip-plate    { top: 58%; left: -10%; animation-delay: 2.4s; }
+  .chip-outfit   { bottom: 10%; right: -4%; animation-delay: 3.6s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+
+  /* Outfit outline */
+  .outline-box {
+    position: absolute;
+    top: 32%; left: 38%; width: 24%; height: 42%;
+    border: 1.5px dashed var(--accent);
+    border-radius: 4px;
+    animation: pulseBox 3s ease-in-out infinite;
+  }
+  @keyframes pulseBox {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+  .outline-box::after {
+    content: "runner · red jacket";
+    position: absolute;
+    top: -22px; left: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    background: var(--bg-soft);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* Scroll indicator */
+  .scroll-hint {
+    position: absolute; bottom: 36px; left: 40px;
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .scroll-hint .vline {
+    width: 1px; height: 28px; background: var(--ink-soft);
+    animation: scrollLine 2s ease-in-out infinite;
+    transform-origin: top;
+  }
+  @keyframes scrollLine {
+    0%, 100% { transform: scaleY(0.3); }
+    50%      { transform: scaleY(1); }
+  }
+
+  /* ─── Section heading pattern ──────────────────────────────────────── */
+  .section-head {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 60px;
+    padding-bottom: 60px;
+    align-items: end;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 80px;
+  }
+  .section-head h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(40px, 5.5vw, 76px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .section-head h2 em { font-style: italic; color: var(--accent); }
+  .section-head p {
+    font-size: 16.5px;
+    color: var(--ink-soft);
+    max-width: 440px;
+    line-height: 1.55;
+  }
+
+  /* ─── SEARCH Section ───────────────────────────────────────────────── */
+  .search {
+    padding: 140px 0 160px;
+    background: var(--bg-soft);
+    position: relative;
+  }
+  .search-stage {
+    position: relative;
+    height: 620px;
+    background: var(--bg);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* Grid backdrop */
+  .search-stage::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  .search-core {
+    position: relative;
+    z-index: 2;
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 14px 14px 14px 28px;
+    width: min(560px, 90%);
+    box-shadow: 0 20px 60px -20px rgba(20,19,17,0.18);
+  }
+  .search-core input {
+    flex: 1; border: none; outline: none;
+    font-family: var(--serif);
+    font-size: 22px;
+    background: transparent;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .search-core input::placeholder { color: var(--ink-faint); }
+  .search-core .cursor {
+    display: inline-block;
+    width: 1.5px; height: 22px;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .search-core .go {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--ink); color: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .25s ease;
+  }
+  .search-core .go:hover { transform: rotate(-45deg); }
+
+  /* Filter chips */
+  .filter {
+    position: absolute;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 14px 40px -14px rgba(20,19,17,0.15);
+    transition: transform .6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow .3s ease;
+    min-width: 180px;
+    animation: float 7s ease-in-out infinite;
+  }
+  .filter:hover {
+    transform: translateY(-4px) scale(1.03) !important;
+    box-shadow: 0 24px 60px -20px rgba(20,19,17,0.22);
+  }
+  .filter .fi-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .filter .fi-icon svg {
+    width: 16px; height: 16px; fill: none; stroke: var(--ink); stroke-width: 1.5;
+  }
+  .filter .fi-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .filter .fi-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  /* Individual filter positions */
+  .f-location { top: 8%;  left: 6%;   animation-delay: 0s; }
+  .f-time     { top: 12%; right: 8%;  animation-delay: 1s; }
+  .f-plate    { bottom: 18%; left: 4%; animation-delay: 2s; }
+  .f-vehicle  { bottom: 8%;  right: 6%; animation-delay: 0.5s; }
+  .f-outfit   { top: 50%; right: 2%; transform: translateY(-50%); animation-delay: 1.5s; }
+
+  /* Connector lines SVG */
+  .search-stage svg.connectors {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 1;
+  }
+
+  .search-caption {
+    margin-top: 28px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  /* ─── SCENARIOS Section ───────────────────────────────────────────── */
+  .scenarios { padding: 160px 0; }
+  .scenarios-quote {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(36px, 4.2vw, 56px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+    margin-bottom: 90px;
+  }
+  .scenarios-quote em { font-style: italic; color: var(--accent); }
+
+  .scn-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .scn-card {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    background: var(--bg-soft);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .scn-card:hover { transform: translateY(-6px); }
+  .scn-img {
+    position: absolute; inset: 0;
+    overflow: hidden;
+  }
+  .scn-img::before {
+    content: "";
+    position: absolute; inset: 0;
+    transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .scn-card:hover .scn-img::before { transform: scale(1.06); }
+  .scn-img::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%);
+  }
+  /* Per-card stripe colors */
+  .scn-card:nth-child(1) .scn-img::before { background: repeating-linear-gradient(135deg, #CFC9B9 0 2px, #C4BEAE 2px 14px); }
+  .scn-card:nth-child(2) .scn-img::before { background: repeating-linear-gradient(45deg, #C9A993 0 2px, #BFA089 2px 14px); }
+  .scn-card:nth-child(3) .scn-img::before { background: repeating-linear-gradient(90deg, #A8AEB0 0 2px, #9FA6A9 2px 14px); }
+
+  .scn-meta {
+    position: absolute;
+    top: 18px; left: 18px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: #F5F2EC;
+    background: rgba(20,19,17,0.35);
+    backdrop-filter: blur(8px);
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    z-index: 2;
+  }
+  .scn-body {
+    position: absolute;
+    bottom: 22px; left: 22px; right: 22px;
+    color: #F5F2EC;
+    z-index: 2;
+  }
+  .scn-title {
+    font-family: var(--serif);
+    font-size: 30px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .scn-sub { font-size: 13px; opacity: 0.8; }
+  .scn-arrow {
+    position: absolute;
+    top: 22px; right: 22px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(245,242,236,0.9);
+    display: flex; align-items: center; justify-content: center;
+    transform: translateY(-4px);
+    opacity: 0;
+    transition: opacity .3s ease, transform .4s ease;
+    z-index: 2;
+  }
+  .scn-card:hover .scn-arrow { opacity: 1; transform: translateY(0); }
+
+  /* ─── PHOTOGRAPHERS Section ─────────────────────────────────────────── */
+  .photogs {
+    padding: 160px 0;
+    background: var(--bg-soft);
+    overflow: hidden;
+  }
+  .photogs-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: end;
+    margin-bottom: 70px;
+  }
+  .photogs-head h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(40px, 5vw, 68px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-top: 20px;
+  }
+  .photogs-head h2 em { font-style: italic; }
+  .photogs-head .meta {
+    font-size: 15.5px;
+    color: var(--ink-soft);
+    max-width: 420px;
+    line-height: 1.55;
+  }
+
+  .photog-marquee {
+    display: flex;
+    gap: 22px;
+    padding: 20px 0;
+    will-change: transform;
+  }
+  .photog-card {
+    flex: 0 0 280px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform .4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .photog-card:hover { transform: translateY(-4px); }
+
+  /* photog-img with nth-child stripe backgrounds + data-label via ::after */
+  .photog-img {
+    aspect-ratio: 4 / 5;
+    background: repeating-linear-gradient(45deg, #DDD6C6 0 2px, #D4CDBD 2px 12px);
+    position: relative;
+  }
+  .photog-img::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: 10px; left: 10px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    background: rgba(251,250,246,0.85);
+    padding: 3px 6px; border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .photog-card:nth-child(2n) .photog-img { background: repeating-linear-gradient(135deg, #CFC9B9 0 2px, #C4BEAE 2px 12px); }
+  .photog-card:nth-child(3n) .photog-img { background: repeating-linear-gradient(90deg, #C9A993 0 2px, #BFA089 2px 12px); }
+  .photog-card:nth-child(5n) .photog-img { background: repeating-linear-gradient(60deg, #A8AEB0 0 2px, #9FA6A9 2px 12px); }
+
+  .photog-info {
+    padding: 16px 18px 18px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .photog-name {
+    font-family: var(--serif);
+    font-size: 20px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .photog-loc {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .photog-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .photog-count .n {
+    font-family: var(--serif);
+    font-size: 20px;
+    color: var(--ink);
+    display: block;
+    letter-spacing: -0.02em;
+  }
+
+  .photog-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 80px;
+    border-top: 1px solid var(--line);
+    padding-top: 40px;
+  }
+  .photog-stats .stat { padding-right: 28px; }
+  .photog-stats .stat-n {
+    font-family: var(--serif);
+    font-size: 52px;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .photog-stats .stat-l {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ─── CLOSING CTA ──────────────────────────────────────────────────── */
+  .closing {
+    padding: 220px 0 180px;
+    position: relative;
+    text-align: center;
+    overflow: hidden;
+  }
+  .closing::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 55%, rgba(183, 101, 61, 0.08), transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 30%, rgba(183, 101, 61, 0.05), transparent 70%);
+    pointer-events: none;
+  }
+  .closing .eyebrow { justify-content: center; display: inline-flex; margin-bottom: 40px; }
+  .closing h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(56px, 8.5vw, 128px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    max-width: 14ch;
+    margin: 0 auto 48px;
+  }
+  .closing h2 em { font-style: italic; color: var(--accent); }
+  .closing .cta-row { justify-content: center; margin-top: 0; opacity: 1; animation: none; display: inline-flex; }
+
+  /* Closing photo frame tiles */
+  .closing-frame {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    box-shadow: 0 20px 50px -20px rgba(20,19,17,0.18);
+    background: #E8E2D5;
+  }
+  .closing-frame .stripes { position: absolute; inset: 0; }
+  /* f1: top-left */
+  .closing-frame.f1 { top: 15%; left: 6%; width: 180px; height: 220px; transform: rotate(-7deg); }
+  .closing-frame.f1 .stripes { background: repeating-linear-gradient(45deg, #CFC9B9 0 2px, #C4BEAE 2px 12px); }
+  /* f2: top-right */
+  .closing-frame.f2 { top: 10%; right: 8%; width: 160px; height: 200px; transform: rotate(5deg); }
+  .closing-frame.f2 .stripes { background: repeating-linear-gradient(135deg, #C9A993 0 2px, #BFA089 2px 12px); }
+  /* f3: bottom-left */
+  .closing-frame.f3 { bottom: 15%; left: 12%; width: 150px; height: 190px; transform: rotate(4deg); }
+  .closing-frame.f3 .stripes { background: repeating-linear-gradient(90deg, #A8AEB0 0 2px, #9FA6A9 2px 12px); }
+  /* f4: bottom-right */
+  .closing-frame.f4 { bottom: 18%; right: 7%; width: 170px; height: 210px; transform: rotate(-5deg); }
+  .closing-frame.f4 .stripes { background: repeating-linear-gradient(60deg, #D8D2C4 0 2px, #CFC9BB 2px 12px); }
+  .closing-frame .ftag {
+    position: absolute; bottom: 8px; left: 8px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
+    color: var(--ink); background: rgba(251,250,246,0.85);
+    padding: 3px 6px; border-radius: 3px; text-transform: uppercase;
+  }
+
+  /* ─── Footer ───────────────────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 50px 0 36px;
+    background: var(--bg);
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 50px;
+    padding-bottom: 60px;
+    border-bottom: 1px solid var(--line);
+  }
+  .footer-brand {
+    font-family: var(--serif);
+    font-size: 42px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .footer-brand em { font-style: italic; color: var(--accent); }
+  .footer-desc {
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    max-width: 320px;
+    line-height: 1.5;
+  }
+  .footer-col h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin-bottom: 18px;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 10px; font-size: 14px; }
+  .footer-col a:hover { color: var(--accent); }
+  .footer-base {
+    padding-top: 24px;
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─────────────────────────────────────────────────────────────── -->
+<nav class="top" id="topnav">
+  <div class="brand">
+    <span class="dot"></span>
+    Captura
+  </div>
+  <div class="nav-links">
+    <a href="#search">Search</a>
+    <a href="#scenarios">Stories</a>
+    <a href="#photogs">Photographers</a>
+    <a href="#">Journal</a>
+  </div>
+  <a class="nav-cta" href="#search">Sign in</a>
+</nav>
+
+<!-- ─── HERO ────────────────────────────────────────────────────────────── -->
+<section class="hero" id="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow" style="opacity:0; animation: fadeIn .8s ease .3s forwards;">Street photography · discovery</span>
+      <h1 style="margin-top: 28px;">
+        <span class="line"><span>Find your</span></span>
+        <span class="line"><span>street <em>moments</em>.</span></span>
+      </h1>
+      <p class="hero-sub">
+        Somewhere, on a sidewalk in Shibuya or a coastal road in Lisbon, a photographer caught you in motion. Search by place, time, vehicle, or how you looked that day.
+      </p>
+      <div class="cta-row">
+        <a href="#search" class="btn btn-primary">
+          Search photos
+          <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#search" class="btn btn-secondary">How it works</a>
+      </div>
+      <div class="hero-meta">
+        <div>
+          <span class="m-num">2.4M</span>
+          photos indexed
+        </div>
+        <div>
+          <span class="m-num">148</span>
+          cities worldwide
+        </div>
+        <div>
+          <span class="m-num">3,200+</span>
+          photographers
+        </div>
+      </div>
+    </div>
+
+    <!-- Street scene visual with floating annotations -->
+    <div class="hero-visual">
+      <div class="scene">
+        <div class="scene-image">
+          <div class="stripes"></div>
+          <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYEnd meet" style="position:absolute;inset:0;width:100%;height:100%;">
+            <line x1="0" y1="340" x2="400" y2="340" stroke="rgba(20,19,17,0.15)" stroke-width="1"/>
+            <line x1="130" y1="500" x2="180" y2="340" stroke="rgba(20,19,17,0.08)" stroke-width="1"/>
+            <line x1="270" y1="500" x2="220" y2="340" stroke="rgba(20,19,17,0.08)" stroke-width="1"/>
+            <rect x="170" y="260" width="50" height="110" rx="4" fill="rgba(20,19,17,0.55)"/>
+            <circle cx="195" cy="245" r="14" fill="rgba(20,19,17,0.55)"/>
+            <rect x="175" y="370" width="18" height="40" fill="rgba(20,19,17,0.45)"/>
+            <rect x="200" y="370" width="18" height="40" fill="rgba(20,19,17,0.45)"/>
+          </svg>
+          <div class="outline-box"></div>
+          <div class="label">PLACEHOLDER · street scene 4:5 · runner at dusk</div>
+        </div>
+
+        <!-- chip-location: top:8% left:-8% -->
+        <div class="chip chip-location">
+          <span class="dot-mini"></span>
+          <div>
+            <div class="k">Location</div>
+            <div class="v">Shibuya, JP</div>
+          </div>
+        </div>
+
+        <!-- chip-time: top:30% right:-6% -->
+        <div class="chip chip-time">
+          <svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l3 2"/></svg>
+          <div>
+            <div class="k">Captured</div>
+            <div class="v">17:42 · Apr 12</div>
+          </div>
+        </div>
+
+        <!-- chip-plate: top:58% left:-10% -->
+        <div class="chip chip-plate">
+          <svg class="icon" viewBox="0 0 16 16"><rect x="1.5" y="4.5" width="13" height="7" rx="1"/><path d="M4 7.5h1M7 7.5h1M10 7.5h1"/></svg>
+          <div>
+            <div class="k">Plate match</div>
+            <div class="v">SHIB · 441</div>
+          </div>
+        </div>
+
+        <!-- chip-outfit: bottom:10% right:-4% -->
+        <div class="chip chip-outfit">
+          <svg class="icon" viewBox="0 0 16 16"><path d="M5 3l3 2 3-2 3 3-2 2v5H4V8L2 6z"/></svg>
+          <div>
+            <div class="k">Outfit</div>
+            <div class="v">Red jacket</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="vline"></div>
+    Scroll to explore
+  </div>
+</section>
+
+<!-- ─── SEARCH ──────────────────────────────────────────────────────────── -->
+<section class="search" id="search">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>One search,<br><em>many ways</em> to find you.</h2>
+      <p>Type a place. Pick a date. Describe a jacket, a bike, a plate. The results are you — before the algorithm tells you they are.</p>
+    </div>
+
+    <div class="search-stage">
+      <!-- Connector lines SVG -->
+      <svg class="connectors" viewBox="0 0 1000 600" preserveAspectRatio="none">
+        <g stroke="var(--line)" stroke-width="1" stroke-dasharray="3 4" fill="none">
+          <path d="M 200 140 Q 400 240 500 300"/>
+          <path d="M 820 150 Q 650 230 500 300"/>
+          <path d="M 180 470 Q 350 380 500 300"/>
+          <path d="M 850 500 Q 680 400 500 300"/>
+          <path d="M 950 300 Q 750 300 500 300"/>
+        </g>
+      </svg>
+
+      <!-- Central search bar -->
+      <div class="search-core">
+        <input type="text" placeholder="Silver motorcycle, Lisbon, sunset…">
+        <span class="cursor"></span>
+        <button class="go" aria-label="Search">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- f-location: top:8% left:6% -->
+      <div class="filter f-location">
+        <div class="fi-icon">
+          <svg viewBox="0 0 16 16"><path d="M8 14s5-4.5 5-9A5 5 0 0 0 3 5c0 4.5 5 9 5 9z"/><circle cx="8" cy="5.5" r="1.6"/></svg>
+        </div>
+        <div>
+          <span class="fi-label">Location</span>
+          <span class="fi-value">Lisbon, Alfama</span>
+        </div>
+      </div>
+
+      <!-- f-time: top:12% right:8% -->
+      <div class="filter f-time">
+        <div class="fi-icon">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l3 2"/></svg>
+        </div>
+        <div>
+          <span class="fi-label">Time &amp; Date</span>
+          <span class="fi-value">Sun · 18:00 – 19:30</span>
+        </div>
+      </div>
+
+      <!-- f-plate: bottom:18% left:4% -->
+      <div class="filter f-plate">
+        <div class="fi-icon">
+          <svg viewBox="0 0 16 16"><rect x="1.5" y="4.5" width="13" height="7" rx="1"/><path d="M4 7.5h1.5M7 7.5h1.5M10 7.5h1.5"/></svg>
+        </div>
+        <div>
+          <span class="fi-label">License plate</span>
+          <span class="fi-value">63·BH·NK</span>
+        </div>
+      </div>
+
+      <!-- f-vehicle: bottom:8% right:6% -->
+      <div class="filter f-vehicle">
+        <div class="fi-icon">
+          <svg viewBox="0 0 16 16"><path d="M2 11h12M3 11V8l2-3h6l2 3v3"/><circle cx="5" cy="12" r="1.3"/><circle cx="11" cy="12" r="1.3"/></svg>
+        </div>
+        <div>
+          <span class="fi-label">Vehicle</span>
+          <span class="fi-value">Café racer · silver</span>
+        </div>
+      </div>
+
+      <!-- f-outfit: top:50% right:2% translateY(-50%) -->
+      <div class="filter f-outfit">
+        <div class="fi-icon">
+          <svg viewBox="0 0 16 16"><path d="M5 3l3 2 3-2 3 3-2 2v5H4V8L2 6z"/></svg>
+        </div>
+        <div>
+          <span class="fi-label">Appearance</span>
+          <span class="fi-value">Linen · tan tote</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-caption">
+      <span>Fig. 01 — Five ways to find yourself</span>
+      <span>Works in any combination</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SCENARIOS ───────────────────────────────────────────────────────── -->
+<section class="scenarios" id="scenarios">
+  <div class="wrap">
+    <span class="eyebrow">Real moments</span>
+    <p class="scenarios-quote">
+      You were there — <em>someone captured it</em>. The evening you ran past the bakery. The ride you took alone. The quiet drive home.
+    </p>
+
+    <div class="scn-grid">
+      <!-- Card 1: stripe 135deg warm grey -->
+      <article class="scn-card">
+        <div class="scn-img"></div>
+        <span class="scn-meta">Sat · 07:14 · Shibuya</span>
+        <div class="scn-arrow">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 11L11 3M5 3h6v6" stroke="#141311" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="scn-body">
+          <div class="scn-title">Running past<br>Shibuya</div>
+          <div class="scn-sub">42 photos · 7 photographers</div>
+        </div>
+      </article>
+
+      <!-- Card 2: stripe 45deg warm terracotta -->
+      <article class="scn-card">
+        <div class="scn-img"></div>
+        <span class="scn-meta">Fri · 19:28 · Algarve coast</span>
+        <div class="scn-arrow">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 11L11 3M5 3h6v6" stroke="#141311" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="scn-body">
+          <div class="scn-title">Motorcycle ride<br>at sunset</div>
+          <div class="scn-sub">18 photos · 3 photographers</div>
+        </div>
+      </article>
+
+      <!-- Card 3: stripe 90deg cool grey -->
+      <article class="scn-card">
+        <div class="scn-img"></div>
+        <span class="scn-meta">Sun · 14:02 · Brooklyn</span>
+        <div class="scn-arrow">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 11L11 3M5 3h6v6" stroke="#141311" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="scn-body">
+          <div class="scn-title">City drive<br>on Sunday</div>
+          <div class="scn-sub">26 photos · 5 photographers</div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PHOTOGRAPHERS ───────────────────────────────────────────────────── -->
+<section class="photogs" id="photogs">
+  <div class="wrap">
+    <div class="photogs-head">
+      <div>
+        <span class="eyebrow" style="margin-bottom: 24px; display: inline-flex;">The people behind the lens</span>
+        <h2>Photos are uploaded<br>by <em>real photographers</em>.</h2>
+      </div>
+      <p class="meta">
+        Captura is a home for street photographers who love their craft. Every image is shared by a human, credited to a human, and licensed clearly.
+      </p>
+    </div>
+  </div>
+
+  <!-- Marquee full-bleed -->
+  <div style="overflow: hidden;">
+    <div class="photog-marquee" id="marquee">
+      <div class="photog-card"><div class="photog-img" data-label="Shibuya · 04:12"></div><div class="photog-info"><div><div class="photog-name">Ayaka Mori</div><div class="photog-loc">Tokyo</div></div><div class="photog-count"><span class="n">412</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Alfama · 19:02"></div><div class="photog-info"><div><div class="photog-name">Tomás Vieira</div><div class="photog-loc">Lisbon</div></div><div class="photog-count"><span class="n">1.2k</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Brooklyn · 14:48"></div><div class="photog-info"><div><div class="photog-name">Naomi Hall</div><div class="photog-loc">New York</div></div><div class="photog-count"><span class="n">809</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Marais · 09:30"></div><div class="photog-info"><div><div class="photog-name">Léa Béranger</div><div class="photog-loc">Paris</div></div><div class="photog-count"><span class="n">560</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Kreuzberg · 22:15"></div><div class="photog-info"><div><div class="photog-name">Jonas Krieger</div><div class="photog-loc">Berlin</div></div><div class="photog-count"><span class="n">324</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Mission · 17:06"></div><div class="photog-info"><div><div class="photog-name">Daniel Cho</div><div class="photog-loc">San Francisco</div></div><div class="photog-count"><span class="n">688</span>photos</div></div></div>
+      <!-- duplicate for seamless loop -->
+      <div class="photog-card"><div class="photog-img" data-label="Shibuya · 04:12"></div><div class="photog-info"><div><div class="photog-name">Ayaka Mori</div><div class="photog-loc">Tokyo</div></div><div class="photog-count"><span class="n">412</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Alfama · 19:02"></div><div class="photog-info"><div><div class="photog-name">Tomás Vieira</div><div class="photog-loc">Lisbon</div></div><div class="photog-count"><span class="n">1.2k</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Brooklyn · 14:48"></div><div class="photog-info"><div><div class="photog-name">Naomi Hall</div><div class="photog-loc">New York</div></div><div class="photog-count"><span class="n">809</span>photos</div></div></div>
+      <div class="photog-card"><div class="photog-img" data-label="Marais · 09:30"></div><div class="photog-info"><div><div class="photog-name">Léa Béranger</div><div class="photog-loc">Paris</div></div><div class="photog-count"><span class="n">560</span>photos</div></div></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="photog-stats">
+      <div class="stat"><div class="stat-n">3,247</div><div class="stat-l">Verified photographers</div></div>
+      <div class="stat"><div class="stat-n">148</div><div class="stat-l">Cities worldwide</div></div>
+      <div class="stat"><div class="stat-n">2.4M</div><div class="stat-l">Moments archived</div></div>
+      <div class="stat"><div class="stat-n">100%</div><div class="stat-l">Human-uploaded</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CLOSING CTA ─────────────────────────────────────────────────────── -->
+<section class="closing">
+  <!-- f1: top:15% left:6% rotate(-7deg) 180x220 -->
+  <div class="closing-frame f1"><div class="stripes"></div><div class="ftag">Tokyo · 17:04</div></div>
+  <!-- f2: top:10% right:8% rotate(5deg) 160x200 -->
+  <div class="closing-frame f2"><div class="stripes"></div><div class="ftag">Lisbon · 19:22</div></div>
+  <!-- f3: bottom:15% left:12% rotate(4deg) 150x190 -->
+  <div class="closing-frame f3"><div class="stripes"></div><div class="ftag">NYC · 14:48</div></div>
+  <!-- f4: bottom:18% right:7% rotate(-5deg) 170x210 -->
+  <div class="closing-frame f4"><div class="stripes"></div><div class="ftag">Paris · 09:30</div></div>
+
+  <div class="wrap" style="position: relative; z-index: 2;">
+    <span class="eyebrow">Your moment is waiting</span>
+    <h2>Someone already<br>took the <em>photo of you</em>.</h2>
+    <div class="cta-row">
+      <a href="#" class="btn btn-primary">
+        Start searching
+        <svg class="arrow" width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="#" class="btn btn-secondary">Browse cities</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ──────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Capt<em>ura</em>.</div>
+        <p class="footer-desc">A home for the photographs of everyday life — yours, somebody else's, somewhere out there.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#">Search</a></li>
+          <li><a href="#">Saved moments</a></li>
+          <li><a href="#">Request removal</a></li>
+          <li><a href="#">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Photographers</h4>
+        <ul>
+          <li><a href="#">Join the roster</a></li>
+          <li><a href="#">Upload guide</a></li>
+          <li><a href="#">Licensing</a></li>
+          <li><a href="#">Journal</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Ethics &amp; privacy</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© 2026 Captura Studio</span>
+      <span>Lisbon · Tokyo · Brooklyn</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const nav = document.getElementById('topnav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  // Marquee
+  const marquee = document.getElementById('marquee');
+  let mx = 0;
+  function tick() {
+    mx -= 0.4;
+    if (Math.abs(mx) >= marquee.scrollWidth / 2) mx = 0;
+    marquee.style.transform = `translateX(${mx}px)`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>
