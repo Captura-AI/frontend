@@ -1,2 +1,15 @@
 export { getHomePageContent } from "./services/HomePageService";
-export type { HomePage, HomeHero, HomeFeature } from "./entities/HomePage";
+export type {
+  HomePage,
+  HomeHero,
+  HomeStat,
+  HomeSearchFilter,
+  HomeSearchSection,
+  HomeStory,
+  HomeStoriesSection,
+  HomePhotographer,
+  HomePhotographerStats,
+  HomePhotographersSection,
+  HomeCta,
+  HomeFeature,
+} from "./entities/HomePage";
