@@ -2,23 +2,31 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/presentation/lib/utils";
 
 const NAV_LINKS = [
-  { label: "Search", href: "#search" },
-  { label: "Stories", href: "#scenarios" },
-  { label: "Photographers", href: "#photogs" },
+  { label: "Home", href: "/" },
+  { label: "Explorer", href: "/explorer" },
+  { label: "Stories", href: "#" },
+  { label: "Photographers", href: "#" },
   { label: "Journal", href: "#" },
 ] as const;
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  function isActive(href: string) {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  }
 
   return (
     <header
@@ -41,22 +49,31 @@ export function Header() {
       </Link>
 
       {/* Nav links */}
-      <nav className="hidden md:flex items-center gap-9" aria-label="Main navigation">
-        {NAV_LINKS.map((link) => (
-          <Link
-            key={link.label}
-            href={link.href}
-            className="text-[13.5px] text-ink transition-opacity hover:opacity-[0.55]"
-          >
-            {link.label}
-          </Link>
-        ))}
+      <nav className="hidden md:flex items-center gap-8.5" aria-label="Main navigation">
+        {NAV_LINKS.map((link) => {
+          const active = isActive(link.href);
+          return (
+            <Link
+              key={link.label}
+              href={link.href}
+              className={cn(
+                "relative text-[13.5px] text-ink transition-opacity whitespace-nowrap",
+                active ? "opacity-100" : "opacity-65 hover:opacity-100"
+              )}
+            >
+              {link.label}
+              {active && (
+                <span className="absolute left-0 right-0 -bottom-5.5 h-px bg-ink" aria-hidden="true" />
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Sign in CTA */}
       <Link
         href="/login"
-        className="text-[13.5px] leading-none px-[18px] py-3 rounded-full bg-ink text-bg-soft transition-[transform,background] duration-300 hover:-translate-y-px hover:bg-black"
+        className="text-[13px] leading-none px-4 py-2.5 rounded-full bg-ink text-bg-soft transition-[transform,background] duration-300 hover:-translate-y-px hover:bg-black whitespace-nowrap"
       >
         Sign in
       </Link>
