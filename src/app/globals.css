@@ -11,6 +11,7 @@
   --color-line-soft:   #EEEAE0;
   --color-accent:      oklch(0.62 0.13 48);
   --color-accent-soft: oklch(0.92 0.04 65);
+  --color-ok:          oklch(0.62 0.10 145);
 
   /* Backward-compat aliases used by existing components */
   --color-cream:     #F5F2EC;
@@ -45,6 +46,37 @@
 @keyframes pulseBox {
   0%, 100% { opacity: 0.6; }
   50%       { opacity: 1; }
+}
+
+/* ─── Studio / AI keyframes ───────────────────────────────────── */
+@keyframes livePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(192, 74, 43, 0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(192, 74, 43, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(192, 74, 43, 0); }
+}
+@keyframes progressShimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: -200% 50%; }
+}
+@keyframes scanlineMini {
+  0%   { top: 0;    opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes scanlineBig {
+  0%   { top: 0%;   opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes bboxPulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
+}
+@keyframes aiDots {
+  0%   { width: 0; }
+  100% { width: 18px; }
 }
 
 /* ─── Hero text rise animation ─────────────────────────────────── */
@@ -106,4 +138,164 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── Studio utility classes ──────────────────────────────────── */
+
+/* Queue thumbnail scan-line overlay */
+.studio-scanning-thumb {
+  position: relative;
+}
+.studio-scanning-thumb::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  box-shadow: 0 0 8px rgba(192, 74, 43, 0.7);
+  animation: scanlineMini 1.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Big photo-panel scan line */
+.studio-photo-scanline {
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  box-shadow: 0 0 14px rgba(192, 74, 43, 0.6);
+  animation: scanlineBig 2.6s ease-in-out infinite;
+}
+
+/* Bounding box pulse — plate (accent) */
+.studio-bbox-plate {
+  position: absolute;
+}
+.studio-bbox-plate::before {
+  content: "";
+  position: absolute;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  border: 1px dashed rgba(192, 74, 43, 0.5);
+  border-radius: 5px;
+  animation: bboxPulse 2s ease-in-out infinite;
+}
+
+/* Bounding box pulse — vehicle (amber) */
+.studio-bbox-vehicle {
+  position: absolute;
+}
+.studio-bbox-vehicle::before {
+  content: "";
+  position: absolute;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  border: 1px dashed rgba(180, 140, 80, 0.5);
+  border-radius: 5px;
+  animation: bboxPulse 2s ease-in-out infinite;
+}
+
+/* ─── Hotspot map — Leaflet overrides ────────────────────────── */
+
+/* Warm sepia tone on map tiles */
+.hotspot-map-wrap .leaflet-tile-pane {
+  filter: sepia(0.45) saturate(0.55) brightness(0.96) contrast(1.04) hue-rotate(-8deg);
+}
+
+/* Dark base for map background */
+.hotspot-map-wrap .leaflet-container {
+  background: #2a2622;
+  font-family: var(--font-sans);
+}
+
+/* Custom attribution style */
+.hotspot-map-wrap .leaflet-control-attribution {
+  background: rgba(251, 250, 246, 0.85) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 9.5px !important;
+  color: var(--color-ink-soft) !important;
+  border-radius: 4px !important;
+  padding: 3px 7px !important;
+}
+
+/* Remove Leaflet zoom controls (we have custom ones) */
+.hotspot-map-wrap .leaflet-control-zoom { display: none !important; }
+
+/* Reset divIcon wrapper so custom CSS takes full control */
+.hotspot-map-wrap .map-pin-icon {
+  background: none !important;
+  border: none !important;
+}
+
+/* ─── Pin marker (rendered inside Leaflet divIcon HTML) ────────── */
+@keyframes pinPulse {
+  0%   { box-shadow: 0 0 0 2px var(--color-bg-soft), 0 0 0 0 rgba(192, 74, 43, 0.55); }
+  70%  { box-shadow: 0 0 0 2px var(--color-bg-soft), 0 0 0 16px rgba(192, 74, 43, 0); }
+  100% { box-shadow: 0 0 0 2px var(--color-bg-soft), 0 0 0 0 rgba(192, 74, 43, 0); }
+}
+
+.map-pin-marker { position: relative; pointer-events: auto; cursor: pointer; }
+
+.map-pin-ring {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-bg-soft), 0 0 0 0 rgba(192, 74, 43, 0.55);
+  animation: pinPulse 2s ease-out infinite;
+  position: relative;
+  transform: translate(-50%, -50%);
+  margin-left: 11px; margin-top: 11px;
+}
+
+.map-pin-ring::after {
+  content: "";
+  position: absolute; inset: 6px;
+  border-radius: 50%;
+  background: var(--color-bg-soft);
+}
+
+/* Warm variant */
+.map-pin-marker.warm .map-pin-ring {
+  background: oklch(0.72 0.10 60);
+  animation-duration: 2.6s;
+}
+
+/* Quiet variant — no pulse animation */
+.map-pin-marker.quiet .map-pin-ring {
+  background: var(--color-ink-faint);
+  animation: none;
+  box-shadow: 0 0 0 2px var(--color-bg-soft);
+}
+
+/* Active state — slightly larger ring */
+.map-pin-marker.active .map-pin-ring {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* Pin label tag */
+.map-pin-tag {
+  position: absolute;
+  top: 26px; left: 11px; transform: translateX(-50%);
+  background: var(--color-bg-soft); border: 1px solid var(--color-line);
+  border-radius: 8px; padding: 6px 10px;
+  box-shadow: 0 10px 28px -10px rgba(20, 19, 17, 0.45);
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+  pointer-events: none;
+}
+
+.map-pin-name {
+  font-family: var(--font-serif);
+  font-style: italic; font-size: 14px; line-height: 1;
+  color: var(--color-ink);
+}
+
+.map-pin-count {
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--color-ink-soft);
+}
+
+/* Active pin — dark tag */
+.map-pin-marker.active .map-pin-tag {
+  background: var(--color-ink); border-color: var(--color-ink);
+  color: var(--color-bg-soft);
+}
+
+.map-pin-marker.active .map-pin-name { color: var(--color-bg-soft); }
+.map-pin-marker.active .map-pin-count { color: rgba(251, 250, 246, 0.65); }
 
