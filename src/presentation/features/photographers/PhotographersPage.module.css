@@ -10,75 +10,8 @@
 .page button, .page input, .page textarea, .page select { font-family: inherit; color: inherit; }
 .page img { display: block; max-width: 100%; }
 
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: 80;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  padding: 16px 32px;
-  border-bottom: 1px solid var(--color-line);
-  background: rgba(245, 242, 236, 0.85);
-  backdrop-filter: blur(14px);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-serif);
-  font-size: 20px;
-}
-
-.brandDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--color-accent);
-}
-
-.navLinks {
-  display: flex;
-  gap: 26px;
-  margin-left: 14px;
-}
-
-.navLinks a {
-  color: var(--color-ink-soft);
-  font-size: 13.5px;
-  transition: color 0.2s;
-  white-space: nowrap;
-}
-
-.navLinks a:hover, .navLinks .active { color: var(--color-ink); }
-
-.navRight {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-
-.navPill {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 16px;
-  border: 1px solid var(--color-line);
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-}
-
-.darkPill {
-  border-color: var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-bg-soft);
-}
-
 .hero {
-  padding: 70px 32px 36px;
+  padding: 110px 32px 36px;
   border-bottom: 1px solid var(--color-line);
 }
 
@@ -198,6 +131,10 @@
 .chipActive {
   border-color: var(--color-ink);
   background: var(--color-ink);
+  color: var(--color-bg-soft);
+}
+
+.page .chipActive {
   color: var(--color-bg-soft);
 }
 
@@ -435,6 +372,10 @@
 
 .darkButton {
   background: var(--color-ink);
+  color: var(--color-bg-soft);
+}
+
+.page .darkButton {
   color: var(--color-bg-soft);
 }
 
@@ -692,31 +633,8 @@ textarea.field { min-height: 88px; resize: vertical; line-height: 1.5; }
   cursor: pointer;
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 26px 32px;
-  border-top: 1px solid var(--color-line);
-  color: var(--color-ink-soft);
-  font-size: 12.5px;
-}
-
-.footer > div:first-child {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.footerLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 22px;
+.page .submitButton {
+  color: var(--color-ink);
 }
 
 @media (max-width: 1100px) {
@@ -729,14 +647,7 @@ textarea.field { min-height: 88px; resize: vertical; line-height: 1.5; }
 }
 
 @media (max-width: 720px) {
-  .nav {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 14px;
-    padding: 16px 20px;
-  }
-  .navLinks, .navRight { margin-left: 0; overflow-x: auto; width: 100%; }
-  .hero, .booking, .directory, .filterbar, .footer { padding-left: 20px; padding-right: 20px; }
+  .hero, .booking, .directory, .filterbar { padding-left: 20px; padding-right: 20px; }
   .grid { grid-template-columns: 1fr; }
   .filterRight { margin-left: 0; width: 100%; }
   .fieldRow, .segmented { grid-template-columns: 1fr; }

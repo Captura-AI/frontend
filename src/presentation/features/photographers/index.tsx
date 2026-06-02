@@ -22,23 +22,6 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
 
   return (
     <div className={styles.page}>
-      <header className={styles.nav}>
-        <Link href="/" className={styles.brand}>
-          <span className={styles.brandDot} />
-          Captura
-        </Link>
-        <nav className={styles.navLinks} aria-label="Photographers navigation">
-          <Link href="/explorer">Explorer</Link>
-          <Link href="/hotspot">Map</Link>
-          <Link className={styles.active} href="/photographers">Photographers</Link>
-          <Link href="/studio">For creators</Link>
-        </nav>
-        <div className={styles.navRight}>
-          <Link href="/login" className={styles.navPill}>Sign in</Link>
-          <Link href="/login" className={`${styles.navPill} ${styles.darkPill}`}>Become a member</Link>
-        </div>
-      </header>
-
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div>
@@ -197,16 +180,6 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div>© 2026 Captura · Indonesia</div>
-        <div className={styles.footerLinks}>
-          <Link href="/photographers">Photographers</Link>
-          <Link href="#">Pricing</Link>
-          <Link href="#">Stories</Link>
-          <Link href="#">Press</Link>
-          <Link href="#">Contact</Link>
-        </div>
-      </footer>
     </div>
   );
 }

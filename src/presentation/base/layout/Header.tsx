@@ -8,9 +8,8 @@ import { cn } from "@/presentation/lib/utils";
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Explorer", href: "/explorer" },
-  { label: "Stories", href: "#" },
-  { label: "Photographers", href: "#" },
-  { label: "Journal", href: "#" },
+  { label: "Photographers", href: "/photographers" },
+  { label: "Heatmap", href: "/hotspot" },
 ] as const;
 
 export function Header() {

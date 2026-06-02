@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 
-const standaloneRoutes = ["/photographers", "/checkout"];
+const standaloneRoutes = ["/checkout"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

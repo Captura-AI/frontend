@@ -722,6 +722,10 @@
   white-space: nowrap;
 }
 
+.page .payButton {
+  color: var(--color-bg-soft);
+}
+
 .trustRow {
   display: flex;
   justify-content: space-between;
