@@ -1,6 +1,5 @@
 import { type Metadata } from "next";
-import { Header } from "@/presentation/base/layout/Header";
-import { Footer } from "@/presentation/base/layout/Footer";
+import { AppShell } from "@/presentation/base/layout/AppShell";
 import { seoConfig } from "@/shared/config/seo.config";
 import "./globals.css";
 
@@ -50,9 +49,7 @@ export default function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col bg-bg text-ink antialiased">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
