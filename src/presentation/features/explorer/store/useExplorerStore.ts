@@ -23,6 +23,18 @@ export function useExplorerStore(initialFilters: ExplorerActiveFilter[]) {
     setActiveFilters([]);
   }, []);
 
+  const applyFilter = useCallback((filter: ExplorerActiveFilter) => {
+    setActiveFilters((prev) => {
+      const existingIndex = prev.findIndex((item) => item.key === filter.key);
+
+      if (existingIndex === -1) {
+        return [...prev, filter];
+      }
+
+      return prev.map((item) => (item.key === filter.key ? filter : item));
+    });
+  }, []);
+
   const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) return;
     setIsSearching(true);
@@ -38,6 +50,7 @@ export function useExplorerStore(initialFilters: ExplorerActiveFilter[]) {
     searchQuery,
     setSearchQuery,
     activeFilters,
+    applyFilter,
     removeFilter,
     clearFilters,
     viewMode,

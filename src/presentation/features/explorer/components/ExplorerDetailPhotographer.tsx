@@ -33,9 +33,9 @@ export function ExplorerDetailPhotographer({ block }: ExplorerDetailPhotographer
         {/* Bio */}
         <div>
           <blockquote className="font-serif text-[26px] leading-[1.2] tracking-[-0.01em]">
-            "{block.quotePrefix}
+            &ldquo;{block.quotePrefix}
             <em className="italic text-accent">{block.quoteEmphasis}</em>
-            {block.quoteSuffix}"
+            {block.quoteSuffix}&rdquo;
           </blockquote>
           <p className="mt-[18px] font-mono text-[11px] tracking-[0.08em] uppercase text-ink-soft">
             — {block.name}, contributor since {block.since}

@@ -125,7 +125,7 @@ export function HomePhotographersSection({ data }: HomePhotographersSectionProps
             >
               {data.headlinePart1}{" "}
               <span className="block">
-                by <em className="italic">{data.headlineEmphasis}</em>.
+                by <em className="italic text-accent">{data.headlineEmphasis}</em>.
               </span>
             </h2>
           </div>

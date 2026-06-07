@@ -28,6 +28,7 @@ export function ExplorerPageView({ content }: ExplorerPageViewProps) {
       <ExplorerFacetBar
         facets={content.facets}
         activeFilters={store.activeFilters}
+        onApplyFilter={store.applyFilter}
         onRemoveFilter={store.removeFilter}
         onClearAll={store.clearFilters}
       />

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { type ExplorerFacet, type ExplorerActiveFilter, type ColorSwatch } from "@/domains/explorer";
+import { type ExplorerFacet, type ExplorerActiveFilter, type FacetOption } from "@/domains/explorer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ExplorerFacetBarProps {
   facets: ExplorerFacet[];
   activeFilters: ExplorerActiveFilter[];
+  onApplyFilter: (filter: ExplorerActiveFilter) => void;
   onRemoveFilter: (key: string) => void;
   onClearAll: () => void;
 }
@@ -76,53 +77,19 @@ function MoodSlider({ initialPct = 40 }: { initialPct?: number }) {
   );
 }
 
-// ─── Swatch group (single-select) ────────────────────────────────────────────
-
-function SwatchGroup({ swatches }: { swatches: ColorSwatch[] }) {
-  const [active, setActive] = useState(0);
-  return (
-    <div>
-      <p className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-ink-soft font-normal mb-3">Outfit color</p>
-      <div className="flex flex-wrap gap-[10px]">
-        {swatches.map((s, i) => (
-          <button
-            key={s.hex}
-            onClick={() => setActive(i)}
-            title={s.label}
-            className="relative w-7 h-7 rounded-full border border-[rgba(20,19,17,0.12)] transition-transform hover:scale-110"
-            style={{ background: s.hex }}
-          >
-            {active === i && (
-              <span className="absolute inset-[-4px] rounded-full border-[1.5px] border-ink pointer-events-none" />
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Option group ─────────────────────────────────────────────────────────────
 
 function OptionGroup({
   heading,
   options,
-  initialActive,
+  selectedValue,
+  onSelect,
 }: {
   heading: string;
-  options: { label: string; value: string }[];
-  initialActive?: string[];
+  options: FacetOption[];
+  selectedValue?: string;
+  onSelect: (option: FacetOption) => void;
 }) {
-  const [active, setActive] = useState<Set<string>>(new Set(initialActive ?? []));
-
-  function toggle(v: string) {
-    setActive((prev) => {
-      const next = new Set(prev);
-      if (next.has(v)) next.delete(v); else next.add(v);
-      return next;
-    });
-  }
-
   return (
     <div>
       <p className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-ink-soft font-normal mb-3">{heading}</p>
@@ -130,9 +97,9 @@ function OptionGroup({
         {options.map((o) => (
           <button
             key={o.value}
-            onClick={() => toggle(o.value)}
+            onClick={() => onSelect(o)}
             className={`px-3 py-[7px] rounded-full border text-[13px] transition-all duration-200 ${
-              active.has(o.value)
+              selectedValue === o.value
                 ? "bg-ink text-bg-soft border-ink"
                 : "bg-transparent border-line text-ink hover:border-ink-soft"
             }`}
@@ -147,28 +114,50 @@ function OptionGroup({
 
 // ─── Plate input ──────────────────────────────────────────────────────────────
 
-function PlateInput({ initial }: { initial: string }) {
+function PlateInput({ initial, onApply }: { initial: string; onApply: (value: string) => void }) {
   const [value, setValue] = useState(initial);
   return (
-    <div
-      className="flex items-center gap-2 bg-ink text-bg-soft rounded-[6px] w-full font-mono text-[13px] tracking-[0.12em]"
-      style={{ padding: "9px 12px" }}
-    >
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value.toUpperCase())}
-        placeholder="__ · __ · __"
-        className="bg-transparent border-none outline-none text-bg-soft font-mono tracking-[0.12em] flex-1 uppercase placeholder:opacity-40"
-        spellCheck={false}
-      />
+    <div className="flex gap-2">
+      <div
+        className="flex items-center gap-2 bg-ink text-bg-soft rounded-[6px] w-full font-mono text-[13px] tracking-[0.12em]"
+        style={{ padding: "9px 12px" }}
+      >
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value.toUpperCase())}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onApply(value);
+          }}
+          placeholder="__ · __ · __"
+          className="bg-transparent border-none outline-none text-bg-soft font-mono tracking-[0.12em] flex-1 uppercase placeholder:opacity-40"
+          spellCheck={false}
+        />
+      </div>
+      <button
+        type="button"
+        onClick={() => onApply(value)}
+        className="rounded-[6px] border border-line px-3 font-mono text-[10px] uppercase tracking-[0.08em] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+      >
+        Apply
+      </button>
     </div>
   );
 }
 
 // ─── Single facet popover ─────────────────────────────────────────────────────
 
-function FacetPopover({ facet, isOpen }: { facet: ExplorerFacet; isOpen: boolean }) {
+function FacetPopover({
+  facet,
+  isOpen,
+  selectedValue,
+  onSelect,
+}: {
+  facet: ExplorerFacet;
+  isOpen: boolean;
+  selectedValue?: string;
+  onSelect: (option: FacetOption) => void;
+}) {
   if (!isOpen) return null;
 
   return (
@@ -185,21 +174,18 @@ function FacetPopover({ facet, isOpen }: { facet: ExplorerFacet; isOpen: boolean
         </>
       )}
 
-      {/* Color swatches for person facet */}
-      {facet.type === "person" && facet.swatches && (
-        <>
-          <SwatchGroup swatches={facet.swatches} />
-          <hr className="border-none border-t border-line-soft my-[14px]" />
-        </>
-      )}
-
       {/* Plate input */}
       {facet.type === "plate" && facet.plateValue && (
         <>
           <p className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-ink-soft font-normal mb-3">
             Partial plate · soft match
           </p>
-          <PlateInput initial={facet.plateValue} />
+          <PlateInput
+            initial={facet.plateValue}
+            onApply={(value) =>
+              onSelect({ label: value || facet.plateValue || "Partial plate", value })
+            }
+          />
           <hr className="border-none border-t border-line-soft my-[14px]" />
         </>
       )}
@@ -208,7 +194,12 @@ function FacetPopover({ facet, isOpen }: { facet: ExplorerFacet; isOpen: boolean
       {facet.optionGroups?.map((group, i) => (
         <div key={group.heading}>
           {i > 0 && <hr className="border-none border-t border-line-soft my-[14px]" />}
-          <OptionGroup heading={group.heading} options={group.options} />
+          <OptionGroup
+            heading={group.heading}
+            options={group.options}
+            selectedValue={selectedValue}
+            onSelect={onSelect}
+          />
         </div>
       ))}
     </div>
@@ -234,10 +225,22 @@ function Caret({ open }: { open: boolean }) {
 export function ExplorerFacetBar({
   facets,
   activeFilters,
+  onApplyFilter,
   onRemoveFilter,
   onClearAll,
 }: ExplorerFacetBarProps) {
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      facets.map((facet) => {
+        const firstValue = facet.optionGroups?.[0]?.options[0]?.value ?? facet.plateValue ?? facet.displayValue;
+        return [facet.key, firstValue];
+      })
+    )
+  );
+  const [facetDisplayValues, setFacetDisplayValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(facets.map((facet) => [facet.key, facet.displayValue]))
+  );
 
   // Close on outside click
   useEffect(() => {
@@ -248,6 +251,18 @@ export function ExplorerFacetBar({
 
   function toggleFacet(key: string) {
     setOpenKey((prev) => (prev === key ? null : key));
+  }
+
+  function selectFacetOption(facet: ExplorerFacet, option: FacetOption) {
+    const valueLabel = option.label.trim();
+    setSelectedOptions((prev) => ({ ...prev, [facet.key]: option.value }));
+    setFacetDisplayValues((prev) => ({ ...prev, [facet.key]: valueLabel }));
+    onApplyFilter({
+      key: facet.key,
+      keyLabel: facet.label.toLowerCase(),
+      value: valueLabel,
+    });
+    setOpenKey(null);
   }
 
   return (
@@ -271,11 +286,16 @@ export function ExplorerFacetBar({
                       {facet.label}
                     </span>
                     <span className="font-serif italic text-[16px] leading-none whitespace-nowrap">
-                      {facet.displayValue}
+                      {facetDisplayValues[facet.key] ?? facet.displayValue}
                     </span>
                     <Caret open={isOpen} />
                   </button>
-                  <FacetPopover facet={facet} isOpen={isOpen} />
+                  <FacetPopover
+                    facet={facet}
+                    isOpen={isOpen}
+                    selectedValue={selectedOptions[facet.key]}
+                    onSelect={(option) => selectFacetOption(facet, option)}
+                  />
                 </div>
               </div>
             );

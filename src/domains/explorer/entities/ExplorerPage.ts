@@ -1,6 +1,6 @@
 // ─── Facet / filter types ─────────────────────────────────────────────────────
 
-export type FacetType = "options" | "plate" | "person" | "time";
+export type FacetType = "options" | "plate" | "time";
 
 export interface FacetOption {
   label: string;
@@ -13,7 +13,7 @@ export interface ColorSwatch {
 }
 
 export interface ExplorerFacet {
-  key: string;           // 'location' | 'time' | 'vehicle' | 'plate' | 'person'
+  key: string;           // 'location' | 'time' | 'vehicle' | 'vehicleType' | 'plate'
   label: string;         // 'Where' | 'When' | etc.
   displayValue: string;  // shown in collapsed pill
   type: FacetType;

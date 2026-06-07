@@ -8,8 +8,8 @@ import { AuthPanel } from "./components/AuthPanel";
 export function LoginPageView() {
   return (
     <div
-      className="fixed inset-0 z-[200] bg-bg overflow-hidden grid grid-cols-2"
-      style={{ minHeight: "720px" }}
+      className="fixed inset-0 z-[200] bg-bg overflow-y-auto lg:overflow-hidden grid lg:grid-cols-2"
+      style={{ minHeight: "100svh" }}
     >
       <AuthVisual />
       <AuthPanel />

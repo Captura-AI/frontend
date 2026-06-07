@@ -131,7 +131,7 @@ export function HomeHeroSection({ hero }: HomeHeroSectionProps) {
             </div>
             <h1
               className="mt-7 font-serif font-normal leading-[0.95] tracking-[-0.03em] text-ink"
-              style={{ fontSize: "clamp(56px, 8vw, 116px)" }}
+              style={{ fontSize: "clamp(56px, 7vw, 100px)" }}
             >
               <span className="block overflow-hidden pb-[0.08em]">
                 <span className="hero-line-span">{hero.headlinePart1}</span>

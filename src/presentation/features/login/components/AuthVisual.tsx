@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function AuthVisual() {
   return (
-    <aside className="relative bg-bg-soft overflow-hidden p-9 flex flex-col justify-between border-r border-line">
+    <aside className="relative hidden lg:flex bg-bg-soft overflow-hidden p-9 flex-col justify-between border-r border-line">
       {/* Brand */}
       <Link
         href="/"

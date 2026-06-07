@@ -10,10 +10,10 @@ interface Props {
 }
 
 export default function StudioUploadPanel({ batch, queue }: Props) {
-  const initialActive = queue.find((q) => q.status === "active")?.id ?? queue[0]?.id;
+  const initialActive = queue.find((q) => q.status === "active")?.id ?? queue[0]?.id ?? "";
   const [activeId, setActiveId] = useState<string>(initialActive);
 
-  const progressPct = Math.round((batch.processed / batch.total) * 100);
+  const progressPct = batch.total > 0 ? Math.round((batch.processed / batch.total) * 100) : 0;
 
   const batchRows = [
     { label: "Plates parsed", value: batch.platesParsed },

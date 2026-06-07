@@ -80,7 +80,7 @@ export function getExplorerPageContent(): ExplorerPage {
         type: "options",
         optionGroups: [
           {
-            heading: "Type",
+            heading: "Vehicle",
             options: [
               { label: "Motorcycle", value: "motorcycle" },
               { label: "Bicycle", value: "bicycle" },
@@ -88,6 +88,34 @@ export function getExplorerPageContent(): ExplorerPage {
               { label: "Tram", value: "tram" },
               { label: "Scooter", value: "scooter" },
               { label: "On foot", value: "walking" },
+            ],
+          },
+        ],
+      },
+      {
+        key: "vehicleType",
+        label: "Type",
+        displayValue: "Café racer",
+        type: "options",
+        optionGroups: [
+          {
+            heading: "Motorcycle type",
+            options: [
+              { label: "Café racer", value: "cafe-racer" },
+              { label: "Sport bike", value: "sport-bike" },
+              { label: "Scooter", value: "scooter-type" },
+              { label: "Cruiser", value: "cruiser" },
+              { label: "Trail bike", value: "trail-bike" },
+              { label: "Moped", value: "moped" },
+            ],
+          },
+          {
+            heading: "Car type",
+            options: [
+              { label: "Sedan", value: "sedan" },
+              { label: "SUV", value: "suv" },
+              { label: "Hatchback", value: "hatchback" },
+              { label: "Van", value: "van" },
             ],
           },
         ],
@@ -104,43 +132,8 @@ export function getExplorerPageContent(): ExplorerPage {
             options: [
               { label: "Allow partials", value: "partial" },
               { label: "Fuzzy read", value: "fuzzy" },
-            ],
-          },
-        ],
-      },
-      {
-        key: "person",
-        label: "Person",
-        displayValue: "red · helmet",
-        type: "person",
-        swatches: [
-          { hex: "#C04A2B", label: "Red" },
-          { hex: "#D9B26A", label: "Ochre" },
-          { hex: "#5B7B6E", label: "Forest" },
-          { hex: "#2C3E55", label: "Navy" },
-          { hex: "#8B5E3C", label: "Tan" },
-          { hex: "#1A1A1A", label: "Black" },
-          { hex: "#EDE6D4", label: "Cream" },
-          { hex: "#B9B3A8", label: "Stone" },
-        ],
-        optionGroups: [
-          {
-            heading: "Hair",
-            options: [
-              { label: "Short", value: "short" },
-              { label: "Long", value: "long" },
-              { label: "Curly", value: "curly" },
-              { label: "Tied back", value: "tied" },
-            ],
-          },
-          {
-            heading: "Accessories",
-            options: [
-              { label: "Helmet", value: "helmet" },
-              { label: "Hat", value: "hat" },
-              { label: "Glasses", value: "glasses" },
-              { label: "Backpack", value: "backpack" },
-              { label: "Umbrella", value: "umbrella" },
+              { label: "Exact plate", value: "exact" },
+              { label: "Region code only", value: "region" },
             ],
           },
         ],
@@ -151,8 +144,8 @@ export function getExplorerPageContent(): ExplorerPage {
       { key: "location", keyLabel: "where",   value: "Shibuya · crosswalk" },
       { key: "time",     keyLabel: "when",     value: "Golden hour" },
       { key: "vehicle",  keyLabel: "vehicle",  value: "Motorcycle" },
+      { key: "vehicleType", keyLabel: "type",  value: "Café racer" },
       { key: "plate",    keyLabel: "plate",    value: "63 · BH · N_" },
-      { key: "person",   keyLabel: "person",   value: "Red · long · helmet" },
     ],
 
     results: {

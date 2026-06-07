@@ -84,7 +84,7 @@ export function HomeCtaSection({ cta }: HomeCtaSectionProps) {
 
         <h2
           className="font-serif font-normal leading-[0.95] tracking-[-0.03em] text-ink mx-auto mb-[48px]"
-          style={{ fontSize: "clamp(56px, 8.5vw, 128px)", maxWidth: "14ch" }}
+          style={{ fontSize: "clamp(56px, 8vw, 100px)", maxWidth: "16ch" }}
         >
           {cta.headlinePart1}{" "}
           <span className="block">

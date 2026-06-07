@@ -29,6 +29,25 @@ export default function HotspotPageClient({ data }: Props) {
 
   const { regionStats } = data;
 
+  if (!selectedHotspot) {
+    return (
+      <div className="fixed inset-0 z-200 grid place-items-center bg-bg px-6 text-center text-ink">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-soft">
+            Hotspot map
+          </p>
+          <h1 className="mt-3 font-serif text-[42px] leading-none">
+            No active areas yet.
+          </h1>
+          <p className="mt-4 max-w-md text-ink-soft">
+            Captura will show photographer activity here as soon as the first
+            area is indexed.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-200 grid grid-cols-[1fr_420px] max-[900px]:grid-cols-1 max-[900px]:grid-rows-[1fr_auto]">
       {/* ── Left: Map + overlays ── */}

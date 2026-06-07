@@ -39,8 +39,15 @@ function attachRequestInterceptor(instance: AxiosInstance, session: SessionStore
 function attachResponseInterceptor(instance: AxiosInstance, session: SessionStore): void {
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
+      const responseData = response.data as {
+        accessToken?: unknown;
+        data?: { accessToken?: unknown };
+        result?: { accessToken?: unknown };
+      };
       const newToken: unknown =
-        (response.data as Record<string, unknown>)?.["accessToken"];
+        responseData?.accessToken ??
+        responseData?.data?.accessToken ??
+        responseData?.result?.accessToken;
       if (typeof newToken === "string") {
         session.setAccessToken(newToken);
       }
@@ -49,7 +56,13 @@ function attachResponseInterceptor(instance: AxiosInstance, session: SessionStor
     (error: unknown) => {
       if (isAxiosError(error)) {
         const status = error.response?.status;
-        const message = error.message;
+        const data = error.response?.data as
+          | { data?: unknown; message?: string | string[]; error?: string; result?: unknown }
+          | undefined;
+        const responseMessage = Array.isArray(data?.message)
+          ? data.message.join(", ")
+          : data?.message;
+        const message = responseMessage ?? data?.error ?? error.message;
         const path = error.config?.url ?? "";
 
         if (status === 401) {
@@ -57,7 +70,7 @@ function attachResponseInterceptor(instance: AxiosInstance, session: SessionStor
         }
 
         return Promise.reject(
-          new Error(`HTTP ${status ?? "?"} — ${message} (${path})`)
+          new Error(`${message} (${status ?? "?"} ${path})`)
         );
       }
       return Promise.reject(error);

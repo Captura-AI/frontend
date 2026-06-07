@@ -20,9 +20,9 @@
   --color-ink-muted: #6B6660;
 
   /* ─── Fonts ───────────────────────────────────────────────── */
-  --font-serif: "Instrument Serif", "Times New Roman", serif;
-  --font-sans:  "Geist", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-  --font-mono:  "Geist Mono", ui-monospace, Menlo, monospace;
+  --font-serif: var(--font-captura-serif), "Times New Roman", serif;
+  --font-sans:  var(--font-captura-sans), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:  var(--font-captura-mono), ui-monospace, Menlo, monospace;
 }
 
 /* ─── Keyframe animations ─────────────────────────────────────── */
@@ -46,6 +46,16 @@
 @keyframes pulseBox {
   0%, 100% { opacity: 0.6; }
   50%       { opacity: 1; }
+}
+@keyframes authModeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ─── Studio / AI keyframes ───────────────────────────────────── */
@@ -137,6 +147,10 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.auth-mode-enter {
+  animation: authModeEnter 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* ─── Studio utility classes ──────────────────────────────────── */

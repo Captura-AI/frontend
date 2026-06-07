@@ -1,6 +1,7 @@
 const ACCESS_TOKEN_KEY = "fe_access_token";
 const REFRESH_TOKEN_KEY = "fe_refresh_token";
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
+export const AUTH_SESSION_EVENT = "captura-auth-session-change";
 
 export interface SessionStore {
   getAccessToken: () => string | null;
@@ -31,6 +32,12 @@ function writeCookie(name: string, value: string, maxAge: number): void {
 
 function deleteCookie(name: string): void {
   document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Strict`;
+}
+
+function notifySessionChange(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(AUTH_SESSION_EVENT));
+  }
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
@@ -66,12 +73,14 @@ export function createSessionStore(): SessionStore {
   function saveSession(accessToken: string, refreshToken?: string): void {
     setAccessToken(accessToken);
     if (refreshToken) setRefreshToken(refreshToken);
+    notifySessionChange();
   }
 
   function clearSession(): void {
     if (isClient()) {
       deleteCookie(ACCESS_TOKEN_KEY);
       deleteCookie(REFRESH_TOKEN_KEY);
+      notifySessionChange();
     } else {
       memory.clear();
     }
