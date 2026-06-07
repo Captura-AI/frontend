@@ -15,6 +15,8 @@ interface PhotographerDetailPageViewProps {
 }
 
 export function PhotographerDetailPageView({ detail }: PhotographerDetailPageViewProps) {
+  const portfolioItems = detail.portfolio.slice(0, 5);
+
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
@@ -98,9 +100,9 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
           title="A street portfolio, not a sales grid."
           text="Curated frames from the routes this photographer knows best."
         />
-        <div className={styles.portfolioGrid}>
-          {detail.portfolio.map((item, index) => (
-            <PortfolioCard item={item} index={index} key={item.id} />
+        <div className={`${styles.portfolioGrid} ${getPortfolioGridClass(portfolioItems.length)}`}>
+          {portfolioItems.map((item) => (
+            <PortfolioCard item={item} key={item.id} />
           ))}
         </div>
       </section>
@@ -181,16 +183,11 @@ function SectionHead({
 
 function PortfolioCard({
   item,
-  index,
 }: {
   item: PhotographerPortfolioItem;
-  index: number;
 }) {
   return (
-    <Link
-      className={`${styles.portfolioCard} ${index === 0 || index === 5 ? styles.tallCard : ""}`}
-      href={item.momentHref}
-    >
+    <Link className={styles.portfolioCard} href={item.momentHref}>
       <Image
         src={item.imageUrl}
         alt={item.title}
@@ -205,6 +202,21 @@ function PortfolioCard({
       </div>
     </Link>
   );
+}
+
+function getPortfolioGridClass(count: number): string {
+  switch (count) {
+    case 1:
+      return styles.portfolioCount1 ?? "";
+    case 2:
+      return styles.portfolioCount2 ?? "";
+    case 3:
+      return styles.portfolioCount3 ?? "";
+    case 4:
+      return styles.portfolioCount4 ?? "";
+    default:
+      return styles.portfolioCount5 ?? "";
+  }
 }
 
 function HotspotCard({ hotspot }: { hotspot: PhotographerHotspot }) {
