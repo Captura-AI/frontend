@@ -33,6 +33,7 @@ export function getPhotographersPageContent(): PhotographersPage {
     sortLabel: "Most active this week",
     photographers: [
       {
+        slug: "sari-pradipta",
         name: "Sari Pradipta",
         spec: "Bandung · Braga · Asia Afrika",
         avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop",
@@ -47,6 +48,7 @@ export function getPhotographersPageContent(): PhotographersPage {
         hourlyRate: "Rp 450k",
       },
       {
+        slug: "reza-ardiansyah",
         name: "Reza Ardiansyah",
         spec: "Jakarta · Sudirman · GBK",
         avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop",
@@ -64,6 +66,7 @@ export function getPhotographersPageContent(): PhotographersPage {
         hourlyRate: "Rp 600k",
       },
       {
+        slug: "alya-permatasari",
         name: "Alya Permatasari",
         spec: "Bandung · Dago · Cihampelas",
         avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80&auto=format&fit=crop",
@@ -82,6 +85,7 @@ export function getPhotographersPageContent(): PhotographersPage {
         hourlyRate: "Rp 380k",
       },
       {
+        slug: "bagus-wirawan",
         name: "Bagus Wirawan",
         spec: "Yogyakarta · Malioboro · Kotagede",
         avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80&auto=format&fit=crop",
@@ -100,6 +104,7 @@ export function getPhotographersPageContent(): PhotographersPage {
         hourlyRate: "Rp 320k",
       },
       {
+        slug: "komang-suarya",
         name: "Komang Suarya",
         spec: "Bali · Canggu · Ubud",
         avatarUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&q=80&auto=format&fit=crop",
@@ -118,6 +123,7 @@ export function getPhotographersPageContent(): PhotographersPage {
         hourlyRate: "Rp 520k",
       },
       {
+        slug: "tessa-kuswandi",
         name: "Tessa Kuswandi",
         spec: "Surabaya · Tunjungan · Old Town",
         avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80&auto=format&fit=crop",

@@ -147,7 +147,7 @@ Kebutuhan:
 
 ## Photographer Detail
 
-Status: planned.
+Status: implemented for Phase 2.
 
 Tujuan:
 
@@ -161,6 +161,9 @@ Kebutuhan:
 - Schedule/session packages.
 - Reviews/testimonials.
 - Link ke foto yang pernah diunggah.
+- Link dari directory card ke `/photographers/[slug]`.
+- CTA booking menuju section package/detail profile.
+- CTA menuju Explorer dengan filter fotografer terkait.
 
 ## Heatmap / Hotspot
 

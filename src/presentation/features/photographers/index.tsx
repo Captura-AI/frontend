@@ -12,7 +12,7 @@ interface PhotographersPageViewProps {
 
 export function PhotographersPageView({ content }: PhotographersPageViewProps) {
   const [activeFilter, setActiveFilter] = useState(content.filters[0]?.label ?? "All");
-  const [selectedPhotographer, setSelectedPhotographer] = useState(content.photographers[0]);
+  const selectedPhotographer = content.photographers[0];
   const [sessionType, setSessionType] = useState(content.booking.sessionTypes[0] ?? "Personal");
   const [timeSlot, setTimeSlot] = useState("17:00 golden hour");
 
@@ -93,7 +93,6 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
             <PhotographerCard
               key={photographer.name}
               photographer={photographer}
-              onBook={() => setSelectedPhotographer(photographer)}
             />
           ))}
         </div>
@@ -217,11 +216,11 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
 
 function PhotographerCard({
   photographer,
-  onBook,
 }: {
   photographer: PhotographerProfile;
-  onBook: () => void;
 }) {
+  const profileHref = `/photographers/${photographer.slug}`;
+
   return (
     <article className={styles.card}>
       <div className={styles.cardTop}>
@@ -267,14 +266,13 @@ function PhotographerCard({
         <div><strong>{photographer.hourlyRate}</strong><span>From / hour</span></div>
       </div>
       <div className={styles.cardCta}>
-        <Link className={styles.ghostButton} href="#">View profile</Link>
-        <a
+        <Link className={styles.ghostButton} href={profileHref}>View profile</Link>
+        <Link
           className={styles.darkButton}
-          href="#booking"
-          onClick={onBook}
+          href={`${profileHref}#booking`}
         >
           Book session <span>→</span>
-        </a>
+        </Link>
       </div>
     </article>
   );
