@@ -16,7 +16,6 @@ export default function HotspotSidebar({
   selectedHotspot,
   feedMoments,
   activePhotographers,
-  regionStats,
 }: Props) {
   const [notified, setNotified] = useState(false);
 

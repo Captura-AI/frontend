@@ -67,7 +67,18 @@ Menu utama:
 
 Checkout boleh menggunakan layout standalone karena memiliki progress checkout sendiri.
 
-## 4.2 Halaman Utama
+## 4.2 Route Map MVP
+
+Keputusan IA per 2026-06-07:
+
+- Public discovery: `/`, `/explorer`, `/explorer/[id]`, `/photographers`, `/photographers/[slug]`, `/hotspot`.
+- Account buyer surface: `/account/profile`, `/account/library`.
+- Checkout and orders: `/checkout`, `/checkout/success`. Route `/orders/[id]` disiapkan sebagai opsi backend-driven setelah order API tersedia, tetapi bukan route MVP phase 1.
+- Photographer workspace: `/dashboard/photographer`, `/dashboard/photographer/uploads`, `/dashboard/photographer/moments`, `/dashboard/photographer/bookings`, `/dashboard/photographer/earnings`.
+- Trust and support placeholders: `/support/removal`, `/support/payments`, `/support/orders/[id]`, `/privacy`, `/licenses`.
+- AI Studio: `/studio` tetap standalone untuk MVP awal. Pada Phase 4, experience ini akan diputuskan ulang apakah menjadi alias/redirect ke `/dashboard/photographer/uploads` atau tetap menjadi lab-style AI surface.
+
+## 4.3 Halaman Utama
 
 ## Home
 
@@ -183,6 +194,44 @@ Kebutuhan:
 
 Checkout harus mempertahankan nav progres sendiri dan tidak wajib memakai navbar global.
 
+## Checkout Success
+
+Status: implemented for Phase 1.
+
+Tujuan:
+
+- Menutup payment journey dengan konfirmasi success, pending, dan failed.
+- Mengarahkan user ke library, retry checkout, atau support sesuai status pembayaran.
+- Menyimpan struktur order summary agar siap menerima order id dari backend.
+
+Route final MVP:
+
+- `/checkout/success`
+
+## Account Profile
+
+Status: implemented for Phase 1.
+
+Tujuan:
+
+- Menjadi account surface untuk identitas user, preferensi pencarian, privacy settings, linked accounts, dan support shortcuts.
+
+Route final MVP:
+
+- `/account/profile`
+
+## Account Library
+
+Status: implemented for Phase 1.
+
+Tujuan:
+
+- Menampilkan purchased moments, license info, invoice link, download CTA, dan status order/download.
+
+Route final MVP:
+
+- `/account/library`
+
 ## 5. UX Requirements
 
 ## 5.1 Search Experience
@@ -290,4 +339,3 @@ Aturan pengembangan:
 - Apakah user bisa membeli foto tanpa login?
 - Apakah pencarian plat nomor harus ditampilkan sebagai masked text di UI publik?
 - Apakah heatmap akan berbasis foto tersedia atau jadwal fotografer aktif?
-

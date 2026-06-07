@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { type CheckoutPage, type PaymentTabId } from "@/domains/checkout";
 import styles from "./CheckoutPage.module.css";
@@ -205,7 +206,15 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
           <aside className={styles.summary}>
             <div className={styles.eyebrow}>{content.summary.eyebrow}</div>
             <div className={styles.sumItem}>
-              <div className={styles.sumThumb}><img src={content.summary.imageUrl} alt="" /></div>
+              <div className={styles.sumThumb}>
+                <Image
+                  src={content.summary.imageUrl}
+                  alt=""
+                  fill
+                  sizes="64px"
+                  className={styles.image}
+                />
+              </div>
               <div>
                 <h2>{content.summary.title} <em>{content.summary.emphasis}</em>.</h2>
                 <div className={styles.sumMeta}>
@@ -238,9 +247,9 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
               <strong><em>USD</em>{totals.total.toFixed(2)}</strong>
             </div>
 
-            <button className={styles.payButton} type="button">
+            <Link className={styles.payButton} href="/checkout/success">
               Pay {formatUsd(totals.total)} {payLabels[activeMethod]} <span>→</span>
-            </button>
+            </Link>
 
             <div className={styles.trustRow}>
               <span><LockIcon />256-bit SSL</span>

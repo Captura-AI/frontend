@@ -1,2 +1,10 @@
 export { getCheckoutPageContent } from "./services/CheckoutPageService";
-export type { CheckoutPage, PaymentMethod, PaymentTab, PaymentTabId } from "./entities/CheckoutPage";
+export { getCheckoutResultPageContent } from "./services/CheckoutResultService";
+export type {
+  CheckoutPage,
+  CheckoutResultPage,
+  CheckoutResultStatus,
+  PaymentMethod,
+  PaymentTab,
+  PaymentTabId,
+} from "./entities/CheckoutPage";

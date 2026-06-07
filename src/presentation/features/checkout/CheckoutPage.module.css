@@ -550,6 +550,7 @@
 }
 
 .sumThumb {
+  position: relative;
   width: 64px;
   height: 80px;
   overflow: hidden;
@@ -558,7 +559,7 @@
   background: var(--color-bg);
 }
 
-.sumThumb img { width: 100%; height: 100%; object-fit: cover; }
+.image { width: 100%; height: 100%; object-fit: cover; }
 
 .sumItem h2 {
   font-family: var(--font-serif);

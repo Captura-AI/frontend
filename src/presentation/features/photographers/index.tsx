@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { type PhotographerProfile, type PhotographersPage } from "@/domains/photographers";
 import styles from "./PhotographersPage.module.css";
@@ -12,13 +13,37 @@ interface PhotographersPageViewProps {
 export function PhotographersPageView({ content }: PhotographersPageViewProps) {
   const [activeFilter, setActiveFilter] = useState(content.filters[0]?.label ?? "All");
   const [selectedPhotographer, setSelectedPhotographer] = useState(content.photographers[0]);
-  const [sessionType, setSessionType] = useState(content.booking.sessionTypes[0]);
+  const [sessionType, setSessionType] = useState(content.booking.sessionTypes[0] ?? "Personal");
   const [timeSlot, setTimeSlot] = useState("17:00 golden hour");
 
   const selectedSpec = useMemo(
-    () => `${selectedPhotographer.spec.split(" · ").slice(0, 2).join(" · ")} · ${selectedPhotographer.ratingMeta.split(" · ")[0]}`,
+    () =>
+      selectedPhotographer
+        ? `${selectedPhotographer.spec.split(" · ").slice(0, 2).join(" · ")} · ${selectedPhotographer.ratingMeta.split(" · ")[0]}`
+        : "",
     [selectedPhotographer]
   );
+
+  if (!selectedPhotographer) {
+    return (
+      <div className={styles.page}>
+        <section className={styles.hero}>
+          <div className={styles.heroInner}>
+            <div>
+              <span className={styles.eyebrow}>{content.hero.eyebrow}</span>
+              <h1>
+                {content.hero.headline} <em>{content.hero.headlineEmphasis}</em>.
+              </h1>
+              <p className={styles.lede}>
+                Photographer profiles will appear here as soon as the first
+                Captura contributors are indexed.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
@@ -84,7 +109,13 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
             <p>{content.booking.description}</p>
             <div className={styles.picked}>
               <div className={styles.pickedAvatar}>
-                <img src={selectedPhotographer.avatarUrl} alt="" />
+                <Image
+                  src={selectedPhotographer.avatarUrl}
+                  alt=""
+                  fill
+                  sizes="48px"
+                  className={styles.image}
+                />
               </div>
               <div className={styles.pickedWho}>
                 <div className={styles.pickedName}>{selectedPhotographer.name}</div>
@@ -195,7 +226,13 @@ function PhotographerCard({
     <article className={styles.card}>
       <div className={styles.cardTop}>
         <div className={styles.avatar}>
-          <img src={photographer.avatarUrl} alt="" />
+          <Image
+            src={photographer.avatarUrl}
+            alt=""
+            fill
+            sizes="64px"
+            className={styles.image}
+          />
           {photographer.isLive && <span />}
         </div>
         <div className={styles.photographerMeta}>
@@ -211,7 +248,13 @@ function PhotographerCard({
       <div className={styles.thumbs}>
         {photographer.thumbnails.map((thumb) => (
           <Link className={styles.thumb} href="/explorer" key={`${photographer.name}-${thumb}`}>
-            <img src={thumb} alt="" />
+            <Image
+              src={thumb}
+              alt=""
+              fill
+              sizes="(max-width: 720px) 30vw, 120px"
+              className={styles.image}
+            />
           </Link>
         ))}
       </div>

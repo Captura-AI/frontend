@@ -49,3 +49,41 @@ export interface CheckoutPage {
     promoPct: number;
   };
 }
+
+export type CheckoutResultStatus = "success" | "pending" | "failed";
+
+export interface CheckoutResultPage {
+  status: CheckoutResultStatus;
+  order: {
+    id: string;
+    title: string;
+    imageUrl: string;
+    photographer: string;
+    license: string;
+    total: string;
+    email: string;
+    estimatedAvailability: string;
+  };
+  states: Record<
+    CheckoutResultStatus,
+    {
+      eyebrow: string;
+      title: string;
+      emphasis: string;
+      description: string;
+      primaryLabel: string;
+      primaryHref: string;
+      secondaryLabel: string;
+      secondaryHref: string;
+    }
+  >;
+  nextSteps: Array<{
+    label: string;
+    description: string;
+  }>;
+  support: {
+    label: string;
+    href: string;
+    description: string;
+  };
+}
