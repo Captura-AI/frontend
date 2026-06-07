@@ -22,7 +22,7 @@
 }
 
 .heroCopy {
-  align-self: end;
+  align-self: center;
 }
 
 .backLink,
@@ -328,7 +328,8 @@
 }
 
 .portfolioCount1 {
-  grid-template-columns: minmax(0, 0.66fr);
+  grid-template-columns: minmax(0, 0.72fr);
+  max-width: 820px;
 }
 
 .portfolioCount2 {
@@ -336,21 +337,43 @@
 }
 
 .portfolioCount3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+  grid-template-rows: repeat(2, minmax(238px, 1fr));
 }
 
 .portfolioCount4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.05fr) repeat(2, minmax(0, 0.98fr));
+  grid-template-rows: repeat(2, minmax(252px, 1fr));
 }
 
 .portfolioCount5 {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.05fr) repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(276px, 1fr));
 }
 
 .portfolioCard {
-  min-height: 360px;
+  min-height: 280px;
   border-radius: 16px;
   color: var(--color-bg-soft);
+}
+
+.portfolioCount1 .portfolioCard {
+  min-height: 520px;
+}
+
+.portfolioCount2 .portfolioCard {
+  min-height: 430px;
+}
+
+.portfolioCount3 .portfolioCard:first-child,
+.portfolioCount4 .portfolioCard:first-child,
+.portfolioCount5 .portfolioCard:first-child {
+  grid-row: 1 / span 2;
+  min-height: 560px;
+}
+
+.portfolioCount4 .portfolioCard:nth-child(4) {
+  grid-column: 2 / span 2;
 }
 
 .portfolioCard::after {
@@ -398,6 +421,16 @@
   display: block;
   margin-top: 8px;
   color: rgba(251, 250, 246, 0.66);
+}
+
+.portfolioMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.portfolioMore .secondaryButton {
+  min-width: 178px;
 }
 
 .twoColumnSection {
@@ -654,6 +687,22 @@
 
   .portfolioCount1 {
     grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+  }
+
+  .portfolioCount3,
+  .portfolioCount4,
+  .portfolioCount5 {
+    grid-template-rows: none;
+  }
+
+  .portfolioCount3 .portfolioCard:first-child,
+  .portfolioCount4 .portfolioCard:first-child,
+  .portfolioCount5 .portfolioCard:first-child,
+  .portfolioCount4 .portfolioCard:nth-child(4) {
+    grid-column: auto;
+    grid-row: auto;
+    min-height: 360px;
   }
 
   .twoColumnSection .sectionHead {
@@ -707,6 +756,10 @@
   .primaryButton,
   .secondaryButton {
     width: 100%;
+  }
+
+  .portfolioMore .secondaryButton {
+    min-width: 0;
   }
 
   .rating {

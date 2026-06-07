@@ -16,6 +16,7 @@ interface PhotographerDetailPageViewProps {
 
 export function PhotographerDetailPageView({ detail }: PhotographerDetailPageViewProps) {
   const portfolioItems = detail.portfolio.slice(0, 5);
+  const hasMorePortfolioItems = detail.portfolio.length > portfolioItems.length;
 
   return (
     <div className={styles.page}>
@@ -105,6 +106,13 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
             <PortfolioCard item={item} key={item.id} />
           ))}
         </div>
+        {hasMorePortfolioItems ? (
+          <div className={styles.portfolioMore}>
+            <Link className={styles.secondaryButton} href={detail.searchHref}>
+              View more moments
+            </Link>
+          </div>
+        ) : null}
       </section>
 
       <section className={styles.twoColumnSection}>
@@ -206,6 +214,7 @@ function PortfolioCard({
 
 function getPortfolioGridClass(count: number): string {
   switch (count) {
+    case 0:
     case 1:
       return styles.portfolioCount1 ?? "";
     case 2:
