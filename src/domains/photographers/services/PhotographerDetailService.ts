@@ -123,7 +123,7 @@ const DETAIL_BY_SLUG: Record<string, PhotographerDetailSeed> = {
       {
         id: "lm-1",
         title: "Cream shirt near Naripan",
-        imageUrl: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=700&q=80&auto=format&fit=crop",
+        imageUrl: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=700&q=80&auto=format&fit=crop",
         meta: "Naripan · 17:18 · match-ready",
         href: "/explorer/m-14",
       },
@@ -137,7 +137,7 @@ const DETAIL_BY_SLUG: Record<string, PhotographerDetailSeed> = {
       {
         id: "lm-3",
         title: "Two silhouettes by the old cinema",
-        imageUrl: "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=700&q=80&auto=format&fit=crop",
+        imageUrl: "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=700&q=80&auto=format&fit=crop",
         meta: "Asia Afrika · 16:44 · editorial",
         href: "/explorer/m-16",
       },
