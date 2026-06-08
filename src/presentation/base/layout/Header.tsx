@@ -178,6 +178,12 @@ export function Header() {
                 Purchase library
               </Link>
               <Link
+                href="/dashboard/photographer"
+                className="block rounded-lg px-3 py-2 text-[13px] text-ink-soft transition-colors hover:bg-bg hover:text-ink"
+              >
+                Photographer dashboard
+              </Link>
+              <Link
                 href="/explorer"
                 className="block rounded-lg px-3 py-2 text-[13px] text-ink-soft transition-colors hover:bg-bg hover:text-ink"
               >
