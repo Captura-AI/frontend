@@ -29,6 +29,23 @@ export default function StudioTopBar({ balance, avatarUrl }: Props) {
         </span>
       </Link>
 
+      {/* Back to dashboard */}
+      <Link
+        href="/dashboard/photographer/uploads"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-line text-[12px] text-ink-soft transition-colors duration-200 hover:bg-bg hover:text-ink"
+      >
+        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+          <path
+            d="M9.5 3 5 8l4.5 5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Uploads
+      </Link>
+
       {/* Nav */}
       <nav className="flex gap-1 ml-3.5">
         {NAV_ITEMS.map((item) => (

@@ -5,6 +5,7 @@ import {
   type PhotographerDashboardPage,
   type UploadQueueStatus,
 } from "@/domains/photographer-dashboard";
+import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
 import styles from "./PhotographerDashboardPage.module.css";
 
 interface PhotographerDashboardPageViewProps {
@@ -27,30 +28,11 @@ const bookingStatusLabels: Record<BookingStatus, string> = {
 
 export function PhotographerDashboardPageView({ content }: PhotographerDashboardPageViewProps) {
   return (
-    <div className={styles.shell}>
-      <aside className={styles.sidebar} aria-label="Photographer dashboard navigation">
-        <Link className={styles.brand} href="/">
-          <span aria-hidden="true" />
-          Captura
-        </Link>
-        <div className={styles.photographerCard}>
-          <span className={styles.avatar}>SP</span>
-          <div>
-            <strong>{content.photographer.name}</strong>
-            <p>{content.photographer.handle}</p>
-          </div>
-        </div>
-        <nav className={styles.nav}>
-          {content.nav.map((item) => (
-            <Link className={item.href === "/dashboard/photographer" ? styles.navActive : ""} href={item.href} key={item.href}>
-              <span>{item.label}</span>
-              {item.status ? <small>{item.status}</small> : null}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
-      <main className={styles.main}>
+    <DashboardShell
+      photographer={content.photographer}
+      nav={content.nav}
+      activeHref="/dashboard/photographer"
+    >
         <header className={styles.topbar}>
           <div>
             <span className={styles.eyebrow}>Photographer dashboard</span>
@@ -210,8 +192,7 @@ export function PhotographerDashboardPageView({ content }: PhotographerDashboard
             </div>
           </div>
         </section>
-      </main>
-    </div>
+    </DashboardShell>
   );
 }
 
