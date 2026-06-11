@@ -4,19 +4,19 @@ const FOOTER_LINKS = {
   product: [
     { label: "Search", href: "#search" },
     { label: "Saved moments", href: "#" },
-    { label: "Request removal", href: "#" },
+    { label: "Request removal", href: "/privacy/removal" },
     { label: "Pricing", href: "#" },
   ],
   photographers: [
     { label: "Join the roster", href: "#" },
     { label: "Upload guide", href: "#" },
-    { label: "Licensing", href: "#" },
+    { label: "Licensing", href: "/licenses" },
     { label: "Journal", href: "#" },
   ],
   company: [
     { label: "About", href: "#" },
     { label: "Ethics & privacy", href: "#" },
-    { label: "Contact", href: "#" },
+    { label: "Contact", href: "/support" },
     { label: "Press", href: "#" },
   ],
 } as const;

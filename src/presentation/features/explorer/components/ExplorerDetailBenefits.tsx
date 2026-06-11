@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { type BenefitItem, type BenefitIconId } from "@/domains/explorer";
 import { ExplorerSectionHead } from "./ExplorerSectionHead";
 
@@ -60,6 +61,13 @@ export function ExplorerDetailBenefits({ benefits }: ExplorerDetailBenefitsProps
           </div>
         ))}
       </div>
+
+      <Link
+        href="/licenses"
+        className="mt-4 inline-flex items-center gap-2 text-[13px] font-medium text-ink transition-colors hover:text-accent"
+      >
+        View full license terms <span aria-hidden="true">→</span>
+      </Link>
     </section>
   );
 }

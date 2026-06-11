@@ -258,7 +258,7 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
             </div>
 
             <p className={styles.legal}>
-              By placing this order, you agree to Captura&apos;s <a href="#">Terms</a>, <a href="#">License Agreement</a>, and <a href="#">Refund Policy</a>. All sales support the photographer directly — 70% of every transaction.
+              By placing this order, you agree to Captura&apos;s <a href="#">Terms</a>, <Link href="/licenses">License Agreement</Link>, and <a href="#">Refund Policy</a>. All sales support the photographer directly — 70% of every transaction.
             </p>
 
             <div className={styles.reassureGrid}>
@@ -274,7 +274,7 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
         <div className={styles.wrap}>
           <div className={styles.footRow}>
             <span>© 2026 Captura Studio · Lisbon</span>
-            <span><a href="#">Need help?</a> · <a href="#">Contact support</a> · <a href="#">Refund policy</a></span>
+            <span><Link href="/support">Need help?</Link> · <Link href="/support">Contact support</Link> · <a href="#">Refund policy</a></span>
           </div>
         </div>
       </footer>

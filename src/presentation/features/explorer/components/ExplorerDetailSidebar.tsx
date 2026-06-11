@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { type DetailPhotographerInfo, type PriceInfo } from "@/domains/explorer";
 import { ExplorerDetailPriceCard } from "./ExplorerDetailPriceCard";
 
@@ -62,6 +63,13 @@ export function ExplorerDetailSidebar({
 
       {/* Price card (client component) */}
       <ExplorerDetailPriceCard price={price} />
+
+      <Link
+        href="/privacy/removal"
+        className="font-mono text-[10.5px] tracking-[0.06em] uppercase text-ink-faint text-center transition-colors hover:text-accent"
+      >
+        Report a problem with this photo
+      </Link>
     </aside>
   );
 }

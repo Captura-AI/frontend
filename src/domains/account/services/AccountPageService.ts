@@ -56,12 +56,12 @@ export function getAccountProfilePageContent(): AccountProfilePage {
       },
       {
         label: "Request removal",
-        href: "/support/removal",
+        href: "/privacy/removal",
         description: "Ask Captura to hide or review a public moment.",
       },
       {
         label: "Payment support",
-        href: "/support/payments",
+        href: "/support",
         description: "Refund, receipt, and failed payment help.",
       },
     ],
