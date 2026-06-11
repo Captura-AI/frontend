@@ -1,4 +1,5 @@
 export { getHotspotPageData } from "./services/HotspotPageService";
+export { getHotspotDetail, getHotspotIds } from "./services/HotspotDetailService";
 export type {
   HotspotPage,
   Hotspot,
@@ -7,3 +8,4 @@ export type {
   ActivePhotographer,
   RegionStats,
 } from "./entities/HotspotPage";
+export type { HotspotDetail, HotspotDetailStats } from "./entities/HotspotDetail";

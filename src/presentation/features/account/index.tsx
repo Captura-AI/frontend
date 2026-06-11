@@ -7,6 +7,7 @@ import {
   type LibraryItem,
 } from "@/domains/account";
 import { type CheckoutResultPage } from "@/domains/checkout";
+import { AccountNav } from "./components/AccountNav";
 import styles from "./AccountPage.module.css";
 
 interface AccountProfilePageViewProps {
@@ -33,6 +34,7 @@ export function AccountProfilePageView({ content }: AccountProfilePageViewProps)
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
+        <AccountNav />
         <section className={styles.hero}>
           <div>
             <span className={styles.eyebrow}>Account profile</span>
@@ -133,6 +135,7 @@ export function AccountLibraryPageView({ content }: AccountLibraryPageViewProps)
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
+        <AccountNav />
         <section className={styles.libraryHero}>
           <div>
             <span className={styles.eyebrow}>Purchase library</span>

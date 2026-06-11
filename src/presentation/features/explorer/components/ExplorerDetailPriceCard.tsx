@@ -9,6 +9,7 @@ interface ExplorerDetailPriceCardProps {
 
 export function ExplorerDetailPriceCard({ price }: ExplorerDetailPriceCardProps) {
   const [activeLicenseId, setActiveLicenseId] = useState(price.defaultLicenseId);
+  const [isSaved, setIsSaved] = useState(false);
 
   const activePrice = price.licenses.find((l) => l.id === activeLicenseId)?.priceUsd ?? price.currentUsd;
 
@@ -18,7 +19,7 @@ export function ExplorerDetailPriceCard({ price }: ExplorerDetailPriceCardProps)
   }, [activeLicenseId, activePrice]);
 
   const handleSave = useCallback(() => {
-    console.info("[PriceCard] save to board");
+    setIsSaved((current) => !current);
   }, []);
 
   const handleShare = useCallback(() => {
@@ -91,12 +92,21 @@ export function ExplorerDetailPriceCard({ price }: ExplorerDetailPriceCardProps)
         </button>
         <button
           onClick={handleSave}
-          aria-label="Save to board"
-          className="w-13 h-13 border border-line rounded-xl flex items-center justify-center bg-bg-soft text-ink transition-[border-color] hover:border-ink"
+          aria-label={isSaved ? "Remove from saved moments" : "Save to board"}
+          aria-pressed={isSaved}
+          className={`w-13 h-13 border rounded-xl flex items-center justify-center bg-bg-soft transition-[border-color,color] ${
+            isSaved ? "border-accent text-accent" : "border-line text-ink hover:border-ink"
+          }`}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M4 2h10v14l-5-3.5L4 16V2z"/>
-          </svg>
+          {isSaved ? (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+              <path d="M4 2h10v14l-5-3.5L4 16V2z"/>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 2h10v14l-5-3.5L4 16V2z"/>
+            </svg>
+          )}
         </button>
         <button
           onClick={handleShare}

@@ -41,6 +41,16 @@ export default function HotspotSidebar({
           {selectedHotspot.meta}
         </p>
 
+        <Link
+          href={`/hotspot/${selectedHotspot.id}`}
+          className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10.5px] tracking-[0.08em] uppercase text-ink-soft hover:text-ink transition-colors duration-200"
+        >
+          View full area report
+          <svg width="11" height="11" viewBox="0 0 13 13" fill="none">
+            <path d="M1 6.5h10M7 2l4.5 4.5L7 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+
         <div className="mt-4.5 pt-4.5 border-t border-line-soft grid grid-cols-3 gap-2">
           {[
             { n: selectedHotspot.active, l: "Photographers active here" },

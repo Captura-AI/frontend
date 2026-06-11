@@ -1,0 +1,245 @@
+.savedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 34px;
+}
+
+.savedCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: rgba(251, 250, 246, 0.82);
+}
+
+.savedThumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--color-line);
+}
+
+.savedThumb .image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbLink {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.bookmarkButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(251, 250, 246, 0.5);
+  border-radius: 50%;
+  background: rgba(20, 19, 17, 0.45);
+  color: var(--color-bg-soft);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.bookmarkButton:hover {
+  border-color: var(--color-bg-soft);
+  background: rgba(20, 19, 17, 0.65);
+}
+
+.bookmarkButtonActive {
+  color: var(--color-accent);
+}
+
+.savedBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 18px;
+}
+
+.savedBody h2 {
+  font-family: var(--font-serif);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.18;
+}
+
+.savedMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.savedMeta span {
+  padding: 6px 10px;
+  border: 1px solid var(--color-line-soft);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-ink-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.savedFooter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.savedPrice {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.savedPrice span {
+  margin-right: 4px;
+  color: var(--color-ink-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.savedAt {
+  margin-top: 6px;
+  color: var(--color-ink-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.searchList {
+  display: grid;
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.searchItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.36fr);
+  gap: 22px;
+  padding: 22px;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: rgba(251, 250, 246, 0.82);
+}
+
+.searchItem h2 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.16;
+}
+
+.searchSummary {
+  margin-top: 8px;
+  color: var(--color-ink-soft);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.searchMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  color: var(--color-ink-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.searchFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.searchFilters span {
+  padding: 7px 10px;
+  border: 1px solid var(--color-line-soft);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-ink-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.searchFilters em {
+  color: var(--color-ink-faint);
+  font-style: normal;
+}
+
+.searchActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  border-left: 1px solid var(--color-line-soft);
+  padding-left: 22px;
+}
+
+.searchActions a,
+.searchActions button {
+  width: 100%;
+}
+
+@media (max-width: 980px) {
+  .savedGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .searchItem {
+    grid-template-columns: 1fr;
+  }
+
+  .searchActions {
+    flex-direction: row;
+    border-left: 0;
+    border-top: 1px solid var(--color-line-soft);
+    padding-left: 0;
+    padding-top: 18px;
+  }
+
+  .searchActions a,
+  .searchActions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 680px) {
+  .savedGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .searchItem {
+    padding: 18px;
+  }
+
+  .searchActions {
+    flex-direction: column;
+  }
+}

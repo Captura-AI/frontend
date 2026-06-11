@@ -9,6 +9,8 @@ import { type ViewMode } from "../store/useExplorerStore";
 // ─── Single result card ───────────────────────────────────────────────────────
 
 function MomentCard({ moment }: { moment: ExplorerMoment }) {
+  const [isSaved, setIsSaved] = useState(false);
+
   return (
     <Link
       href={`/explorer/${moment.id}`}
@@ -32,10 +34,35 @@ function MomentCard({ moment }: { moment: ExplorerMoment }) {
         {moment.city} · {moment.time}
       </span>
 
-      {/* Match badge — top-right (only when present) */}
+      {/* Bookmark button — top-right */}
+      <button
+        type="button"
+        aria-label={isSaved ? "Remove from saved moments" : "Save moment"}
+        aria-pressed={isSaved}
+        onClick={(event) => {
+          event.preventDefault();
+          setIsSaved((current) => !current);
+        }}
+        className={`absolute top-[14px] right-[14px] z-30 grid h-9 w-9 place-items-center rounded-full border border-[rgba(251,250,246,0.5)] transition-colors duration-200 hover:border-bg-soft ${
+          isSaved ? "text-accent" : "text-bg-soft"
+        }`}
+        style={{ background: "rgba(20,19,17,0.45)", backdropFilter: "blur(8px)" }}
+      >
+        {isSaved ? (
+          <svg width="16" height="16" viewBox="0 0 18 18" fill="currentColor">
+            <path d="M4 2h10v14l-5-3.5L4 16V2z" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M4 2h10v14l-5-3.5L4 16V2z" />
+          </svg>
+        )}
+      </button>
+
+      {/* Match badge — below bookmark button (only when present) */}
       {moment.match && (
         <span
-          className="absolute top-[14px] right-[14px] z-20 font-mono text-[10px] tracking-[0.06em] uppercase text-bg-soft rounded-[4px] px-[9px] py-[5px]"
+          className="absolute top-[58px] right-[14px] z-20 font-mono text-[10px] tracking-[0.06em] uppercase text-bg-soft rounded-[4px] px-[9px] py-[5px]"
           style={{
             background:
               moment.match.type === "match"
