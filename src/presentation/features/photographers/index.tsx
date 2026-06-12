@@ -98,6 +98,24 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
         </div>
       </section>
 
+      <section className={styles.becomeCta}>
+        <div className={styles.becomeCtaInner}>
+          <span className={styles.becomeCtaGlow} aria-hidden="true" />
+          <div>
+            <h2>
+              Know these streets? <em>Shoot them</em> for Captura.
+            </h2>
+            <p>
+              Set your areas and specialties, let our AI handle plate, vehicle, and tag matching, and
+              keep 70% of every sale.
+            </p>
+          </div>
+          <Link className={styles.becomeCtaButton} href="/onboarding/photographer">
+            Become a photographer
+          </Link>
+        </div>
+      </section>
+
       <section className={styles.booking} id="booking">
         <div className={styles.bookingInner}>
           <div className={styles.bookingLeft}>

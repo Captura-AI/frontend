@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   type HomePhotographersSection as HomePhotographersSectionData,
   type HomePhotographer,
@@ -106,6 +107,44 @@ function StatsBar({ stats }: { stats: HomePhotographersSectionData["stats"] }) {
   );
 }
 
+// ─── Become a photographer CTA ─────────────────────────────────────────────────
+
+function BecomePhotographerCta() {
+  return (
+    <div className="max-w-[1320px] mx-auto px-10 mt-[60px]">
+      <div className="relative overflow-hidden rounded-[14px] border border-line bg-bg px-10 py-12 grid grid-cols-[1.4fr_auto] gap-10 items-center">
+        <span
+          className="pointer-events-none absolute -right-24 -top-24 w-[280px] h-[280px] rounded-full"
+          style={{ background: "var(--color-accent-soft)" }}
+          aria-hidden="true"
+        />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.08em] uppercase text-ink-soft mb-4">
+            <span className="block w-[18px] h-px bg-ink-soft" />
+            For street photographers
+          </div>
+          <h3
+            className="font-serif font-normal leading-[1.05] tracking-[-0.02em] text-ink"
+            style={{ fontSize: "clamp(28px, 3.4vw, 42px)" }}
+          >
+            Turn your <em className="italic text-accent">street eye</em> into a profile.
+          </h3>
+          <p className="mt-4 text-[14.5px] leading-[1.6] text-ink-soft max-w-[460px]">
+            Set your areas and specialties, let our AI handle plate, vehicle, and tag matching, and
+            keep 70% of every sale.
+          </p>
+        </div>
+        <Link
+          href="/onboarding/photographer"
+          className="relative inline-flex items-center justify-center whitespace-nowrap rounded-full border border-ink bg-ink px-7 py-[14px] text-[13.5px] font-medium text-bg-soft transition-transform duration-200 hover:-translate-y-0.5"
+        >
+          Become a photographer
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 // ─── Section ─────────────────────────────────────────────────────────────────
 
 export function HomePhotographersSection({ data }: HomePhotographersSectionProps) {
@@ -140,6 +179,9 @@ export function HomePhotographersSection({ data }: HomePhotographersSectionProps
 
       {/* Stats */}
       <StatsBar stats={data.stats} />
+
+      {/* Become a photographer CTA */}
+      <BecomePhotographerCta />
     </section>
   );
 }

@@ -8,7 +8,7 @@ const FOOTER_LINKS = {
     { label: "Pricing", href: "#" },
   ],
   photographers: [
-    { label: "Join the roster", href: "#" },
+    { label: "Join the roster", href: "/onboarding/photographer" },
     { label: "Upload guide", href: "#" },
     { label: "Licensing", href: "/licenses" },
     { label: "Journal", href: "#" },

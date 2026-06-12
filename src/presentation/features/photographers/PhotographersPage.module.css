@@ -378,6 +378,80 @@
   color: var(--color-bg-soft);
 }
 
+.becomeCta {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+}
+
+.becomeCtaInner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.4fr auto;
+  align-items: center;
+  gap: 40px;
+  padding: 48px;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: var(--color-bg-soft);
+  overflow: hidden;
+}
+
+.becomeCtaGlow {
+  position: absolute;
+  top: -110px;
+  right: -90px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  pointer-events: none;
+}
+
+.becomeCtaInner h2 {
+  position: relative;
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.becomeCtaInner h2 em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+.becomeCtaInner p {
+  position: relative;
+  margin-top: 14px;
+  max-width: 460px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}
+
+.becomeCtaButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-bg-soft);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.becomeCtaButton:hover {
+  transform: translateY(-1px);
+}
+
 .booking {
   padding: 90px 32px;
   background: var(--color-ink);
@@ -646,8 +720,10 @@ textarea.field { min-height: 88px; resize: vertical; line-height: 1.5; }
 }
 
 @media (max-width: 720px) {
-  .hero, .booking, .directory, .filterbar { padding-left: 20px; padding-right: 20px; }
+  .hero, .booking, .directory, .filterbar, .becomeCta { padding-left: 20px; padding-right: 20px; }
   .grid { grid-template-columns: 1fr; }
   .filterRight { margin-left: 0; width: 100%; }
   .fieldRow, .segmented { grid-template-columns: 1fr; }
+  .becomeCtaInner { grid-template-columns: 1fr; padding: 32px; text-align: left; }
+  .becomeCtaButton { width: 100%; }
 }
