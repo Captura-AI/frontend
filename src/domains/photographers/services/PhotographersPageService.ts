@@ -6,6 +6,13 @@ const sharedThumbs = [
   "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=300&q=80&auto=format&fit=crop",
 ] as const;
 
+/**
+ * Returns static mock content for the Photographer Directory page.
+ *
+ * TODO: When the backend is ready, replace this with IPhotographersRepository:
+ *   import { type IPhotographersRepository } from "@/infrastructure/repositories/IPhotographersRepository";
+ *   return photographersRepository.getPhotographersPageContent();
+ */
 export function getPhotographersPageContent(): PhotographersPage {
   return {
     hero: {

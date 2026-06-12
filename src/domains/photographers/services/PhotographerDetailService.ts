@@ -152,6 +152,14 @@ function slugify(value: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+/**
+ * Returns static mock slugs/profile data for the Photographer Detail page.
+ *
+ * TODO: When the backend is ready, replace these with IPhotographersRepository:
+ *   import { type IPhotographersRepository } from "@/infrastructure/repositories/IPhotographersRepository";
+ *   const slugs = await photographersRepository.getPhotographerSlugs();
+ *   const detail = await photographersRepository.getPhotographerDetail(slug);
+ */
 export function getPhotographerSlugs(): string[] {
   return getPhotographersPageContent().photographers.map((photographer) => photographer.slug);
 }

@@ -5,6 +5,15 @@ import {
 
 const VALID_STATUSES: CheckoutResultStatus[] = ["success", "pending", "failed"];
 
+/**
+ * Returns static mock content for the Checkout Result page, keyed by status.
+ *
+ * TODO: When the backend is ready, replace this with IOrdersRepository:
+ *   import { type IOrdersRepository } from "@/infrastructure/repositories/IOrdersRepository";
+ *   return ordersRepository.getOrderResult(orderId);
+ * Note: this requires `/checkout/success` to become `/orders/[id]` (or to
+ * accept an order id query param) so the result can be looked up by order.
+ */
 export function getCheckoutResultPageContent(
   status: string | string[] | undefined
 ): CheckoutResultPage {

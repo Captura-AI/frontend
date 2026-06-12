@@ -2,6 +2,15 @@ import { type PhotographerEarningsPage } from "../entities/PhotographerEarningsP
 
 const PAYOUT_METHOD = "Bank transfer · BCA •••• 4821";
 
+/**
+ * Returns static mock content for the Earnings page.
+ *
+ * TODO: When the backend is ready, replace getPhotographerEarningsPageContent
+ * (below) with IPhotographerEarningsRepository:
+ *   import { type IPhotographerEarningsRepository } from "@/infrastructure/repositories/IPhotographerEarningsRepository";
+ *   return earningsRepository.getEarningsPageContent(period);
+ */
+
 export function getPhotographerEarningsPageContent(): PhotographerEarningsPage {
   return {
     photographer: {

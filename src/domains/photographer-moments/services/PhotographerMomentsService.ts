@@ -1,5 +1,12 @@
 import { type PhotographerMomentsPage } from "../entities/PhotographerMomentsPage";
 
+/**
+ * Returns static mock content for the Moment Manager page.
+ *
+ * TODO: When the backend is ready, replace this with IPhotographerMomentsRepository:
+ *   import { type IPhotographerMomentsRepository } from "@/infrastructure/repositories/IPhotographerMomentsRepository";
+ *   return momentsRepository.getMomentsPageContent(page, limit);
+ */
 export function getPhotographerMomentsPageContent(): PhotographerMomentsPage {
   return {
     photographer: {

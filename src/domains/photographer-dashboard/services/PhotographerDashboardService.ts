@@ -1,5 +1,12 @@
 import { type PhotographerDashboardPage } from "../entities/PhotographerDashboardPage";
 
+/**
+ * Returns static mock content for the Photographer Dashboard overview.
+ *
+ * TODO: When the backend is ready, replace this with IPhotographerDashboardRepository:
+ *   import { type IPhotographerDashboardRepository } from "@/infrastructure/repositories/IPhotographerDashboardRepository";
+ *   return dashboardRepository.getDashboardPageContent();
+ */
 export function getPhotographerDashboardPageContent(): PhotographerDashboardPage {
   return {
     photographer: {

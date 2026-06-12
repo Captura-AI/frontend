@@ -1,5 +1,12 @@
 import { type PhotographerUploadsPage } from "../entities/PhotographerUploadsPage";
 
+/**
+ * Returns static mock content for the Uploads / AI Review page.
+ *
+ * TODO: When the backend is ready, replace this with IPhotographerUploadsRepository:
+ *   import { type IPhotographerUploadsRepository } from "@/infrastructure/repositories/IPhotographerUploadsRepository";
+ *   return uploadsRepository.getUploadsPageContent();
+ */
 export function getPhotographerUploadsPageContent(): PhotographerUploadsPage {
   return {
     photographer: {

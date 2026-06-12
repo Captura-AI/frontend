@@ -1,5 +1,12 @@
 import { type PhotographerBookingsPage } from "../entities/PhotographerBookingsPage";
 
+/**
+ * Returns static mock content for the Bookings page.
+ *
+ * TODO: When the backend is ready, replace this with IPhotographerBookingsRepository:
+ *   import { type IPhotographerBookingsRepository } from "@/infrastructure/repositories/IPhotographerBookingsRepository";
+ *   return bookingsRepository.getBookingsPageContent();
+ */
 export function getPhotographerBookingsPageContent(): PhotographerBookingsPage {
   return {
     photographer: {

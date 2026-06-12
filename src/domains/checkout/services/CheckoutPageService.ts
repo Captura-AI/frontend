@@ -1,5 +1,12 @@
 import { type CheckoutPage } from "../entities/CheckoutPage";
 
+/**
+ * Returns static mock content for the Checkout page.
+ *
+ * TODO: When the backend is ready, replace this with IOrdersRepository:
+ *   import { type IOrdersRepository } from "@/infrastructure/repositories/IOrdersRepository";
+ *   return ordersRepository.getCheckoutPageContent();
+ */
 export function getCheckoutPageContent(): CheckoutPage {
   return {
     header: {

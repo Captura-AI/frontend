@@ -1,5 +1,12 @@
 import { type SupportPage } from "../entities/SupportPage";
 
+/**
+ * Returns static mock content for the Support page.
+ *
+ * TODO: When the backend is ready, replace this with ISupportRepository:
+ *   import { type ISupportRepository } from "@/infrastructure/repositories/ISupportRepository";
+ *   return supportRepository.getSupportPageContent();
+ */
 export function getSupportPageContent(): SupportPage {
   return {
     hero: {

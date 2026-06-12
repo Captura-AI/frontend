@@ -3,6 +3,14 @@ import {
   type AccountProfilePage,
 } from "../entities/AccountPage";
 
+/**
+ * Returns static mock content for the Account Profile and Library pages.
+ *
+ * TODO: When the backend is ready, replace these with IAccountRepository:
+ *   import { type IAccountRepository } from "@/infrastructure/repositories/IAccountRepository";
+ *   const profile = await accountRepository.getProfile();
+ *   const library = await accountRepository.getLibrary();
+ */
 export function getAccountProfilePageContent(): AccountProfilePage {
   return {
     user: {
