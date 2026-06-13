@@ -1,10 +1,57 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { HotspotDetail } from "@/domains/hotspot";
 import { ExplorerSectionHead } from "@/presentation/features/explorer/components/ExplorerSectionHead";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 
 interface HotspotDetailViewProps {
   detail: HotspotDetail;
+}
+
+function MomentCard({
+  moment,
+  delay,
+}: {
+  moment: HotspotDetail["latestMoments"][number];
+  delay: number;
+}) {
+  const { ref, isVisible } = useScrollReveal<HTMLAnchorElement>();
+
+  return (
+    <Link
+      ref={ref}
+      href="/explorer"
+      className={cn(
+        "group relative overflow-hidden rounded-[8px] block transition-transform duration-500 [cubic-bezier(0.2,0.8,0.2,1)] hover:-translate-y-1 reveal",
+        isVisible && "is-visible",
+      )}
+      style={{ aspectRatio: "4/5", "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
+      <Image
+        src={moment.imageUrl}
+        alt={moment.caption}
+        fill
+        sizes="(max-width: 980px) 50vw, 33vw"
+        className="object-cover transition-transform duration-1000 [cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.04]"
+      />
+      <span
+        className="absolute top-3 left-3 z-10 font-mono text-[10px] tracking-[0.06em] uppercase text-bg-soft rounded-[3px] px-2 py-1 whitespace-nowrap"
+        style={{ background: "rgba(20,19,17,0.34)", backdropFilter: "blur(6px)" }}
+      >
+        {moment.timeAgo}
+      </span>
+      <div
+        className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-[350ms]"
+        style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(20,19,17,0.6) 100%)" }}
+      />
+      <p className="absolute bottom-[14px] left-[14px] right-[14px] z-10 font-serif italic text-[14px] leading-[1.2] text-bg-soft opacity-0 translate-y-[6px] group-hover:opacity-100 group-hover:translate-y-0 transition-[opacity,transform] duration-[350ms]">
+        {moment.caption}
+      </p>
+    </Link>
+  );
 }
 
 const LEVEL_LABELS: Record<HotspotDetail["level"], string> = {
@@ -21,6 +68,10 @@ const LEVEL_DOT_CLASSES: Record<HotspotDetail["level"], string> = {
 
 export function HotspotDetailView({ detail }: HotspotDetailViewProps) {
   const searchHref = `/explorer?location=${encodeURIComponent(`${detail.name}, ${detail.region}`)}`;
+
+  const { ref: descRef, isVisible: descVisible } = useScrollReveal<HTMLElement>();
+  const { ref: activeRef, isVisible: activeVisible } = useScrollReveal<HTMLElement>();
+  const { ref: momentsRef, isVisible: momentsVisible } = useScrollReveal<HTMLElement>();
 
   return (
     <main className="pt-[60px]">
@@ -43,8 +94,8 @@ export function HotspotDetailView({ detail }: HotspotDetailViewProps) {
 
         {/* Hero */}
         <section
-          className="grid gap-14 items-start pt-[26px] pb-[64px] max-[980px]:grid-cols-1 max-[980px]:gap-8"
-          style={{ gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)" }}
+          className="grid gap-14 items-start pt-[26px] pb-[64px] max-[980px]:grid-cols-1 max-[980px]:gap-8 opacity-0"
+          style={{ gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)", animation: "fadeIn 0.8s ease forwards" }}
         >
           <div className="relative rounded-xl overflow-hidden bg-ink" style={{ aspectRatio: "16 / 10" }}>
             <Image
@@ -148,13 +199,19 @@ export function HotspotDetailView({ detail }: HotspotDetailViewProps) {
         </section>
 
         {/* Description */}
-        <section className="max-w-[760px] pb-[60px]">
+        <section
+          ref={descRef}
+          className={cn("max-w-[760px] pb-[60px] reveal", descVisible && "is-visible")}
+        >
           <p className="text-ink-soft text-[16px] leading-[1.7]">{detail.description}</p>
         </section>
 
         {/* Active photographers */}
         {detail.activePhotographers.length > 0 && (
-          <section>
+          <section
+            ref={activeRef}
+            className={cn("reveal", activeVisible && "is-visible")}
+          >
             <ExplorerSectionHead heading="Active" emphasis="photographers" meta="Watching this corner now" />
             <div className="flex flex-wrap gap-4 pb-[60px]">
               {detail.activePhotographers.map((photographer) => (
@@ -173,37 +230,14 @@ export function HotspotDetailView({ detail }: HotspotDetailViewProps) {
         )}
 
         {/* Latest moments */}
-        <section>
+        <section
+          ref={momentsRef}
+          className={cn("reveal", momentsVisible && "is-visible")}
+        >
           <ExplorerSectionHead heading="Latest" emphasis="moments" meta={`From ${detail.name}`} />
           <div className="grid grid-cols-3 gap-[18px] mt-9 pb-[80px] max-[980px]:grid-cols-2 max-[680px]:grid-cols-1">
-            {detail.latestMoments.map((moment) => (
-              <Link
-                key={moment.id}
-                href="/explorer"
-                className="group relative overflow-hidden rounded-[8px] block transition-transform duration-500 [cubic-bezier(0.2,0.8,0.2,1)] hover:-translate-y-1"
-                style={{ aspectRatio: "4/5" }}
-              >
-                <Image
-                  src={moment.imageUrl}
-                  alt={moment.caption}
-                  fill
-                  sizes="(max-width: 980px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-1000 [cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.04]"
-                />
-                <span
-                  className="absolute top-3 left-3 z-10 font-mono text-[10px] tracking-[0.06em] uppercase text-bg-soft rounded-[3px] px-2 py-1 whitespace-nowrap"
-                  style={{ background: "rgba(20,19,17,0.34)", backdropFilter: "blur(6px)" }}
-                >
-                  {moment.timeAgo}
-                </span>
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-[350ms]"
-                  style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(20,19,17,0.6) 100%)" }}
-                />
-                <p className="absolute bottom-[14px] left-[14px] right-[14px] z-10 font-serif italic text-[14px] leading-[1.2] text-bg-soft opacity-0 translate-y-[6px] group-hover:opacity-100 group-hover:translate-y-0 transition-[opacity,transform] duration-[350ms]">
-                  {moment.caption}
-                </p>
-              </Link>
+            {detail.latestMoments.map((moment, i) => (
+              <MomentCard key={moment.id} moment={moment} delay={i * 80} />
             ))}
           </div>
         </section>

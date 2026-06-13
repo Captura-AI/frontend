@@ -89,6 +89,32 @@
   100% { width: 18px; }
 }
 
+/* ─── Scroll reveal ────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible,
+.reveal-left.is-visible,
+.reveal-scale.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 /* ─── Hero text rise animation ─────────────────────────────────── */
 .hero-line-span {
   display: inline-block;
@@ -313,3 +339,23 @@ body {
 .map-pin-marker.active .map-pin-name { color: var(--color-bg-soft); }
 .map-pin-marker.active .map-pin-count { color: rgba(251, 250, 246, 0.65); }
 
+
+/* ─── Reduced motion ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal, .reveal-left, .reveal-scale {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .hero-line-span {
+    transform: translateY(0);
+  }
+}

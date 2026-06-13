@@ -6,6 +6,7 @@ import {
   type OnboardingFormState,
   type OnboardingPhotographerPage,
 } from "@/domains/onboarding-photographer";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import { OnboardingStepper } from "./components/OnboardingStepper";
 import { CompletionScreen } from "./components/CompletionScreen";
 import { ProfileStep } from "./components/steps/ProfileStep";
@@ -38,6 +39,9 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
   const [stepIndex, setStepIndex] = useState(0);
   const [formState, setFormState] = useState<OnboardingFormState>(createInitialOnboardingFormState());
   const [completed, setCompleted] = useState(false);
+
+  const { ref: layoutRef, isVisible: layoutVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: completionRef, isVisible: completionVisible } = useScrollReveal<HTMLDivElement>();
 
   const currentStep = content.steps[stepIndex] ?? content.steps[0];
 
@@ -72,7 +76,10 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
-        <section className={styles.hero}>
+        <section
+          className={`${styles.hero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <span className={styles.eyebrow}>{content.hero.eyebrow}</span>
           <h1>
             {content.hero.titlePrefix}
@@ -82,11 +89,17 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
         </section>
 
         {completed ? (
-          <div className={styles.completionWrap}>
+          <div
+            ref={completionRef}
+            className={`${styles.completionWrap} reveal-scale ${completionVisible ? "is-visible" : ""}`}
+          >
             <CompletionScreen completion={content.completion} />
           </div>
         ) : (
-          <div className={styles.layout}>
+          <div
+            ref={layoutRef}
+            className={`${styles.layout} reveal ${layoutVisible ? "is-visible" : ""}`}
+          >
             <OnboardingStepper currentStepIndex={stepIndex} steps={content.steps} />
 
             <div className={styles.card}>

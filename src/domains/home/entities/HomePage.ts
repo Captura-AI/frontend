@@ -108,12 +108,3 @@ export interface HomePage {
   photographers: HomePhotographersSection;
   cta: HomeCta;
 }
-
-// ─── Legacy (kept for backward compatibility) ─────────────────────────────────
-
-/** @deprecated Use the section-specific types above. */
-export interface HomeFeature {
-  icon: string;
-  title: string;
-  description: string;
-}

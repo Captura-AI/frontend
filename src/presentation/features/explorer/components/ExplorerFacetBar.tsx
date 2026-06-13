@@ -55,7 +55,14 @@ function MoodSlider({ initialPct = 40 }: { initialPct?: number }) {
       <div className="flex items-center gap-[14px]">
         <div
           ref={trackRef}
-          className="flex-1 h-7 relative rounded-full border border-line cursor-pointer"
+          role="slider"
+          tabIndex={0}
+          aria-label="Mood"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pct)}
+          aria-valuetext={moodAt(pct)}
+          className="flex-1 h-7 relative rounded-full border border-line cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           style={{
             background:
               "linear-gradient(90deg, #1C1C22 0%, #3E3545 12%, #C87A5C 30%, #E8B28A 40%, #F5E6C8 54%, #D8D2C4 70%, #C87A5C 82%, #3E3545 92%, #1C1C22 100%)",
@@ -64,6 +71,15 @@ function MoodSlider({ initialPct = 40 }: { initialPct?: number }) {
             dragging.current = true;
             setFromEvent(e.clientX);
             e.stopPropagation();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+              e.preventDefault();
+              setPct((p) => Math.max(2, p - 2));
+            } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+              e.preventDefault();
+              setPct((p) => Math.min(98, p + 2));
+            }
           }}
         >
           <div
@@ -162,8 +178,14 @@ function FacetPopover({
 
   return (
     <div
+      role="dialog"
+      aria-label={`${facet.label} options`}
       className="absolute top-[calc(100%+12px)] left-0 min-w-[320px] bg-bg-soft border border-line rounded-[14px] z-50"
-      style={{ padding: 18, boxShadow: "0 24px 60px -20px rgba(20,19,17,0.18)" }}
+      style={{
+        padding: 18,
+        boxShadow: "0 24px 60px -20px rgba(20,19,17,0.18)",
+        animation: "authModeEnter 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
+      }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Mood slider for time facet */}
@@ -278,6 +300,8 @@ export function ExplorerFacetBar({
                 <div className="relative">
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleFacet(facet.key); }}
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
                     className={`inline-flex items-center gap-2 px-[14px] py-[9px] rounded-full text-[13.5px] transition-[background,color] duration-200 ${
                       isOpen ? "bg-ink text-bg-soft" : "bg-transparent text-ink hover:bg-bg-soft"
                     }`}

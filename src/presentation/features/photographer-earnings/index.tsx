@@ -27,7 +27,10 @@ export function PhotographerEarningsPageView({ content }: PhotographerEarningsPa
       nav={content.nav}
       activeHref="/dashboard/photographer/earnings"
     >
-      <header className={styles.topbar}>
+      <header
+        className={`${styles.topbar} opacity-0`}
+        style={{ animation: "fadeIn 0.6s ease forwards" }}
+      >
         <span className={styles.eyebrow}>Earnings</span>
         <h1>
           Track your <em>payouts</em> and order history.

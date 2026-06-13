@@ -10,6 +10,7 @@ import {
   type SavedSearch,
 } from "@/domains/saved";
 import { AccountNav } from "@/presentation/features/account/components/AccountNav";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import { buildExplorerSearchHref } from "./lib/saved-search-helpers";
 import accountStyles from "@/presentation/features/account/AccountPage.module.css";
 import styles from "./SavedPage.module.css";
@@ -24,6 +25,8 @@ interface AccountSavedSearchesPageViewProps {
 
 export function AccountSavedPageView({ content }: AccountSavedPageViewProps) {
   const [items, setItems] = useState<SavedMoment[]>(content.items);
+  const { ref: savedGridRef, isVisible: savedGridVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: emptyStateRef, isVisible: emptyStateVisible } = useScrollReveal<HTMLDivElement>();
 
   const handleRemove = (id: string) => {
     setItems((current) => current.filter((item) => item.id !== id));
@@ -33,7 +36,10 @@ export function AccountSavedPageView({ content }: AccountSavedPageViewProps) {
     <div className={accountStyles.page}>
       <div className={accountStyles.wrap}>
         <AccountNav />
-        <section className={accountStyles.libraryHero}>
+        <section
+          className={`${accountStyles.libraryHero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <div>
             <span className={accountStyles.eyebrow}>Saved moments</span>
             <h1>
@@ -53,13 +59,20 @@ export function AccountSavedPageView({ content }: AccountSavedPageViewProps) {
         </section>
 
         {items.length > 0 ? (
-          <section className={styles.savedGrid} aria-label="Saved moments">
-            {items.map((item) => (
-              <SavedMomentCard item={item} key={item.id} onRemove={handleRemove} />
+          <section
+            ref={savedGridRef}
+            className={`${styles.savedGrid} reveal ${savedGridVisible ? "is-visible" : ""}`}
+            aria-label="Saved moments"
+          >
+            {items.map((item, i) => (
+              <SavedMomentCard item={item} key={item.id} onRemove={handleRemove} delay={i * 80} />
             ))}
           </section>
         ) : (
-          <div className={accountStyles.emptyState}>
+          <div
+            ref={emptyStateRef}
+            className={`${accountStyles.emptyState} reveal-scale ${emptyStateVisible ? "is-visible" : ""}`}
+          >
             <h2>{content.emptyState.title}</h2>
             <p>{content.emptyState.description}</p>
             <div className={accountStyles.itemActions}>
@@ -76,6 +89,8 @@ export function AccountSavedPageView({ content }: AccountSavedPageViewProps) {
 
 export function AccountSavedSearchesPageView({ content }: AccountSavedSearchesPageViewProps) {
   const [items, setItems] = useState<SavedSearch[]>(content.items);
+  const { ref: searchListRef, isVisible: searchListVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: emptyStateRef, isVisible: emptyStateVisible } = useScrollReveal<HTMLDivElement>();
 
   const handleRemove = (id: string) => {
     setItems((current) => current.filter((item) => item.id !== id));
@@ -85,7 +100,10 @@ export function AccountSavedSearchesPageView({ content }: AccountSavedSearchesPa
     <div className={accountStyles.page}>
       <div className={accountStyles.wrap}>
         <AccountNav />
-        <section className={accountStyles.libraryHero}>
+        <section
+          className={`${accountStyles.libraryHero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <div>
             <span className={accountStyles.eyebrow}>Saved searches</span>
             <h1>
@@ -96,13 +114,20 @@ export function AccountSavedSearchesPageView({ content }: AccountSavedSearchesPa
         </section>
 
         {items.length > 0 ? (
-          <section className={styles.searchList} aria-label="Saved searches">
-            {items.map((item) => (
-              <SavedSearchItem item={item} key={item.id} onRemove={handleRemove} />
+          <section
+            ref={searchListRef}
+            className={`${styles.searchList} reveal ${searchListVisible ? "is-visible" : ""}`}
+            aria-label="Saved searches"
+          >
+            {items.map((item, i) => (
+              <SavedSearchItem item={item} key={item.id} onRemove={handleRemove} delay={i * 80} />
             ))}
           </section>
         ) : (
-          <div className={accountStyles.emptyState}>
+          <div
+            ref={emptyStateRef}
+            className={`${accountStyles.emptyState} reveal-scale ${emptyStateVisible ? "is-visible" : ""}`}
+          >
             <h2>{content.emptyState.title}</h2>
             <p>{content.emptyState.description}</p>
             <div className={accountStyles.itemActions}>
@@ -120,17 +145,25 @@ export function AccountSavedSearchesPageView({ content }: AccountSavedSearchesPa
 function SavedMomentCard({
   item,
   onRemove,
+  delay,
 }: {
   item: SavedMoment;
   onRemove: (id: string) => void;
+  delay: number;
 }) {
+  const { ref, isVisible } = useScrollReveal<HTMLElement>();
+
   return (
-    <article className={styles.savedCard}>
+    <article
+      ref={ref}
+      className={`${styles.savedCard} reveal ${isVisible ? "is-visible" : ""}`}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
       <div className={styles.savedThumb}>
         <Link href={item.momentHref} className={styles.thumbLink} aria-label={item.title}>
           <Image
             src={item.imageUrl}
-            alt=""
+            alt={item.title}
             fill
             sizes="(max-width: 680px) 100vw, (max-width: 980px) 50vw, 33vw"
             className={styles.image}
@@ -178,12 +211,20 @@ function SavedMomentCard({
 function SavedSearchItem({
   item,
   onRemove,
+  delay,
 }: {
   item: SavedSearch;
   onRemove: (id: string) => void;
+  delay: number;
 }) {
+  const { ref, isVisible } = useScrollReveal<HTMLElement>();
+
   return (
-    <article className={styles.searchItem}>
+    <article
+      ref={ref}
+      className={`${styles.searchItem} reveal ${isVisible ? "is-visible" : ""}`}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
       <div>
         <h2>{item.label}</h2>
         <p className={styles.searchSummary}>{item.summary}</p>

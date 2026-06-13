@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { type CheckoutPage, type PaymentTabId } from "@/domains/checkout";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import styles from "./CheckoutPage.module.css";
 
 interface CheckoutPageViewProps {
@@ -39,6 +40,10 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
   const [discount, setDiscount] = useState(0);
   const [qrSeconds, setQrSeconds] = useState(5 * 60 - 2);
 
+  const { ref: paymentRef, isVisible: paymentVisible } = useScrollReveal<HTMLElement>();
+  const { ref: almostRef, isVisible: almostVisible } = useScrollReveal<HTMLElement>();
+  const { ref: summaryRef, isVisible: summaryVisible } = useScrollReveal<HTMLElement>();
+
   useEffect(() => {
     const interval = window.setInterval(() => {
       setQrSeconds((seconds) => (seconds > 0 ? seconds - 1 : 5 * 60));
@@ -70,7 +75,10 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
 
   return (
     <div className={styles.page}>
-      <nav className={styles.top}>
+      <nav
+        className={`${styles.top} opacity-0`}
+        style={{ animation: "fadeIn 0.6s ease forwards" }}
+      >
         <Link href="/" className={styles.brand}>
           <span />
           Captura
@@ -89,14 +97,20 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
       </nav>
 
       <div className={styles.wrap}>
-        <header className={styles.pageHead}>
+        <header
+          className={`${styles.pageHead} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease 0.1s forwards" }}
+        >
           <h1>{content.header.title} <em>{content.header.emphasis}</em>.</h1>
           <span className={styles.tag}><span />{content.header.status}</span>
         </header>
 
         <div className={styles.layout}>
           <div>
-            <section className={styles.section}>
+            <section
+              className={`${styles.section} opacity-0`}
+              style={{ animation: "fadeIn 0.8s ease 0.2s forwards" }}
+            >
               <SectionTitle title="Contact" number="01 / 03" />
               <div className={styles.fieldGrid}>
                 <div className={`${styles.field} ${styles.full}`}>
@@ -124,15 +138,22 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
               </div>
             </section>
 
-            <section className={styles.section}>
+            <section
+              ref={paymentRef}
+              className={`${styles.section} reveal ${paymentVisible ? "is-visible" : ""}`}
+            >
               <SectionTitle title="Payment" emphasis="method" number="02 / 03" />
-              <div className={styles.payTabs} role="tablist">
+              <div className={styles.payTabs} role="tablist" aria-label="Payment method group">
                 {content.payment.tabs.map((tab) => (
                   <button
                     className={activeTab === tab.id ? styles.payTabActive : ""}
+                    id={`pay-tab-${tab.id}`}
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`pay-panel-${tab.id}`}
                   >
                     {tab.id === "local" ? "ID " : ""}{tab.label}
                   </button>
@@ -140,13 +161,23 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
               </div>
 
               {content.payment.tabs.map((tab) => (
-                <div className={activeTab === tab.id ? styles.payList : styles.hidden} key={tab.id}>
+                <div
+                  className={activeTab === tab.id ? styles.payList : styles.hidden}
+                  key={tab.id}
+                  id={`pay-panel-${tab.id}`}
+                  role="tabpanel"
+                  aria-labelledby={`pay-tab-${tab.id}`}
+                  aria-label={`${tab.label} payment methods`}
+                  hidden={activeTab !== tab.id}
+                >
                   {tab.methods.map((method) => (
                     <button
                       className={`${styles.pay} ${activeMethods[tab.id] === method.id ? styles.payActive : ""}`}
                       key={method.id}
                       onClick={() => setActiveMethods((current) => ({ ...current, [tab.id]: method.id }))}
                       type="button"
+                      role="radio"
+                      aria-checked={activeMethods[tab.id] === method.id}
                     >
                       <span className={styles.radio} />
                       <span className={`${styles.logo} ${method.darkLogo ? styles.logoDark : ""}`}>{method.logo}</span>
@@ -191,7 +222,10 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
               )}
             </section>
 
-            <section className={styles.section}>
+            <section
+              ref={almostRef}
+              className={`${styles.section} reveal ${almostVisible ? "is-visible" : ""}`}
+            >
               <SectionTitle title="Almost there" number="03 / 03" />
               <div className={styles.review}>
                 <CheckIcon />
@@ -203,13 +237,16 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
             </section>
           </div>
 
-          <aside className={styles.summary}>
+          <aside
+            ref={summaryRef}
+            className={`${styles.summary} reveal-scale ${summaryVisible ? "is-visible" : ""}`}
+          >
             <div className={styles.eyebrow}>{content.summary.eyebrow}</div>
             <div className={styles.sumItem}>
               <div className={styles.sumThumb}>
                 <Image
                   src={content.summary.imageUrl}
-                  alt=""
+                  alt={`${content.summary.title} ${content.summary.emphasis}`}
                   fill
                   sizes="64px"
                   className={styles.image}
@@ -307,7 +344,7 @@ function CardForm() {
 function Line({ label, value, info, className }: { label: string; value: string; info?: boolean; className?: string }) {
   return (
     <div className={`${styles.line} ${className ?? ""}`}>
-      <span>{label}{info && <i title="Configurable fee">i</i>}</span>
+      <span>{label}{info && <i title="Configurable fee" role="img" aria-label="Configurable fee">i</i>}</span>
       <strong>{value}</strong>
     </div>
   );

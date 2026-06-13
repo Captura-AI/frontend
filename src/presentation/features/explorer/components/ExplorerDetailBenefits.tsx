@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { type BenefitItem, type BenefitIconId } from "@/domains/explorer";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 import { ExplorerSectionHead } from "./ExplorerSectionHead";
 
 // ─── Icon lookup ──────────────────────────────────────────────────────────────
@@ -41,24 +45,36 @@ interface ExplorerDetailBenefitsProps {
   benefits: BenefitItem[];
 }
 
+function BenefitCard({ benefit, delay }: { benefit: BenefitItem; delay: number }) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "p-[22px] border border-line rounded-[12px] bg-bg-soft transition-[transform,border-color] duration-[350ms] [cubic-bezier(0.2,0.8,0.2,1)] hover:-translate-y-[3px] hover:border-ink-soft reveal",
+        isVisible && "is-visible",
+      )}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
+      <BenefitIcon id={benefit.iconId} />
+      <p className="font-serif text-[21px] tracking-[-0.01em] leading-[1.15]">
+        {benefit.titlePrefix}
+        <em className="italic text-accent">{benefit.titleEmphasis}</em>
+      </p>
+      <p className="mt-2 text-[13.5px] text-ink-soft leading-[1.5]">{benefit.description}</p>
+    </div>
+  );
+}
+
 export function ExplorerDetailBenefits({ benefits }: ExplorerDetailBenefitsProps) {
   return (
     <section>
       <ExplorerSectionHead heading="What you receive" meta="Every license" />
 
-      <div className="grid grid-cols-4 gap-[18px]">
-        {benefits.map((b) => (
-          <div
-            key={b.iconId}
-            className="p-[22px] border border-line rounded-[12px] bg-bg-soft transition-[transform,border-color] duration-[350ms] [cubic-bezier(0.2,0.8,0.2,1)] hover:-translate-y-[3px] hover:border-ink-soft"
-          >
-            <BenefitIcon id={b.iconId} />
-            <p className="font-serif text-[21px] tracking-[-0.01em] leading-[1.15]">
-              {b.titlePrefix}
-              <em className="italic text-accent">{b.titleEmphasis}</em>
-            </p>
-            <p className="mt-2 text-[13.5px] text-ink-soft leading-[1.5]">{b.description}</p>
-          </div>
+      <div className="grid grid-cols-2 gap-[18px] md:grid-cols-4">
+        {benefits.map((b, i) => (
+          <BenefitCard key={b.iconId} benefit={b} delay={i * 80} />
         ))}
       </div>
 

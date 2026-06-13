@@ -1,4 +1,8 @@
+"use client";
+
 import { type DetectedItem } from "@/domains/explorer";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 import { ExplorerSectionHead } from "./ExplorerSectionHead";
 
 interface ExplorerDetailStoryProps {
@@ -7,11 +11,19 @@ interface ExplorerDetailStoryProps {
 }
 
 export function ExplorerDetailStory({ paragraphs, detectedItems }: ExplorerDetailStoryProps) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <section>
       <ExplorerSectionHead heading="The story" emphasis="behind the frame" meta="By the photographer" />
 
-      <div className="grid gap-15 mt-7" style={{ gridTemplateColumns: "1fr 1.4fr" }}>
+      <div
+        ref={ref}
+        className={cn(
+          "grid grid-cols-1 gap-15 mt-7 md:grid-cols-[1fr_1.4fr] reveal",
+          isVisible && "is-visible",
+        )}
+      >
         {/* Story text */}
         <div>
           {paragraphs.map((p, i) => (

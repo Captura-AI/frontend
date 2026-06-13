@@ -2,22 +2,22 @@ import Link from "next/link";
 
 const FOOTER_LINKS = {
   product: [
-    { label: "Search", href: "#search" },
-    { label: "Saved moments", href: "#" },
+    { label: "Search", href: "/explorer" },
+    { label: "Saved moments", href: "/account/saved" },
     { label: "Request removal", href: "/privacy/removal" },
-    { label: "Pricing", href: "#" },
+    { label: "Pricing", href: "/licenses" },
   ],
   photographers: [
     { label: "Join the roster", href: "/onboarding/photographer" },
-    { label: "Upload guide", href: "#" },
+    { label: "Upload guide", href: "/studio" },
     { label: "Licensing", href: "/licenses" },
-    { label: "Journal", href: "#" },
+    { label: "Hotspot map", href: "/hotspot" },
   ],
   company: [
-    { label: "About", href: "#" },
-    { label: "Ethics & privacy", href: "#" },
+    { label: "About", href: "/support" },
+    { label: "Ethics & privacy", href: "/privacy/removal" },
     { label: "Contact", href: "/support" },
-    { label: "Press", href: "#" },
+    { label: "Press", href: "/support" },
   ],
 } as const;
 

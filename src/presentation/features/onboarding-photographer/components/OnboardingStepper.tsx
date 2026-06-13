@@ -15,7 +15,14 @@ export function OnboardingStepper({ steps, currentStepIndex }: OnboardingStepper
         <span className={styles.stepperProgressLabel}>
           Step {currentStepIndex + 1} of {steps.length}
         </span>
-        <div className={styles.stepperProgressTrack}>
+        <div
+          className={styles.stepperProgressTrack}
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Onboarding completion"
+        >
           <div className={styles.stepperProgressFill} style={{ width: `${progress}%` }} />
         </div>
       </div>

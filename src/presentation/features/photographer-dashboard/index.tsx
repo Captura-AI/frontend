@@ -33,7 +33,10 @@ export function PhotographerDashboardPageView({ content }: PhotographerDashboard
       nav={content.nav}
       activeHref="/dashboard/photographer"
     >
-        <header className={styles.topbar}>
+        <header
+          className={`${styles.topbar} opacity-0`}
+          style={{ animation: "fadeIn 0.6s ease forwards" }}
+        >
           <div>
             <span className={styles.eyebrow}>Photographer dashboard</span>
             <h1>
@@ -76,7 +79,14 @@ export function PhotographerDashboardPageView({ content }: PhotographerDashboard
               </div>
               <Link href={content.profileCompletion.actionHref}>Tune profile</Link>
             </div>
-            <div className={styles.progressTrack} aria-label={`${content.profileCompletion.percentage}% profile complete`}>
+            <div
+              className={styles.progressTrack}
+              role="progressbar"
+              aria-label="Profile completion"
+              aria-valuenow={content.profileCompletion.percentage}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <span style={{ width: `${content.profileCompletion.percentage}%` }} />
             </div>
             <p>{content.profileCompletion.summary}</p>
@@ -151,7 +161,14 @@ export function PhotographerDashboardPageView({ content }: PhotographerDashboard
                     </div>
                     <small>{item.frames}</small>
                   </div>
-                  <div className={styles.progressTrack} aria-label={`${item.batchName} ${item.progress}% processed`}>
+                  <div
+                    className={styles.progressTrack}
+                    role="progressbar"
+                    aria-label={`${item.batchName} processing progress`}
+                    aria-valuenow={item.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
                     <span style={{ width: `${item.progress}%` }} />
                   </div>
                   <p>{item.helper}</p>

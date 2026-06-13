@@ -12,7 +12,10 @@ const STAT_ITEMS = (stats: StudioHeaderStats) => [
 
 export default function StudioPageHeader({ stats }: Props) {
   return (
-    <div className="px-7 pt-9.5 pb-4.5 flex items-end justify-between gap-6 flex-wrap">
+    <div
+      className="px-7 pt-9.5 pb-4.5 flex items-end justify-between gap-6 flex-wrap opacity-0"
+      style={{ animation: "fadeIn 0.6s ease forwards" }}
+    >
       <div className="min-w-0 flex-1">
         <h1
           className="font-serif font-normal text-[40px] leading-[1.08] tracking-[-0.02em] max-w-160 text-pretty"

@@ -23,7 +23,10 @@ export function ExplorerDetailSidebar({
   price,
 }: ExplorerDetailSidebarProps) {
   return (
-    <aside className="sticky top-22.5 flex flex-col gap-7">
+    <aside
+      className="lg:sticky lg:top-22.5 flex flex-col gap-7 opacity-0"
+      style={{ animation: "fadeIn 0.8s ease 0.2s forwards" }}
+    >
       {/* Photographer row */}
       <div className="flex items-center gap-3.5 pb-6 border-b border-line">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-bg-soft border border-line shrink-0 relative">

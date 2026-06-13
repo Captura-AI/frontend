@@ -114,7 +114,10 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
       nav={content.nav}
       activeHref="/dashboard/photographer/moments"
     >
-      <header className={styles.topbar}>
+      <header
+        className={`${styles.topbar} opacity-0`}
+        style={{ animation: "fadeIn 0.6s ease forwards" }}
+      >
         <div>
           <span className={styles.eyebrow}>Moment manager</span>
           <h1>

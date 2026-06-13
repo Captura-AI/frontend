@@ -4,18 +4,34 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type ExplorerMoment, type ExplorerResultsBlock } from "@/domains/explorer";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 import { type ViewMode } from "../store/useExplorerStore";
 
 // ─── Single result card ───────────────────────────────────────────────────────
 
-function MomentCard({ moment }: { moment: ExplorerMoment }) {
+function MomentCard({
+  moment,
+  featured,
+  revealDelay,
+}: {
+  moment: ExplorerMoment;
+  featured?: boolean;
+  revealDelay: number;
+}) {
   const [isSaved, setIsSaved] = useState(false);
+  const { ref, isVisible } = useScrollReveal<HTMLAnchorElement>();
 
   return (
     <Link
+      ref={ref}
       href={`/explorer/${moment.id}`}
-      className="group relative block bg-bg-soft rounded-[8px] overflow-hidden cursor-pointer transition-transform duration-500 [cubic-bezier(0.2,0.8,0.2,1)] hover:-translate-y-1"
-      style={{ aspectRatio: "4/5" }}
+      className={cn(
+        "group relative block bg-bg-soft rounded-[8px] overflow-hidden cursor-pointer transition-transform duration-500 [cubic-bezier(0.2,0.8,0.2,1)] hover:-translate-y-1 reveal",
+        featured && "md:col-span-2",
+        isVisible && "is-visible",
+      )}
+      style={{ aspectRatio: featured ? "16/10" : "4/5", "--reveal-delay": `${revealDelay}ms` } as React.CSSProperties}
     >
       {/* Photo */}
       <Image
@@ -243,6 +259,7 @@ export function ExplorerResultsGrid({ data, viewMode, onViewChange }: ExplorerRe
               <button
                 key={mode}
                 onClick={() => onViewChange(mode)}
+                aria-pressed={viewMode === mode}
                 className={`capitalize transition-colors duration-200 ${viewMode === mode ? "text-ink" : "hover:text-ink"}`}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -251,26 +268,42 @@ export function ExplorerResultsGrid({ data, viewMode, onViewChange }: ExplorerRe
           </div>
         </div>
 
-        {viewMode === "grid" && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {visibleMoments.map((m) => (
-              <MomentCard key={m.id} moment={m} />
-            ))}
+        {data.moments.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-line-soft bg-bg-soft py-[100px] text-center">
+            <p className="font-serif text-[28px] leading-none text-ink">No moments match yet.</p>
+            <p className="max-w-[360px] text-[14px] text-ink-soft">
+              Try widening your search — adjust the time, plate, or vehicle filters above.
+            </p>
           </div>
+        ) : (
+          <>
+            {viewMode === "grid" && (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {visibleMoments.map((m, i) => (
+                  <MomentCard
+                    key={m.id}
+                    moment={m}
+                    featured={i % 5 === 0}
+                    revealDelay={(i % 6) * 80}
+                  />
+                ))}
+              </div>
+            )}
+
+            {viewMode === "map" && <ExplorerMapView moments={visibleMoments} />}
+
+            {viewMode === "timeline" && <ExplorerTimelineView moments={visibleMoments} />}
+
+            <div ref={sentinelRef} className="h-10" />
+            <div className="mt-[42px] flex justify-center">
+              <p className="rounded-full border border-line bg-bg-soft px-5 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-ink-soft">
+                {visible < data.moments.length
+                  ? `${data.loadMoreLabel} · loading quietly`
+                  : "All quiet matches loaded"}
+              </p>
+            </div>
+          </>
         )}
-
-        {viewMode === "map" && <ExplorerMapView moments={visibleMoments} />}
-
-        {viewMode === "timeline" && <ExplorerTimelineView moments={visibleMoments} />}
-
-        <div ref={sentinelRef} className="h-10" />
-        <div className="mt-[42px] flex justify-center">
-          <p className="rounded-full border border-line bg-bg-soft px-5 py-2.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-ink-soft">
-            {visible < data.moments.length
-              ? `${data.loadMoreLabel} · loading quietly`
-              : "All quiet matches loaded"}
-          </p>
-        </div>
       </div>
     </section>
   );

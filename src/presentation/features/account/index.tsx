@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -7,6 +9,7 @@ import {
   type LibraryItem,
 } from "@/domains/account";
 import { type CheckoutResultPage } from "@/domains/checkout";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import { AccountNav } from "./components/AccountNav";
 import styles from "./AccountPage.module.css";
 
@@ -31,11 +34,19 @@ const downloadStatusLabels: Record<DownloadStatus, string> = {
 };
 
 export function AccountProfilePageView({ content }: AccountProfilePageViewProps) {
+  const { ref: preferencesRef, isVisible: preferencesVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: shortcutsRef, isVisible: shortcutsVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: privacyRef, isVisible: privacyVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: linkedRef, isVisible: linkedVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
         <AccountNav />
-        <section className={styles.hero}>
+        <section
+          className={`${styles.hero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <div>
             <span className={styles.eyebrow}>Account profile</span>
             <h1>
@@ -46,7 +57,10 @@ export function AccountProfilePageView({ content }: AccountProfilePageViewProps)
             </p>
           </div>
 
-          <aside className={styles.identityCard}>
+          <aside
+            className={`${styles.identityCard} opacity-0`}
+            style={{ animation: "fadeIn 0.8s ease 0.15s forwards" }}
+          >
             <div className={styles.avatar}>{content.user.avatarInitials}</div>
             <h2>{content.user.name}</h2>
             <div className={styles.identityMeta}>
@@ -60,7 +74,10 @@ export function AccountProfilePageView({ content }: AccountProfilePageViewProps)
         </section>
 
         <div className={styles.grid}>
-          <div className={styles.panel}>
+          <div
+            ref={preferencesRef}
+            className={`${styles.panel} reveal ${preferencesVisible ? "is-visible" : ""}`}
+          >
             <SectionTitle title="Preferences" meta="Search defaults" />
             <div className={styles.preferenceList}>
               {content.preferences.map((preference) => (
@@ -75,7 +92,11 @@ export function AccountProfilePageView({ content }: AccountProfilePageViewProps)
             </div>
           </div>
 
-          <div className={styles.panel}>
+          <div
+            ref={shortcutsRef}
+            className={`${styles.panel} reveal ${shortcutsVisible ? "is-visible" : ""}`}
+            style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
+          >
             <SectionTitle title="Shortcuts" meta="Account routes" />
             <div className={styles.shortcutList}>
               {content.shortcuts.map((shortcut) => (
@@ -87,12 +108,21 @@ export function AccountProfilePageView({ content }: AccountProfilePageViewProps)
             </div>
           </div>
 
-          <div className={styles.panel}>
+          <div
+            ref={privacyRef}
+            className={`${styles.panel} reveal ${privacyVisible ? "is-visible" : ""}`}
+            style={{ "--reveal-delay": "160ms" } as React.CSSProperties}
+          >
             <SectionTitle title="Privacy" emphasis="settings" meta="Sensitive metadata" />
             <div className={styles.privacyList}>
               {content.privacy.map((item) => (
                 <div className={styles.privacyRow} key={item.label}>
-                  <span className={`${styles.toggle} ${item.enabled ? styles.toggleOn : ""}`} aria-hidden="true" />
+                  <span
+                    className={`${styles.toggle} ${item.enabled ? styles.toggleOn : ""}`}
+                    role="switch"
+                    aria-checked={item.enabled}
+                    aria-label={item.label}
+                  />
                   <div>
                     <strong>{item.label}</strong>
                     <p>{item.description}</p>
@@ -102,7 +132,11 @@ export function AccountProfilePageView({ content }: AccountProfilePageViewProps)
             </div>
           </div>
 
-          <div className={styles.panel}>
+          <div
+            ref={linkedRef}
+            className={`${styles.panel} reveal ${linkedVisible ? "is-visible" : ""}`}
+            style={{ "--reveal-delay": "240ms" } as React.CSSProperties}
+          >
             <SectionTitle title="Linked accounts" meta="Sign-in and alerts" />
             <div className={styles.linkedList}>
               {content.linkedAccounts.map((account) => (
@@ -132,11 +166,17 @@ export function AccountProfilePageView({ content }: AccountProfilePageViewProps)
 }
 
 export function AccountLibraryPageView({ content }: AccountLibraryPageViewProps) {
+  const { ref: libraryListRef, isVisible: libraryListVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: emptyStateRef, isVisible: emptyStateVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
         <AccountNav />
-        <section className={styles.libraryHero}>
+        <section
+          className={`${styles.libraryHero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <div>
             <span className={styles.eyebrow}>Purchase library</span>
             <h1>
@@ -156,11 +196,20 @@ export function AccountLibraryPageView({ content }: AccountLibraryPageViewProps)
         </section>
 
         {content.items.length > 0 ? (
-          <section className={styles.libraryList} aria-label="Purchased moments">
-            {content.items.map((item) => <LibraryItemCard item={item} key={item.id} />)}
+          <section
+            ref={libraryListRef}
+            className={`${styles.libraryList} reveal ${libraryListVisible ? "is-visible" : ""}`}
+            aria-label="Purchased moments"
+          >
+            {content.items.map((item, i) => (
+              <LibraryItemCard item={item} key={item.id} delay={i * 80} />
+            ))}
           </section>
         ) : (
-          <div className={styles.emptyState}>
+          <div
+            ref={emptyStateRef}
+            className={`${styles.emptyState} reveal-scale ${emptyStateVisible ? "is-visible" : ""}`}
+          >
             <h2>{content.emptyState.title}</h2>
             <p>{content.emptyState.description}</p>
             <div className={styles.itemActions}>
@@ -177,11 +226,16 @@ export function AccountLibraryPageView({ content }: AccountLibraryPageViewProps)
 
 export function CheckoutResultPageView({ content }: CheckoutResultPageViewProps) {
   const state = content.states[content.status];
+  const { ref: nextStepsRef, isVisible: nextStepsVisible } = useScrollReveal<HTMLElement>();
+  const { ref: supportRef, isVisible: supportVisible } = useScrollReveal<HTMLElement>();
 
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
-        <section className={styles.resultHero}>
+        <section
+          className={`${styles.resultHero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <div>
             <span className={styles.eyebrow}>{state.eyebrow}</span>
             <h1>
@@ -198,11 +252,14 @@ export function CheckoutResultPageView({ content }: CheckoutResultPageViewProps)
             </div>
           </div>
 
-          <aside className={styles.orderCard}>
+          <aside
+            className={`${styles.orderCard} opacity-0`}
+            style={{ animation: "fadeIn 0.8s ease 0.15s forwards" }}
+          >
             <div className={styles.orderThumb}>
               <Image
                 src={content.order.imageUrl}
-                alt=""
+                alt={content.order.title}
                 fill
                 sizes="(max-width: 980px) 100vw, 430px"
                 className={styles.image}
@@ -225,7 +282,10 @@ export function CheckoutResultPageView({ content }: CheckoutResultPageViewProps)
         </section>
 
         <div className={styles.confirmationGrid}>
-          <section className={styles.panel}>
+          <section
+            ref={nextStepsRef}
+            className={`${styles.panel} reveal ${nextStepsVisible ? "is-visible" : ""}`}
+          >
             <SectionTitle title="Next" emphasis="steps" meta="Order handoff" />
             <div className={styles.nextSteps}>
               {content.nextSteps.map((step) => (
@@ -237,7 +297,11 @@ export function CheckoutResultPageView({ content }: CheckoutResultPageViewProps)
             </div>
           </section>
 
-          <section className={styles.panel}>
+          <section
+            ref={supportRef}
+            className={`${styles.panel} reveal ${supportVisible ? "is-visible" : ""}`}
+            style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
+          >
             <SectionTitle title="Trust" emphasis="support" meta="Not a dead end" />
             <div className={styles.supportBox}>
               <strong>{content.support.label}</strong>
@@ -258,13 +322,19 @@ export function CheckoutResultPageView({ content }: CheckoutResultPageViewProps)
   );
 }
 
-function LibraryItemCard({ item }: { item: LibraryItem }) {
+function LibraryItemCard({ item, delay }: { item: LibraryItem; delay: number }) {
+  const { ref, isVisible } = useScrollReveal<HTMLElement>();
+
   return (
-    <article className={styles.libraryItem}>
+    <article
+      ref={ref}
+      className={`${styles.libraryItem} reveal ${isVisible ? "is-visible" : ""}`}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
       <Link className={styles.thumb} href={item.momentHref}>
         <Image
           src={item.imageUrl}
-          alt=""
+          alt={item.title}
           fill
           sizes="(max-width: 680px) 100vw, 168px"
           className={styles.image}

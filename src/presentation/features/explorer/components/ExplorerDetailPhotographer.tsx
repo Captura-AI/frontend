@@ -1,5 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import { type DetailPhotographerBlock } from "@/domains/explorer";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 import { ExplorerSectionHead } from "./ExplorerSectionHead";
 
 interface ExplorerDetailPhotographerProps {
@@ -7,6 +11,8 @@ interface ExplorerDetailPhotographerProps {
 }
 
 export function ExplorerDetailPhotographer({ block }: ExplorerDetailPhotographerProps) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <section>
       <ExplorerSectionHead
@@ -16,8 +22,11 @@ export function ExplorerDetailPhotographer({ block }: ExplorerDetailPhotographer
       />
 
       <div
-        className="grid gap-12 p-8 border border-line rounded-[14px] bg-bg-soft items-center mt-[40px]"
-        style={{ gridTemplateColumns: "1fr 1.4fr" }}
+        ref={ref}
+        className={cn(
+          "grid grid-cols-1 gap-12 p-8 border border-line rounded-[14px] bg-bg-soft items-center mt-[40px] md:grid-cols-[1fr_1.4fr] reveal-scale",
+          isVisible && "is-visible",
+        )}
       >
         {/* Portrait */}
         <div className="rounded-[10px] overflow-hidden bg-bg relative" style={{ aspectRatio: "4/5" }}>

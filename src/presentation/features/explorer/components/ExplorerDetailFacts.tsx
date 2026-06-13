@@ -1,21 +1,23 @@
+"use client";
+
 import { type DetailFact } from "@/domains/explorer";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 
 interface ExplorerDetailFactsProps {
   facts: DetailFact[];
 }
 
 export function ExplorerDetailFacts({ facts }: ExplorerDetailFactsProps) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <div
-      className="grid border border-line rounded-xl overflow-hidden bg-bg-soft"
-      style={{ gridTemplateColumns: `repeat(${facts.length}, 1fr)` }}
+      ref={ref}
+      className={cn("grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 reveal", isVisible && "is-visible")}
     >
-      {facts.map((fact, i) => (
-        <div
-          key={fact.key}
-          className="p-5.5"
-          style={{ borderRight: i < facts.length - 1 ? "1px solid var(--color-line-soft)" : "none" }}
-        >
+      {facts.map((fact) => (
+        <div key={fact.key} className="p-5.5 border border-line rounded-xl bg-bg-soft">
           <div className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-ink-soft mb-2.5">
             {fact.key}
           </div>

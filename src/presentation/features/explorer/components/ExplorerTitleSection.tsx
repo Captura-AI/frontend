@@ -10,7 +10,7 @@ export function ExplorerTitleSection({ data }: ExplorerTitleSectionProps) {
       <div className="max-w-[1280px] mx-auto px-10">
         {/* 2-col grid: 1.4fr 1fr aligned to bottom */}
         <div className="grid gap-[80px] items-end" style={{ gridTemplateColumns: "1.4fr 1fr" }}>
-          <div>
+          <div className="opacity-0" style={{ animation: "fadeIn 0.8s ease 0.05s forwards" }}>
             <span className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.1em] uppercase text-ink-soft before:content-[''] before:w-[18px] before:h-px before:bg-ink-soft">
               {data.eyebrow}
             </span>
@@ -23,13 +23,19 @@ export function ExplorerTitleSection({ data }: ExplorerTitleSectionProps) {
               {data.headlinePart2}
             </h1>
           </div>
-          <p className="text-[16px] text-ink-soft max-w-[380px] leading-[1.55]">
+          <p
+            className="text-[16px] text-ink-soft max-w-[380px] leading-[1.55] opacity-0"
+            style={{ animation: "fadeIn 0.8s ease 0.25s forwards" }}
+          >
             {data.description}
           </p>
         </div>
 
         {/* Stats foot */}
-        <div className="mt-[60px] pt-6 border-t border-line flex items-center justify-between font-mono text-[11px] tracking-[0.08em] uppercase text-ink-soft">
+        <div
+          className="mt-[60px] pt-6 border-t border-line flex items-center justify-between font-mono text-[11px] tracking-[0.08em] uppercase text-ink-soft opacity-0"
+          style={{ animation: "fadeIn 0.8s ease 0.4s forwards" }}
+        >
           <span>
             {data.totalMoments} moments · {data.totalCities} cities · updated {data.lastUpdated}
           </span>

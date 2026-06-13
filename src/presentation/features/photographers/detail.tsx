@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -8,6 +10,7 @@ import {
   type PhotographerPortfolioItem,
   type PhotographerReview,
 } from "@/domains/photographers";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import styles from "./PhotographerDetailPage.module.css";
 
 interface PhotographerDetailPageViewProps {
@@ -18,9 +21,20 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
   const portfolioItems = detail.portfolio.slice(0, 5);
   const hasMorePortfolioItems = detail.portfolio.length > portfolioItems.length;
 
+  const { ref: statsRef, isVisible: statsVisible } = useScrollReveal<HTMLElement>();
+  const { ref: storyRef, isVisible: storyVisible } = useScrollReveal<HTMLElement>();
+  const { ref: portfolioRef, isVisible: portfolioVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: hotspotsRef, isVisible: hotspotsVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: packagesRef, isVisible: packagesVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: reviewsRef, isVisible: reviewsVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: latestRef, isVisible: latestVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
+      <section
+        className={`${styles.hero} opacity-0`}
+        style={{ animation: "fadeIn 0.8s ease forwards" }}
+      >
         <div className={styles.heroCopy}>
           <Link className={styles.backLink} href="/photographers">
             Photographers
@@ -41,7 +55,10 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
           </div>
         </div>
 
-        <aside className={styles.heroPanel}>
+        <aside
+          className={`${styles.heroPanel} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease 0.2s forwards" }}
+        >
           <div className={styles.heroImage}>
             <Image
               src={detail.heroImageUrl}
@@ -74,7 +91,11 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
         </aside>
       </section>
 
-      <section className={styles.statsBand} aria-label="Photographer stats">
+      <section
+        ref={statsRef}
+        className={`${styles.statsBand} reveal ${statsVisible ? "is-visible" : ""}`}
+        aria-label="Photographer stats"
+      >
         {detail.stats.map((stat) => (
           <div className={styles.stat} key={stat.label}>
             <strong>{stat.emphasized ? <em>{stat.value}</em> : stat.value}</strong>
@@ -83,7 +104,10 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
         ))}
       </section>
 
-      <section className={styles.storySection}>
+      <section
+        ref={storyRef}
+        className={`${styles.storySection} reveal ${storyVisible ? "is-visible" : ""}`}
+      >
         <div>
           <span className={styles.eyebrow}>Specialties</span>
           <div className={styles.specialties}>
@@ -101,18 +125,30 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
           title="A street portfolio, not a sales grid."
           text="Curated frames from the routes this photographer knows best."
         />
-        <div className={`${styles.portfolioGrid} ${getPortfolioGridClass(portfolioItems.length)}`}>
-          {portfolioItems.map((item) => (
-            <PortfolioCard item={item} key={item.id} />
-          ))}
-        </div>
-        {hasMorePortfolioItems ? (
-          <div className={styles.portfolioMore}>
-            <Link className={styles.secondaryButton} href={detail.searchHref}>
-              View more moments
-            </Link>
-          </div>
-        ) : null}
+        {portfolioItems.length === 0 ? (
+          <EmptyState
+            title="No portfolio frames yet."
+            text="This photographer hasn't published any portfolio moments yet — check back soon."
+          />
+        ) : (
+          <>
+            <div
+              ref={portfolioRef}
+              className={`${styles.portfolioGrid} ${getPortfolioGridClass(portfolioItems.length)} reveal ${portfolioVisible ? "is-visible" : ""}`}
+            >
+              {portfolioItems.map((item) => (
+                <PortfolioCard item={item} key={item.id} />
+              ))}
+            </div>
+            {hasMorePortfolioItems ? (
+              <div className={styles.portfolioMore}>
+                <Link className={styles.secondaryButton} href={detail.searchHref}>
+                  View more moments
+                </Link>
+              </div>
+            ) : null}
+          </>
+        )}
       </section>
 
       <section className={styles.twoColumnSection}>
@@ -122,11 +158,21 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
             title="Corners with a point of view."
             text="Hotspots show where this photographer is most likely to be active, and when the light usually works."
           />
-          <div className={styles.hotspotList}>
-            {detail.hotspots.map((hotspot) => (
-              <HotspotCard hotspot={hotspot} key={hotspot.name} />
-            ))}
-          </div>
+          {detail.hotspots.length === 0 ? (
+            <EmptyState
+              title="No active areas yet."
+              text="This photographer hasn't mapped any hotspots yet."
+            />
+          ) : (
+            <div
+              ref={hotspotsRef}
+              className={`${styles.hotspotList} reveal-left ${hotspotsVisible ? "is-visible" : ""}`}
+            >
+              {detail.hotspots.map((hotspot) => (
+                <HotspotCard hotspot={hotspot} key={hotspot.name} />
+              ))}
+            </div>
+          )}
         </div>
         <div id="booking">
           <SectionHead
@@ -134,11 +180,21 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
             title="Book the walk, keep the evidence."
             text="Rates are starting points. Captura can route special requests into the photographer dashboard in later phases."
           />
-          <div className={styles.packageList}>
-            {detail.packages.map((item) => (
-              <PackageCard item={item} key={item.name} />
-            ))}
-          </div>
+          {detail.packages.length === 0 ? (
+            <EmptyState
+              title="No packages yet."
+              text="This photographer hasn't published booking packages yet."
+            />
+          ) : (
+            <div
+              ref={packagesRef}
+              className={`${styles.packageList} reveal ${packagesVisible ? "is-visible" : ""}`}
+            >
+              {detail.packages.map((item) => (
+                <PackageCard item={item} key={item.name} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -148,11 +204,22 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
           title="What people remember after the walk."
           text="Testimonials focus on the session experience, not just the final files."
         />
-        <div className={styles.reviewGrid}>
-          {detail.reviews.map((review) => (
-            <ReviewCard review={review} key={review.author} />
-          ))}
-        </div>
+        {detail.reviews.length === 0 ? (
+          <EmptyState
+            title="No reviews yet."
+            text="Be the first to book a session and share your story."
+            dark
+          />
+        ) : (
+          <div
+            ref={reviewsRef}
+            className={`${styles.reviewGrid} reveal-scale ${reviewsVisible ? "is-visible" : ""}`}
+          >
+            {detail.reviews.map((review) => (
+              <ReviewCard review={review} key={review.author} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className={styles.section}>
@@ -161,11 +228,21 @@ export function PhotographerDetailPageView({ detail }: PhotographerDetailPageVie
           title="Recently uploaded frames."
           text="Freshly indexed photos from this photographer, ready to search or purchase."
         />
-        <div className={styles.latestGrid}>
-          {detail.latestMoments.map((moment) => (
-            <LatestMomentCard moment={moment} key={moment.id} />
-          ))}
-        </div>
+        {detail.latestMoments.length === 0 ? (
+          <EmptyState
+            title="No moments uploaded yet."
+            text="New frames from this photographer will appear here as soon as they're indexed."
+          />
+        ) : (
+          <div
+            ref={latestRef}
+            className={`${styles.latestGrid} reveal ${latestVisible ? "is-visible" : ""}`}
+          >
+            {detail.latestMoments.map((moment, i) => (
+              <LatestMomentCard moment={moment} key={moment.id} delay={i * 80} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -186,6 +263,27 @@ function SectionHead({
       <h2>{title}</h2>
       <p>{text}</p>
     </header>
+  );
+}
+
+function EmptyState({ title, text, dark }: { title: string; text: string; dark?: boolean }) {
+  return (
+    <div
+      className="flex flex-col items-center gap-3 rounded-lg border py-[100px] text-center"
+      style={
+        dark
+          ? { borderColor: "rgba(251,250,246,0.12)", background: "rgba(251,250,246,0.05)" }
+          : { borderColor: "var(--color-line-soft)", background: "var(--color-bg-soft)" }
+      }
+    >
+      <p className="font-serif text-[28px] leading-none">{title}</p>
+      <p
+        className="max-w-[360px] text-[14px]"
+        style={{ color: dark ? "rgba(251,250,246,0.58)" : "var(--color-ink-soft)" }}
+      >
+        {text}
+      </p>
+    </div>
   );
 }
 
@@ -272,9 +370,16 @@ function ReviewCard({ review }: { review: PhotographerReview }) {
   );
 }
 
-function LatestMomentCard({ moment }: { moment: PhotographerLatestMoment }) {
+function LatestMomentCard({ moment, delay }: { moment: PhotographerLatestMoment; delay: number }) {
+  const { ref, isVisible } = useScrollReveal<HTMLAnchorElement>();
+
   return (
-    <Link className={styles.latestCard} href={moment.href}>
+    <Link
+      ref={ref}
+      className={`${styles.latestCard} reveal ${isVisible ? "is-visible" : ""}`}
+      href={moment.href}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
       <div>
         <Image
           src={moment.imageUrl}

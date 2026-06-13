@@ -21,8 +21,7 @@ export function ExplorerDetailView({ detail }: ExplorerDetailViewProps) {
 
         {/* 2-column hero layout */}
         <section
-          className="grid gap-[56px] items-start pt-[26px] pb-[80px]"
-          style={{ gridTemplateColumns: "minmax(0, 1.7fr) minmax(0, 1fr)" }}
+          className="grid grid-cols-1 gap-14 items-start pt-6.5 pb-20 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]"
         >
           <ExplorerDetailImageGallery
             image={detail.image}

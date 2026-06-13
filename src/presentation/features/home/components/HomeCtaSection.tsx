@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { type HomeCta } from "@/domains/home/entities/HomePage";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 
 interface HomeCtaSectionProps {
   cta: HomeCta;
@@ -11,19 +15,24 @@ function Frame({
   label,
   style,
   gradient,
+  delay,
+  visible,
 }: {
   label: string;
   style: React.CSSProperties;
   gradient: string;
+  delay: number;
+  visible: boolean;
 }) {
   return (
     <div
-      className="absolute overflow-hidden rounded-[6px] border border-line"
+      className={cn("absolute overflow-hidden rounded-[6px] border border-line reveal-scale hidden md:block", visible && "is-visible")}
       style={{
         boxShadow: "0 20px 50px -20px rgba(20,19,17,0.18)",
         background: "#E8E2D5",
+        "--reveal-delay": `${delay}ms`,
         ...style,
-      }}
+      } as React.CSSProperties}
     >
       <div className="absolute inset-0" style={{ background: gradient }} />
       <div
@@ -39,6 +48,8 @@ function Frame({
 // ─── Section ─────────────────────────────────────────────────────────────────
 
 export function HomeCtaSection({ cta }: HomeCtaSectionProps) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <section className="relative overflow-hidden text-center pt-[220px] pb-[180px]">
       {/* Radial gradient background overlay */}
@@ -55,28 +66,36 @@ export function HomeCtaSection({ cta }: HomeCtaSectionProps) {
         label="Tokyo · 17:04"
         gradient="repeating-linear-gradient(45deg, #CFC9B9 0 2px, #C4BEAE 2px 12px)"
         style={{ top: "15%", left: "6%", width: 180, height: 220, transform: "rotate(-7deg)" }}
+        delay={0}
+        visible={isVisible}
       />
       {/* f2: top:10% right:8% rotate(5deg) 160x200 */}
       <Frame
         label="Lisbon · 19:22"
         gradient="repeating-linear-gradient(135deg, #C9A993 0 2px, #BFA089 2px 12px)"
         style={{ top: "10%", right: "8%", width: 160, height: 200, transform: "rotate(5deg)" }}
+        delay={90}
+        visible={isVisible}
       />
       {/* f3: bottom:15% left:12% rotate(4deg) 150x190 */}
       <Frame
         label="NYC · 14:48"
         gradient="repeating-linear-gradient(90deg, #A8AEB0 0 2px, #9FA6A9 2px 12px)"
         style={{ bottom: "15%", left: "12%", width: 150, height: 190, transform: "rotate(4deg)" }}
+        delay={180}
+        visible={isVisible}
       />
       {/* f4: bottom:18% right:7% rotate(-5deg) 170x210 */}
       <Frame
         label="Paris · 09:30"
         gradient="repeating-linear-gradient(60deg, #D8D2C4 0 2px, #CFC9BB 2px 12px)"
         style={{ bottom: "18%", right: "7%", width: 170, height: 210, transform: "rotate(-5deg)" }}
+        delay={270}
+        visible={isVisible}
       />
 
       {/* Centre content */}
-      <div className="relative z-10 max-w-[1320px] mx-auto px-10">
+      <div ref={ref} className={cn("relative z-10 max-w-[1320px] mx-auto px-10 reveal", isVisible && "is-visible")}>
         <div className="inline-flex items-center gap-2 font-mono text-[11.5px] tracking-[0.08em] uppercase text-ink-soft mb-[40px]">
           <span className="block w-[18px] h-px bg-ink-soft" />
           {cta.eyebrow}
@@ -99,7 +118,7 @@ export function HomeCtaSection({ cta }: HomeCtaSectionProps) {
             className="inline-flex items-center gap-[10px] rounded-full bg-ink text-bg-soft px-7 py-[15px] text-[14.5px] font-medium transition-[transform,background] duration-300 hover:-translate-y-0.5 hover:bg-black"
           >
             {cta.primaryCtaLabel}
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </Link>

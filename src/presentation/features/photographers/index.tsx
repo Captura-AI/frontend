@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { type PhotographerProfile, type PhotographersPage } from "@/domains/photographers";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import styles from "./PhotographersPage.module.css";
 
 interface PhotographersPageViewProps {
@@ -24,10 +25,18 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
     [selectedPhotographer]
   );
 
+  const { ref: directoryRef, isVisible: directoryVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: ctaRef, isVisible: ctaVisible } = useScrollReveal<HTMLElement>();
+  const { ref: bookingLeftRef, isVisible: bookingLeftVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: bookingFormRef, isVisible: bookingFormVisible } = useScrollReveal<HTMLFormElement>();
+
   if (!selectedPhotographer) {
     return (
       <div className={styles.page}>
-        <section className={styles.hero}>
+        <section
+          className={`${styles.hero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <div className={styles.heroInner}>
             <div>
               <span className={styles.eyebrow}>{content.hero.eyebrow}</span>
@@ -47,7 +56,10 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
 
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
+      <section
+        className={`${styles.hero} opacity-0`}
+        style={{ animation: "fadeIn 0.8s ease forwards" }}
+      >
         <div className={styles.heroInner}>
           <div>
             <span className={styles.eyebrow}>{content.hero.eyebrow}</span>
@@ -69,7 +81,10 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
         </div>
       </section>
 
-      <div className={styles.filterbar}>
+      <div
+        className={`${styles.filterbar} opacity-0`}
+        style={{ animation: "fadeIn 0.8s ease 0.15s forwards" }}
+      >
         <span className={styles.filterLabel}>Filter by</span>
         {content.filters.map((filter) => (
           <button
@@ -77,6 +92,7 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
             key={filter.label}
             onClick={() => setActiveFilter(filter.label)}
             type="button"
+            aria-pressed={activeFilter === filter.label}
           >
             {filter.label} <em>{filter.count}</em>
           </button>
@@ -88,17 +104,24 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
       </div>
 
       <section className={styles.directory}>
-        <div className={styles.grid}>
-          {content.photographers.map((photographer) => (
+        <div
+          ref={directoryRef}
+          className={`${styles.grid} reveal ${directoryVisible ? "is-visible" : ""}`}
+        >
+          {content.photographers.map((photographer, i) => (
             <PhotographerCard
               key={photographer.name}
               photographer={photographer}
+              delay={i * 80}
             />
           ))}
         </div>
       </section>
 
-      <section className={styles.becomeCta}>
+      <section
+        ref={ctaRef}
+        className={`${styles.becomeCta} reveal-scale ${ctaVisible ? "is-visible" : ""}`}
+      >
         <div className={styles.becomeCtaInner}>
           <span className={styles.becomeCtaGlow} aria-hidden="true" />
           <div>
@@ -118,7 +141,10 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
 
       <section className={styles.booking} id="booking">
         <div className={styles.bookingInner}>
-          <div className={styles.bookingLeft}>
+          <div
+            ref={bookingLeftRef}
+            className={`${styles.bookingLeft} reveal-left ${bookingLeftVisible ? "is-visible" : ""}`}
+          >
             <span className={styles.eyebrow}>{content.booking.eyebrow}</span>
             <h2>
               {content.booking.headline} <em>{content.booking.headlineEmphasis}</em> Take it home.
@@ -128,7 +154,7 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
               <div className={styles.pickedAvatar}>
                 <Image
                   src={selectedPhotographer.avatarUrl}
-                  alt=""
+                  alt={selectedPhotographer.name}
                   fill
                   sizes="48px"
                   className={styles.image}
@@ -146,7 +172,11 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
             </p>
           </div>
 
-          <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
+          <form
+            ref={bookingFormRef}
+            className={`${styles.form} reveal ${bookingFormVisible ? "is-visible" : ""}`}
+            onSubmit={(event) => event.preventDefault()}
+          >
             <div className={styles.formHead}>
               <span>Your booking</span>
               <span>Estimated total <em>Rp 675k</em></span>
@@ -161,6 +191,7 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
                     key={type}
                     onClick={() => setSessionType(type)}
                     type="button"
+                    aria-pressed={sessionType === type}
                   >
                     {type}
                   </button>
@@ -194,6 +225,7 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
                     key={slot.label}
                     onClick={() => setTimeSlot(slot.label)}
                     type="button"
+                    aria-pressed={timeSlot === slot.label}
                   >
                     {slot.label}
                   </button>
@@ -234,18 +266,25 @@ export function PhotographersPageView({ content }: PhotographersPageViewProps) {
 
 function PhotographerCard({
   photographer,
+  delay,
 }: {
   photographer: PhotographerProfile;
+  delay: number;
 }) {
   const profileHref = `/photographers/${photographer.slug}`;
+  const { ref, isVisible } = useScrollReveal<HTMLElement>();
 
   return (
-    <article className={styles.card}>
+    <article
+      ref={ref}
+      className={`${styles.card} reveal ${isVisible ? "is-visible" : ""}`}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
       <div className={styles.cardTop}>
         <div className={styles.avatar}>
           <Image
             src={photographer.avatarUrl}
-            alt=""
+            alt={photographer.name}
             fill
             sizes="64px"
             className={styles.image}

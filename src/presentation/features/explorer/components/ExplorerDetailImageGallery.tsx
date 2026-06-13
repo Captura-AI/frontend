@@ -25,7 +25,7 @@ export function ExplorerDetailImageGallery({ image, title }: ExplorerDetailImage
   const mainUrl = `${image.urls[activeIdx]}?w=1600&q=85&auto=format&fit=crop`;
 
   return (
-    <div>
+    <div className="opacity-0" style={{ animation: "fadeIn 0.8s ease 0.05s forwards" }}>
       {/* Main frame */}
       <div className="relative rounded-[10px] overflow-hidden bg-bg-soft border border-line" style={{ aspectRatio: "4/5" }}>
         <Image
@@ -75,13 +75,14 @@ export function ExplorerDetailImageGallery({ image, title }: ExplorerDetailImage
           <button
             key={url}
             onClick={() => switchTo(i)}
+            aria-pressed={activeIdx === i}
             className={`relative rounded-md overflow-hidden border transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 ${
               activeIdx === i
                 ? "border-ink shadow-[0_0_0_2px_var(--color-bg),0_0_0_3px_var(--color-ink)]"
                 : "border-line"
             }`}
             style={{ aspectRatio: "1/1" }}
-            aria-label={`View thumbnail ${i + 1}`}
+            aria-label={`View image ${i + 1} of ${image.urls.length}`}
           >
             <Image
               src={`${url}?w=300&q=70&auto=format&fit=crop`}

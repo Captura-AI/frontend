@@ -101,6 +101,7 @@ export default function HotspotPageClient({ data }: Props) {
             </svg>
             <input
               type="text"
+              aria-label="Search hotspot locations"
               placeholder="A street in Bandung, a route through Bogor…"
               className="flex-1 border-none outline-none bg-transparent font-serif text-[17px] tracking-[-0.005em] py-1 placeholder:text-ink-faint placeholder:italic"
             />

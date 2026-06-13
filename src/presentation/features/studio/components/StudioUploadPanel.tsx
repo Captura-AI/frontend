@@ -103,7 +103,13 @@ export default function StudioUploadPanel({ batch, queue }: Props) {
                 : ""
             } ${item.status === "scanning" ? "studio-scanning-thumb" : ""}`}
           >
-            <Image src={item.imageUrl} alt="" fill className="object-cover" sizes="80px" />
+            <Image
+              src={item.imageUrl}
+              alt={`Queued frame, ${item.status === "scanning" ? "AI scanning in progress" : item.status === "done" ? "processed" : "pending review"}`}
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
             {/* AI badge */}
             {item.badge === "ai" && (
               <span className="absolute top-1.25 left-1.25 bg-ink text-bg-soft font-mono text-[7.5px] tracking-[0.08em] h-3.5 px-1.25 rounded-[7px] flex items-center">

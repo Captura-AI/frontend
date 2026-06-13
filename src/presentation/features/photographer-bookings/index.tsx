@@ -71,7 +71,10 @@ export function PhotographerBookingsPageView({ content }: PhotographerBookingsPa
       nav={content.nav}
       activeHref="/dashboard/photographer/bookings"
     >
-      <header className={styles.topbar}>
+      <header
+        className={`${styles.topbar} opacity-0`}
+        style={{ animation: "fadeIn 0.6s ease forwards" }}
+      >
         <div>
           <span className={styles.eyebrow}>Bookings</span>
           <h1>

@@ -30,7 +30,12 @@ export function DashboardShell({ photographer, nav, activeHref, children }: Dash
         </div>
         <nav className={styles.nav}>
           {nav.map((item) => (
-            <Link className={item.href === activeHref ? styles.navActive : ""} href={item.href} key={item.href}>
+            <Link
+              className={item.href === activeHref ? styles.navActive : ""}
+              href={item.href}
+              key={item.href}
+              aria-current={item.href === activeHref ? "page" : undefined}
+            >
               <span>{item.label}</span>
               {item.status ? <small>{item.status}</small> : null}
             </Link>

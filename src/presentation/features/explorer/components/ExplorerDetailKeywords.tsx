@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { type Keyword } from "@/domains/explorer";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 import { ExplorerSectionHead } from "./ExplorerSectionHead";
 
 interface ExplorerDetailKeywordsProps {
@@ -7,11 +11,13 @@ interface ExplorerDetailKeywordsProps {
 }
 
 export function ExplorerDetailKeywords({ keywords }: ExplorerDetailKeywordsProps) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <section>
       <ExplorerSectionHead heading="Keywords" meta="Browse similar" />
 
-      <div className="flex flex-wrap gap-2">
+      <div ref={ref} className={cn("flex flex-wrap gap-2 reveal", isVisible && "is-visible")}>
         {keywords.map((kw) => (
           <Link
             key={`${kw.category}-${kw.label}`}

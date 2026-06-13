@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { type PrivacyRemovalPage } from "@/domains/privacy-removal";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import { RemovalRequestForm } from "./components/RemovalRequestForm";
 import styles from "./PrivacyRemovalPage.module.css";
 
@@ -8,10 +11,16 @@ interface PrivacyRemovalPageViewProps {
 }
 
 export function PrivacyRemovalPageView({ content }: PrivacyRemovalPageViewProps) {
+  const { ref: mainRef, isVisible: mainVisible } = useScrollReveal<HTMLDivElement>();
+  const { ref: sidebarRef, isVisible: sidebarVisible } = useScrollReveal<HTMLElement>();
+
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
-        <section className={styles.hero}>
+        <section
+          className={`${styles.hero} opacity-0`}
+          style={{ animation: "fadeIn 0.8s ease forwards" }}
+        >
           <span className={styles.eyebrow}>{content.hero.eyebrow}</span>
           <h1>
             {content.hero.titlePrefix}
@@ -21,11 +30,17 @@ export function PrivacyRemovalPageView({ content }: PrivacyRemovalPageViewProps)
         </section>
 
         <div className={styles.layout}>
-          <div className={styles.main}>
+          <div
+            ref={mainRef}
+            className={`${styles.main} reveal-left ${mainVisible ? "is-visible" : ""}`}
+          >
             <RemovalRequestForm content={content} />
           </div>
 
-          <aside className={styles.sidebar}>
+          <aside
+            ref={sidebarRef}
+            className={`${styles.sidebar} reveal ${sidebarVisible ? "is-visible" : ""}`}
+          >
             <div className={styles.panel}>
               <div className={styles.sectionTitle}>
                 <h2>How review works</h2>

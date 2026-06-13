@@ -6,6 +6,8 @@ import {
   type HomePhotographersSection as HomePhotographersSectionData,
   type HomePhotographer,
 } from "@/domains/home/entities/HomePage";
+import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { cn } from "@/presentation/lib/utils";
 
 interface HomePhotographersSectionProps {
   data: HomePhotographersSectionData;
@@ -61,6 +63,7 @@ function PhotographerMarquee({ photographers }: { photographers: HomePhotographe
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let rafId: number;
     function tick() {
       mx.current -= 0.4;
@@ -89,6 +92,7 @@ function PhotographerMarquee({ photographers }: { photographers: HomePhotographe
 // ─── Stats bar ────────────────────────────────────────────────────────────────
 
 function StatsBar({ stats }: { stats: HomePhotographersSectionData["stats"] }) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
   const items = [
     { value: stats.verifiedPhotographers, label: "Verified photographers" },
     { value: stats.citiesWorldwide,       label: "Cities worldwide" },
@@ -96,9 +100,13 @@ function StatsBar({ stats }: { stats: HomePhotographersSectionData["stats"] }) {
     { value: stats.humanUploaded,         label: "Human-uploaded" },
   ];
   return (
-    <div className="max-w-[1320px] mx-auto px-10 mt-[80px] pt-[40px] border-t border-line grid grid-cols-4">
-      {items.map((item) => (
-        <div key={item.label}>
+    <div ref={ref} className="max-w-[1320px] mx-auto px-10 mt-[80px] pt-[40px] border-t border-line grid grid-cols-2 md:grid-cols-4 gap-y-10">
+      {items.map((item, i) => (
+        <div
+          key={item.label}
+          className={cn("reveal", isVisible && "is-visible")}
+          style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties}
+        >
           <p className="font-serif text-[52px] leading-[1] tracking-[-0.03em] text-ink">{item.value}</p>
           <p className="mt-3 font-mono text-[11px] tracking-[0.06em] uppercase text-ink-soft">{item.label}</p>
         </div>
@@ -110,9 +118,10 @@ function StatsBar({ stats }: { stats: HomePhotographersSectionData["stats"] }) {
 // ─── Become a photographer CTA ─────────────────────────────────────────────────
 
 function BecomePhotographerCta() {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
   return (
-    <div className="max-w-[1320px] mx-auto px-10 mt-[60px]">
-      <div className="relative overflow-hidden rounded-[14px] border border-line bg-bg px-10 py-12 grid grid-cols-[1.4fr_auto] gap-10 items-center">
+    <div ref={ref} className={cn("max-w-[1320px] mx-auto px-10 mt-[60px] reveal-scale", isVisible && "is-visible")}>
+      <div className="relative overflow-hidden rounded-[14px] border border-line bg-bg px-10 py-12 grid grid-cols-1 md:grid-cols-[1.4fr_auto] gap-10 items-center">
         <span
           className="pointer-events-none absolute -right-24 -top-24 w-[280px] h-[280px] rounded-full"
           style={{ background: "var(--color-accent-soft)" }}
@@ -148,11 +157,13 @@ function BecomePhotographerCta() {
 // ─── Section ─────────────────────────────────────────────────────────────────
 
 export function HomePhotographersSection({ data }: HomePhotographersSectionProps) {
+  const { ref: headRef, isVisible: headVisible } = useScrollReveal<HTMLDivElement>();
+
   return (
     <section id="photogs" className="bg-bg-soft py-[160px] overflow-hidden">
       {/* Head */}
-      <div className="max-w-[1320px] mx-auto px-10 mb-[70px]">
-        <div className="grid grid-cols-2 gap-[60px] items-end">
+      <div ref={headRef} className={cn("max-w-[1320px] mx-auto px-10 mb-[70px] reveal", headVisible && "is-visible")}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[60px] items-end">
           <div>
             <div className="inline-flex items-center gap-2 font-mono text-[11.5px] tracking-[0.08em] uppercase text-ink-soft mb-6">
               <span className="block w-[18px] h-px bg-ink-soft" />

@@ -64,7 +64,10 @@ export function PhotographerUploadsPageView({ content }: PhotographerUploadsPage
       nav={content.nav}
       activeHref="/dashboard/photographer/uploads"
     >
-      <header className={styles.topbar}>
+      <header
+        className={`${styles.topbar} opacity-0`}
+        style={{ animation: "fadeIn 0.6s ease forwards" }}
+      >
         <div>
           <span className={styles.eyebrow}>Batch manager</span>
           <h1>
@@ -148,7 +151,14 @@ function BatchCard({ batch, studioHref }: { batch: UploadBatch; studioHref: stri
           <strong>
             {batch.processedFrames}/{batch.totalFrames} frames processed
           </strong>
-          <div className={styles.progressTrack} aria-label={`${batch.name} ${batch.progress}% processed`}>
+          <div
+            className={styles.progressTrack}
+            role="progressbar"
+            aria-label={`${batch.name} processing progress`}
+            aria-valuenow={batch.progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <span style={{ width: `${batch.progress}%` }} />
           </div>
         </div>
@@ -176,7 +186,7 @@ function FrameRow({ frame }: { frame: UploadFrame }) {
   return (
     <div className={styles.frameRow}>
       <div className={styles.frameThumb}>
-        <Image src={frame.thumbnailUrl} alt="" fill sizes="64px" className={styles.frameThumbImg} />
+        <Image src={frame.thumbnailUrl} alt={frame.fileName} fill sizes="64px" className={styles.frameThumbImg} />
       </div>
       <div className={styles.frameBody}>
         <div className={styles.frameTop}>
@@ -185,7 +195,14 @@ function FrameRow({ frame }: { frame: UploadFrame }) {
         </div>
 
         {frame.status === "analyzing" ? (
-          <div className={styles.progressTrack} aria-label={`${frame.fileName} ${frame.progress}% analyzed`}>
+          <div
+            className={styles.progressTrack}
+            role="progressbar"
+            aria-label={`${frame.fileName} analysis progress`}
+            aria-valuenow={frame.progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <span style={{ width: `${frame.progress}%` }} />
           </div>
         ) : null}

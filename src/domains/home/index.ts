@@ -11,5 +11,4 @@ export type {
   HomePhotographerStats,
   HomePhotographersSection,
   HomeCta,
-  HomeFeature,
 } from "./entities/HomePage";
