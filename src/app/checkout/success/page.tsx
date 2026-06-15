@@ -12,13 +12,31 @@ export const metadata: Metadata = generatePageSeo({
   noFollow: true,
 });
 
+// Result depends on the order id query + an authenticated lookup.
+export const dynamic = "force-dynamic";
+
+type SearchParamValue = string | string[] | undefined;
+
+function firstParam(value: SearchParamValue): string | undefined {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+}
+
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string | string[] }>;
+  searchParams: Promise<{
+    order_id?: SearchParamValue;
+    orderId?: SearchParamValue;
+    status?: SearchParamValue;
+  }>;
 }) {
   const params = await searchParams;
-  const content = getCheckoutResultPageContent(params.status);
+  const orderId = firstParam(params.order_id) ?? firstParam(params.orderId);
+  const content = await getCheckoutResultPageContent(orderId, firstParam(params.status));
 
   return <CheckoutResultPageView content={content} />;
 }
