@@ -12,7 +12,8 @@ export const metadata: Metadata = generatePageSeo({
   noFollow: true,
 });
 
-export default function AccountLibraryPage() {
-  const content = getAccountLibraryPageContent();
+export default async function AccountLibraryPage() {
+  const content = await getAccountLibraryPageContent();
+
   return <AccountLibraryPageView content={content} />;
 }

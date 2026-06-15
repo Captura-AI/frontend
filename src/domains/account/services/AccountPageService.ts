@@ -1,6 +1,10 @@
+import { serverApiRequest } from "@/shared/api/serverApi";
 import {
   type AccountLibraryPage,
   type AccountProfilePage,
+  type DownloadStatus,
+  type LibraryItem,
+  type OrderStatus,
 } from "../entities/AccountPage";
 
 /**
@@ -88,77 +92,182 @@ export function getAccountProfilePageContent(): AccountProfilePage {
   };
 }
 
-export function getAccountLibraryPageContent(): AccountLibraryPage {
-  const items = [
-    {
-      id: "ord-01428",
-      title: "Seen near Shibuya, just before dusk",
-      imageUrl:
-        "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=900&q=80&auto=format&fit=crop",
-      photographer: "Ayaka Mori",
-      purchaseDate: "Apr 12, 2026",
-      license: "Personal print",
-      fileType: "TIFF + web JPG",
-      totalPaid: "USD 53.90",
-      orderStatus: "ready",
-      downloadStatus: "ready",
-      invoiceHref: "/invoices/ord-01428",
-      momentHref: "/explorer/m-1",
-      supportHref: "/support/orders/ord-01428",
-    },
-    {
-      id: "ord-01631",
-      title: "Morning riders on Jalan Sudirman",
-      imageUrl:
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=900&q=80&auto=format&fit=crop",
-      photographer: "Sari Wirawan",
-      purchaseDate: "May 02, 2026",
-      license: "Editorial web",
-      fileType: "JPG export",
-      totalPaid: "USD 34.40",
-      orderStatus: "processing",
-      downloadStatus: "processing",
-      invoiceHref: "/invoices/ord-01631",
-      momentHref: "/explorer/m-7",
-      supportHref: "/support/orders/ord-01631",
-    },
-    {
-      id: "ord-01702",
-      title: "Blue coupe at golden hour",
-      imageUrl:
-        "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&q=80&auto=format&fit=crop",
-      photographer: "Rafi Pradana",
-      purchaseDate: "May 20, 2026",
-      license: "Personal archive",
-      fileType: "HEIC + JPG",
-      totalPaid: "USD 28.00",
-      orderStatus: "failed",
-      downloadStatus: "failed",
-      invoiceHref: "/invoices/ord-01702",
-      momentHref: "/explorer/m-9",
-      supportHref: "/support/orders/ord-01702",
-    },
-  ] satisfies AccountLibraryPage["items"];
+// ─── Library: real data from GET /orders/me ─────────────────────────────────
+// Backend shapes mirror OrderEntity with the relations enriched server-side.
+// The library never receives a plate (stripped by the backend).
+
+interface BackendLibraryPhotographer {
+  artistName?: string | null;
+}
+
+interface BackendLibraryMoment {
+  id?: string | null;
+  caption?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  photographerProfile?: BackendLibraryPhotographer | null;
+}
+
+interface BackendLicenseType {
+  name?: string | null;
+}
+
+interface BackendLibraryLicense {
+  licenseType?: BackendLicenseType | null;
+}
+
+interface BackendOrder {
+  id: string;
+  status: string;
+  totalAmount: number | string;
+  currency: string;
+  createdAt: number | null; // Unix ms
+  moment?: BackendLibraryMoment | null;
+  license?: BackendLibraryLicense | null;
+}
+
+interface BackendOrdersResult {
+  data: BackendOrder[];
+  limit: number;
+  offset: number;
+  total: number;
+}
+
+const PAID_STATUS = "PAID";
+const PENDING_STATUS = "PENDING";
+
+const LIBRARY_HEADER: AccountLibraryPage["header"] = {
+  title: "Your purchased",
+  emphasis: "moments",
+  description:
+    "Every order keeps its license, invoice, photographer credit, and download status in one account surface.",
+};
+
+const LIBRARY_EMPTY_STATE: AccountLibraryPage["emptyState"] = {
+  title: "No purchased moments yet.",
+  description:
+    "When checkout is complete, your downloads, invoices, and license details will appear here automatically.",
+  ctaLabel: "Explore photos",
+  ctaHref: "/explorer",
+};
+
+function formatIdr(amount: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    currency: "IDR",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(amount);
+}
+
+function formatPurchaseDate(createdAt: number | null): string {
+  if (!createdAt) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(createdAt));
+}
+
+function toOrderStatus(status: string): OrderStatus {
+  if (status === PAID_STATUS) {
+    return "ready";
+  }
+
+  if (status === PENDING_STATUS) {
+    return "processing";
+  }
+
+  return "failed";
+}
+
+function toDownloadStatus(status: string): DownloadStatus {
+  if (status === PAID_STATUS) {
+    return "ready";
+  }
+
+  if (status === PENDING_STATUS) {
+    return "pending";
+  }
+
+  return "failed";
+}
+
+function toLibraryItem(order: BackendOrder): LibraryItem {
+  const moment = order.moment;
+  const momentId = moment?.id ?? null;
 
   return {
-    header: {
-      title: "Your purchased",
-      emphasis: "moments",
-      description:
-        "Every order keeps its license, invoice, photographer credit, and download status in one account surface.",
+    id: order.id,
+    title: moment?.caption ?? moment?.description ?? "Captura moment",
+    imageUrl: moment?.thumbnailUrl ?? moment?.imageUrl ?? "/window.svg",
+    photographer: moment?.photographerProfile?.artistName ?? "Captura photographer",
+    purchaseDate: formatPurchaseDate(order.createdAt),
+    license: order.license?.licenseType?.name ?? "Standard license",
+    fileType: "Full-resolution",
+    totalPaid: formatIdr(Number(order.totalAmount)),
+    orderStatus: toOrderStatus(order.status),
+    downloadStatus: toDownloadStatus(order.status),
+    invoiceHref: "/support",
+    momentHref: momentId ? `/explorer/${momentId}` : "/explorer",
+    supportHref: "/support",
+  };
+}
+
+function buildLibraryStats(
+  orders: BackendOrder[],
+  items: LibraryItem[]
+): AccountLibraryPage["stats"] {
+  const readyDownloads = items.filter((item) => item.downloadStatus === "ready").length;
+  const totalSpent = orders
+    .filter((order) => order.status === PAID_STATUS)
+    .reduce((sum, order) => sum + Number(order.totalAmount), 0);
+  const licenseCount = new Set(items.map((item) => item.license)).size;
+
+  return [
+    {
+      label: "Ready downloads",
+      value: String(readyDownloads),
+      helper: "Full-resolution files available",
     },
-    stats: [
-      { label: "Ready downloads", value: "1", helper: "Full-resolution files available" },
-      { label: "Total spent", value: "USD 116.30", helper: "Across 3 captured moments" },
-      { label: "Licenses", value: "3", helper: "Personal and editorial usage" },
-    ],
+    {
+      label: "Total spent",
+      value: formatIdr(totalSpent),
+      helper: `Across ${items.length} captured moment${items.length === 1 ? "" : "s"}`,
+    },
+    { label: "Licenses", value: String(licenseCount), helper: "Across your purchases" },
+  ];
+}
+
+async function fetchMyOrders(): Promise<BackendOrder[]> {
+  try {
+    const response = await serverApiRequest<BackendOrdersResult>("/orders/me", {
+      auth: true,
+      revalidate: false,
+    });
+
+    return response.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Loads the buyer's purchased moments from `GET /orders/me`. On error (e.g. an
+ * expired session or unreachable backend) it returns an empty library rather
+ * than fabricating purchases, so the page shows its honest empty state.
+ */
+export async function getAccountLibraryPageContent(): Promise<AccountLibraryPage> {
+  const orders = await fetchMyOrders();
+  const items = orders.map(toLibraryItem);
+
+  return {
+    header: LIBRARY_HEADER,
+    stats: buildLibraryStats(orders, items),
     items,
-    emptyState: {
-      title: "No purchased moments yet.",
-      description:
-        "When checkout is complete, your downloads, invoices, and license details will appear here automatically.",
-      ctaLabel: "Explore photos",
-      ctaHref: "/explorer",
-    },
+    emptyState: LIBRARY_EMPTY_STATE,
   };
 }
