@@ -1,6 +1,21 @@
-import { type ExplorerDetail } from "../entities/ExplorerDetail";
+import { serverApiRequest } from "@/shared/api/serverApi";
+import {
+  type DetailFact,
+  type DetectedItem,
+  type ExplorerDetail,
+  type Keyword,
+  type LicenseOption,
+  type SimilarMoment,
+} from "../entities/ExplorerDetail";
 
-const SHIBUYA_DETAIL: ExplorerDetail = {
+/**
+ * Presentational template used when the backend is unreachable or a moment is
+ * missing fields the rich detail UI expects (edition, ratings, benefit copy).
+ *
+ * Real backend fields override this template in `toExplorerDetail`; template
+ * values are never presented as if they were real moment data.
+ */
+const FALLBACK_DETAIL: ExplorerDetail = {
   id: "m-1",
   breadcrumb: [
     { label: "Explorer", href: "/explorer" },
@@ -171,12 +186,321 @@ const SHIBUYA_DETAIL: ExplorerDetail = {
   ],
 };
 
+// ─── Backend contracts ──────────────────────────────────────────────────────
+// Shapes mirror the public NestJS responses. `GET /moments/:id` already masks
+// the plate (`licensePlate: "AB***CD"`); full plate is never sent to the client.
+
+interface BackendPhotographerSummary {
+  id: string;
+  artistName: string;
+  bio: string | null;
+  location: string | null;
+  avatar: string | null;
+  totalMoments: number;
+}
+
+interface BackendMomentDetail {
+  id: string;
+  imageUrl: string | null;
+  thumbnailUrl: string | null;
+  capturedAt: number | null; // Unix seconds
+  caption: string | null;
+  description: string | null;
+  story: string | null;
+  tags: string[] | null;
+  cameraInfo: string | null;
+  city: string | null;
+  district: string | null;
+  vehicleType: string | null;
+  licensePlate: string | null; // masked at the API layer
+  photographerSummary: BackendPhotographerSummary | null;
+}
+
+interface BackendMomentLicense {
+  id: string;
+  licenseTypeId: string | null;
+  price: number;
+  currency: string;
+  isActive: boolean;
+}
+
+interface BackendSimilarMoment {
+  id: string;
+  imageUrl: string | null;
+  thumbnailUrl: string | null;
+  capturedAt: number | null;
+  caption: string | null;
+  city: string | null;
+  district: string | null;
+}
+
+// ─── Formatting helpers ─────────────────────────────────────────────────────
+
+const JAKARTA_TIME_ZONE = "Asia/Jakarta";
+const DETAIL_REVALIDATE_SECONDS = 300;
+
+function formatClockTime(capturedAt: number | null): string {
+  if (!capturedAt) {
+    return "Time TBA";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: JAKARTA_TIME_ZONE,
+  }).format(new Date(capturedAt * 1000));
+}
+
+function formatCalendarDate(capturedAt: number | null): string {
+  if (!capturedAt) {
+    return "Date TBA";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: JAKARTA_TIME_ZONE,
+  }).format(new Date(capturedAt * 1000));
+}
+
+function joinLocation(city: string | null, district: string | null): string {
+  const parts = [city, district].filter((part): part is string => Boolean(part));
+
+  return parts.length > 0 ? parts.join(" · ") : "Location TBA";
+}
+
+// ─── Field mappers (small, single-responsibility) ───────────────────────────
+
+function toDetailImage(detail: BackendMomentDetail): ExplorerDetail["image"] {
+  const primaryUrl = detail.imageUrl ?? detail.thumbnailUrl;
+  const badge = `${joinLocation(detail.city, detail.district)} · ${formatClockTime(
+    detail.capturedAt
+  )} · ${formatCalendarDate(detail.capturedAt)}`;
+
+  return {
+    urls: primaryUrl ? [primaryUrl] : FALLBACK_DETAIL.image.urls,
+    badge,
+    matchBadge: "Captura · original",
+  };
+}
+
+function toPhotographerInfo(
+  summary: BackendPhotographerSummary | null
+): ExplorerDetail["photographer"] {
+  if (!summary) {
+    return FALLBACK_DETAIL.photographer;
+  }
+
+  return {
+    name: summary.artistName,
+    city: summary.location ?? FALLBACK_DETAIL.photographer.city,
+    momentsCount: summary.totalMoments,
+    since: FALLBACK_DETAIL.photographer.since,
+    avatarUrl: summary.avatar ?? FALLBACK_DETAIL.photographer.avatarUrl,
+  };
+}
+
+function toPhotographerBlock(
+  summary: BackendPhotographerSummary | null
+): ExplorerDetail["photographerBlock"] {
+  if (!summary) {
+    return FALLBACK_DETAIL.photographerBlock;
+  }
+
+  return {
+    ...FALLBACK_DETAIL.photographerBlock,
+    name: summary.artistName,
+    city: summary.location ?? FALLBACK_DETAIL.photographerBlock.city,
+    avatarUrl: summary.avatar ?? FALLBACK_DETAIL.photographerBlock.avatarUrl,
+    moments: summary.totalMoments,
+  };
+}
+
+function toFacts(detail: BackendMomentDetail): DetailFact[] {
+  const facts: DetailFact[] = [
+    {
+      key: "When",
+      value: formatClockTime(detail.capturedAt),
+      sub: formatCalendarDate(detail.capturedAt),
+    },
+    {
+      key: "Where",
+      value: detail.city ?? "Location TBA",
+      sub: detail.district ?? "—",
+    },
+  ];
+
+  if (detail.cameraInfo) {
+    facts.push({ key: "Camera", value: detail.cameraInfo, sub: "Capture details" });
+  }
+
+  return facts;
+}
+
+function toDetectedItems(detail: BackendMomentDetail): DetectedItem[] {
+  const items: DetectedItem[] = [];
+
+  if (detail.vehicleType) {
+    items.push({ key: "Vehicle", value: detail.vehicleType });
+  }
+
+  items.push({ key: "Plate read", value: detail.licensePlate ?? "— not in frame —" });
+
+  const sceneTags = detail.tags?.filter(Boolean) ?? [];
+
+  if (sceneTags.length > 0) {
+    items.push({ key: "Scene", value: sceneTags.slice(0, 4).join(", ") });
+  }
+
+  return items;
+}
+
+function toKeywords(tags: string[] | null): Keyword[] {
+  if (!tags || tags.length === 0) {
+    return FALLBACK_DETAIL.keywords;
+  }
+
+  return tags.slice(0, 12).map((label) => ({ category: "subject", label }));
+}
+
+function toStoryParagraphs(story: string | null): string[] {
+  if (!story) {
+    return FALLBACK_DETAIL.storyParagraphs;
+  }
+
+  const paragraphs = story
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  return paragraphs.length > 0 ? paragraphs : [story.trim()];
+}
+
+function toLicenseOption(license: BackendMomentLicense, index: number): LicenseOption {
+  return {
+    id: license.licenseTypeId ?? license.id,
+    title: `License option ${index + 1}`,
+    subtitle: license.currency,
+    priceUsd: license.price,
+  };
+}
+
+function toPrice(licenses: BackendMomentLicense[]): ExplorerDetail["price"] {
+  const activeLicenses = licenses.filter((license) => license.isActive);
+
+  if (activeLicenses.length === 0) {
+    return FALLBACK_DETAIL.price;
+  }
+
+  const options = activeLicenses.map(toLicenseOption);
+  const lowestPrice = Math.min(...activeLicenses.map((license) => license.price));
+
+  return {
+    ...FALLBACK_DETAIL.price,
+    currentUsd: lowestPrice,
+    wasUsd: lowestPrice,
+    promoLabel: "",
+    defaultLicenseId: options[0]?.id ?? FALLBACK_DETAIL.price.defaultLicenseId,
+    licenses: options,
+  };
+}
+
+function toSimilarMoment(moment: BackendSimilarMoment): SimilarMoment {
+  return {
+    id: moment.id,
+    imageUrl: moment.thumbnailUrl ?? moment.imageUrl ?? "/window.svg",
+    city: joinLocation(moment.city, moment.district),
+    time: formatClockTime(moment.capturedAt),
+    caption: moment.caption ?? "A searchable Captura moment.",
+  };
+}
+
+function toBreadcrumb(detail: BackendMomentDetail): ExplorerDetail["breadcrumb"] {
+  const title = detail.caption ?? detail.description ?? "Moment detail";
+
+  return [
+    { label: "Explorer", href: "/explorer" },
+    {
+      label: joinLocation(detail.city, detail.district),
+      href: `/explorer?location=${encodeURIComponent(detail.city ?? "")}`,
+    },
+    { label: title },
+  ];
+}
+
 /**
- * Returns the detail data for a single moment by ID.
- *
- * TODO: When backend is ready, call ExplorerRepository.getMomentDetail(id)
+ * Merges real backend data onto the presentational template. Only fields the
+ * backend actually provides are overridden; the rest keep neutral template
+ * values so the rich detail UI renders without fabricating moment-specific data.
  */
-export function getExplorerDetail(id: string): ExplorerDetail {
-  // For now, return the Shibuya mock for any id, using the requested id as the record id
-  return { ...SHIBUYA_DETAIL, id };
+function toExplorerDetail(
+  detail: BackendMomentDetail,
+  licenses: BackendMomentLicense[],
+  similar: BackendSimilarMoment[]
+): ExplorerDetail {
+  const headline = detail.caption ?? detail.description ?? FALLBACK_DETAIL.titleEmphasis;
+  const similarMoments =
+    similar.length > 0 ? similar.map(toSimilarMoment) : FALLBACK_DETAIL.similar;
+
+  return {
+    ...FALLBACK_DETAIL,
+    id: detail.id,
+    breadcrumb: toBreadcrumb(detail),
+    image: toDetailImage(detail),
+    photographer: toPhotographerInfo(detail.photographerSummary),
+    titlePrefix: "",
+    titleEmphasis: headline,
+    description: detail.description ?? detail.caption ?? FALLBACK_DETAIL.description,
+    price: toPrice(licenses),
+    facts: toFacts(detail),
+    storyParagraphs: toStoryParagraphs(detail.story),
+    detectedItems: toDetectedItems(detail),
+    keywords: toKeywords(detail.tags),
+    photographerBlock: toPhotographerBlock(detail.photographerSummary),
+    similar: similarMoments,
+  };
+}
+
+// ─── Resilient sub-fetches ──────────────────────────────────────────────────
+// A missing license list or similar feed must not blank out the real detail,
+// so these degrade to empty arrays independently of the primary detail fetch.
+
+async function fetchLicenses(id: string): Promise<BackendMomentLicense[]> {
+  try {
+    return await serverApiRequest<BackendMomentLicense[]>(`/moments/${id}/licenses`, {
+      revalidate: DETAIL_REVALIDATE_SECONDS,
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function fetchSimilar(id: string): Promise<BackendSimilarMoment[]> {
+  try {
+    return await serverApiRequest<BackendSimilarMoment[]>(`/moments/${id}/similar`, {
+      revalidate: DETAIL_REVALIDATE_SECONDS,
+    });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Loads a single moment's detail from the backend, composing the detail,
+ * license, and similar endpoints. Falls back to the presentational template if
+ * the moment cannot be reached (e.g. backend offline).
+ */
+export async function getExplorerDetail(id: string): Promise<ExplorerDetail> {
+  try {
+    const detail = await serverApiRequest<BackendMomentDetail>(`/moments/${id}`, {
+      revalidate: DETAIL_REVALIDATE_SECONDS,
+    });
+
+    const [licenses, similar] = await Promise.all([fetchLicenses(id), fetchSimilar(id)]);
+
+    return toExplorerDetail(detail, licenses, similar);
+  } catch {
+    return { ...FALLBACK_DETAIL, id };
+  }
 }

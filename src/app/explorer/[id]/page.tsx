@@ -11,7 +11,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const detail = getExplorerDetail(id);
+  const detail = await getExplorerDetail(id);
 
   return generateDynamicSeo({
     title: `${detail.titlePrefix}${detail.titleEmphasis} — Captura`,
@@ -34,7 +34,7 @@ export default async function ExplorerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const detail = getExplorerDetail(id);
+  const detail = await getExplorerDetail(id);
 
   const jsonLdPhoto = {
     "@context": "https://schema.org",
