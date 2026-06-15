@@ -1,7 +1,4 @@
-export {
-  getPhotographerDetail,
-  getPhotographerSlugs,
-} from "./services/PhotographerDetailService";
+export { getPhotographerDetail } from "./services/PhotographerDetailService";
 export { getPhotographersPageContent } from "./services/PhotographersPageService";
 export type {
   BookingOption,
