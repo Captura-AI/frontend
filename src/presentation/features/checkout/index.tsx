@@ -4,6 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { type CheckoutPage, type PaymentTabId } from "@/domains/checkout";
+import {
+  createOrder,
+  type CheckoutPaymentMethod,
+} from "@/domains/checkout/services/createOrder";
 import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
 import styles from "./CheckoutPage.module.css";
 
@@ -17,15 +21,19 @@ const payLabels: Record<string, string> = {
   gopay: "with GoPay",
   ovo: "with OVO",
   dana: "with DANA",
-  alfamart: "at Alfamart",
   card: "with card",
-  apple: "with Apple Pay",
-  google: "with Google Pay",
-  paypal: "with PayPal",
-  alipay: "with Alipay",
-  sepa: "via SEPA",
-  wise: "via Wise",
-  ach: "via ACH",
+};
+
+// Maps the previewed method to a backend PaymentMethodEnum value. Unmapped
+// previews fall back to QRIS — Midtrans Snap still offers every method after
+// redirect, so the chosen value only seeds the hosted page.
+const methodToPayment: Record<string, CheckoutPaymentMethod> = {
+  qris: "QRIS",
+  gopay: "GOPAY",
+  ovo: "OVO",
+  dana: "DANA",
+  va: "VIRTUAL_ACCOUNT_BCA",
+  card: "CREDIT_CARD",
 };
 
 export function CheckoutPageView({ content }: CheckoutPageViewProps) {
@@ -36,8 +44,15 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
     wallet: "apple",
     bank: "sepa",
   });
-  const [promo, setPromo] = useState("");
-  const [discount, setDiscount] = useState(0);
+  const [billing, setBilling] = useState({
+    email: content.contact.email,
+    firstName: content.contact.firstName,
+    lastName: content.contact.lastName,
+    phone: content.contact.phone,
+    country: content.contact.countries[0] ?? "Indonesia",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   const [qrSeconds, setQrSeconds] = useState(5 * 60 - 2);
 
   const { ref: paymentRef, isVisible: paymentVisible } = useScrollReveal<HTMLElement>();
@@ -51,25 +66,53 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
     return () => window.clearInterval(interval);
   }, []);
 
+  // Mirror the backend pricing model: subtotal + 5% service + 11% PPN on
+  // (subtotal + service). The authoritative total is recomputed server-side.
   const totals = useMemo(() => {
-    const discountedSubtotal = content.summary.subtotal - discount;
-    const service = roundCurrency(discountedSubtotal * content.summary.serviceFeePct);
-    const tax = roundCurrency(discountedSubtotal * content.summary.taxPct);
-    const total = roundCurrency(discountedSubtotal + service + tax);
-    return {
-      service,
-      tax,
-      total,
-      idr: Math.round(total * content.summary.rateToIdr),
-    };
-  }, [content.summary, discount]);
+    const subtotal = content.summary.subtotal;
+    const service = Math.floor(subtotal * content.summary.serviceFeePct);
+    const tax = Math.floor((subtotal + service) * content.summary.taxPct);
+    const total = subtotal + service + tax;
+
+    return { service, tax, total };
+  }, [content.summary]);
 
   const activeMethod = activeMethods[activeTab];
   const qrTime = `${String(Math.floor(qrSeconds / 60)).padStart(2, "0")}:${String(qrSeconds % 60).padStart(2, "0")}`;
+  const canPay = Boolean(content.purchase.momentId && content.purchase.licenseId);
 
-  function applyPromo() {
-    if (promo.trim().toUpperCase() === content.summary.promoCode) {
-      setDiscount(roundCurrency(content.summary.subtotal * content.summary.promoPct));
+  function updateBilling(field: keyof typeof billing, value: string) {
+    setBilling((current) => ({ ...current, [field]: value }));
+  }
+
+  async function handlePay() {
+    if (!canPay || isSubmitting) {
+      return;
+    }
+
+    setPayError(null);
+    setIsSubmitting(true);
+
+    try {
+      const { redirectUrl } = await createOrder({
+        momentId: content.purchase.momentId,
+        licenseId: content.purchase.licenseId,
+        paymentMethod: methodToPayment[activeMethod] ?? "QRIS",
+        billing: {
+          email: billing.email,
+          firstName: billing.firstName,
+          lastName: billing.lastName,
+          phone: billing.phone || undefined,
+          country: billing.country,
+        },
+      });
+
+      window.location.href = redirectUrl;
+    } catch (error: unknown) {
+      setPayError(
+        error instanceof Error ? error.message : "Could not start payment. Please try again."
+      );
+      setIsSubmitting(false);
     }
   }
 
@@ -115,23 +158,50 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
               <div className={styles.fieldGrid}>
                 <div className={`${styles.field} ${styles.full}`}>
                   <label htmlFor="email">Email · for receipt &amp; download link</label>
-                  <input id="email" type="email" defaultValue={content.contact.email} />
+                  <input
+                    id="email"
+                    type="email"
+                    value={billing.email}
+                    onChange={(event) => updateBilling("email", event.target.value)}
+                  />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="fname">First name</label>
-                  <input id="fname" type="text" placeholder="Ayaka" />
+                  <input
+                    id="fname"
+                    type="text"
+                    placeholder="Ayaka"
+                    value={billing.firstName}
+                    onChange={(event) => updateBilling("firstName", event.target.value)}
+                  />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="lname">Last name</label>
-                  <input id="lname" type="text" placeholder="Mori" />
+                  <input
+                    id="lname"
+                    type="text"
+                    placeholder="Mori"
+                    value={billing.lastName}
+                    onChange={(event) => updateBilling("lastName", event.target.value)}
+                  />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="phone">Phone <span>— optional, only for QRIS confirmation</span></label>
-                  <input id="phone" type="tel" placeholder="+62 812 3456 7890" />
+                  <input
+                    id="phone"
+                    type="tel"
+                    placeholder="+62 812 3456 7890"
+                    value={billing.phone}
+                    onChange={(event) => updateBilling("phone", event.target.value)}
+                  />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="country">Billing country</label>
-                  <select id="country">
+                  <select
+                    id="country"
+                    value={billing.country}
+                    onChange={(event) => updateBilling("country", event.target.value)}
+                  >
                     {content.contact.countries.map((country) => <option key={country}>{country}</option>)}
                   </select>
                 </div>
@@ -262,31 +332,36 @@ export function CheckoutPageView({ content }: CheckoutPageViewProps) {
               </div>
             </div>
 
-            <div className={styles.promoRow}>
-              <input
-                placeholder="Promo code · DUSK15"
-                value={promo}
-                onChange={(event) => setPromo(event.target.value)}
-              />
-              <button onClick={applyPromo} type="button">Apply</button>
-            </div>
-
             <div className={styles.lines}>
-              <Line label="Subtotal" value={formatUsd(content.summary.subtotal)} />
-              {discount > 0 && <Line className={styles.discount} label={`Discount · ${content.summary.promoCode}`} value={`-${formatUsd(discount)}`} />}
-              <Line label="Service fee" value={formatUsd(totals.service)} info />
-              <Line label="Tax · VAT (11%)" value={formatUsd(totals.tax)} info />
-              <div className={styles.note}>Shown in USD · Rp {totals.idr.toLocaleString("id-ID")} at checkout</div>
+              <Line label="Subtotal" value={formatIdr(content.summary.subtotal)} />
+              <Line label="Service fee" value={formatIdr(totals.service)} info />
+              <Line label="Tax · PPN (11%)" value={formatIdr(totals.tax)} info />
             </div>
 
             <div className={styles.totalLine}>
               <span>Total due</span>
-              <strong><em>USD</em>{totals.total.toFixed(2)}</strong>
+              <strong>{formatIdr(totals.total)}</strong>
             </div>
 
-            <Link className={styles.payButton} href="/checkout/success">
-              Pay {formatUsd(totals.total)} {payLabels[activeMethod]} <span>→</span>
-            </Link>
+            {payError && (
+              <p role="alert" style={{ color: "#b00020", fontSize: "0.85rem", margin: "0 0 0.5rem" }}>
+                {payError}
+              </p>
+            )}
+
+            <button
+              className={styles.payButton}
+              type="button"
+              onClick={handlePay}
+              disabled={!canPay || isSubmitting}
+            >
+              {isSubmitting
+                ? "Starting payment…"
+                : canPay
+                  ? `Pay ${formatIdr(totals.total)} ${payLabels[activeMethod] ?? ""}`
+                  : "Select a moment to purchase"}{" "}
+              <span>→</span>
+            </button>
 
             <div className={styles.trustRow}>
               <span><LockIcon />256-bit SSL</span>
@@ -354,12 +429,12 @@ function Reassure({ icon, title, text }: { icon: React.ReactNode; title: string;
   return <div className={styles.reassure}>{icon}<h3>{title}</h3><p>{text}</p></div>;
 }
 
-function roundCurrency(value: number) {
-  return Math.round(value * 100) / 100;
-}
-
-function formatUsd(value: number) {
-  return `$${value.toFixed(2)}`;
+function formatIdr(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    currency: "IDR",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value);
 }
 
 function LockIcon() {

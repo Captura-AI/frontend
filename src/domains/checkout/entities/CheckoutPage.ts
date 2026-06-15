@@ -24,6 +24,9 @@ export interface CheckoutPage {
   };
   contact: {
     email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
     countries: string[];
   };
   payment: {
@@ -41,12 +44,15 @@ export interface CheckoutPage {
     edition: string;
     file: string;
     frame: string;
+    /** Amount in IDR (backend prices are IDR-denominated). */
     subtotal: number;
     serviceFeePct: number;
     taxPct: number;
-    rateToIdr: number;
-    promoCode: string;
-    promoPct: number;
+  };
+  /** Identifiers required to create the order. Empty when nothing is selected. */
+  purchase: {
+    momentId: string;
+    licenseId: string;
   };
 }
 
