@@ -1,179 +1,182 @@
-import { type PhotographersPage } from "../entities/PhotographersPage";
+import { serverApiRequest } from "@/shared/api/serverApi";
 
-const sharedThumbs = [
-  "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=300&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1551913902-c92207136625?w=300&q=80&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=300&q=80&auto=format&fit=crop",
-] as const;
+import { type PhotographerProfile, type PhotographersPage } from "../entities/PhotographersPage";
 
-/**
- * Returns static mock content for the Photographer Directory page.
- *
- * TODO: When the backend is ready, replace this with IPhotographersRepository:
- *   import { type IPhotographersRepository } from "@/infrastructure/repositories/IPhotographersRepository";
- *   return photographersRepository.getPhotographersPageContent();
- */
-export function getPhotographersPageContent(): PhotographersPage {
+interface BackendPhotographerMoment {
+  capturedAt: number | null;
+  category: string;
+  city: string | null;
+  district: string | null;
+  id: string;
+  imageUrl: string | null;
+  licensePlate: string | null;
+  slug: string | null;
+  tags: string[];
+  title: string;
+  vehicleType: string | null;
+}
+
+interface BackendPhotographerPackage {
+  currency: string;
+  description: string | null;
+  duration: string;
+  id: string;
+  includes: string[];
+  name: string;
+  price: number;
+}
+
+interface BackendPhotographerStats {
+  averageRating: number | null;
+  momentsCount: number;
+  packagesCount: number;
+  reviewsCount: number;
+}
+
+interface BackendPhotographerDirectoryItem {
+  avatarUrl: string | null;
+  bio: string | null;
+  id: string;
+  isApproved: boolean;
+  latestMoments: BackendPhotographerMoment[];
+  location: string | null;
+  name: string;
+  packages: BackendPhotographerPackage[];
+  slug: string;
+  stats: BackendPhotographerStats;
+}
+
+interface BackendPhotographersResponse {
+  data: BackendPhotographerDirectoryItem[];
+  limit: number;
+  offset: number;
+  total: number;
+}
+
+const IMAGE_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f1eee8'/%3E%3Cpath d='M112 276h376L386 146l-76 92-48-54-150 92Z' fill='%23cbc3b4'/%3E%3Ccircle cx='188' cy='132' r='34' fill='%23d8d1c5'/%3E%3C/svg%3E";
+
+function formatCount(value: number): string {
+  return new Intl.NumberFormat("id-ID").format(value);
+}
+
+function formatPrice(value: number, currency: string): string {
+  return new Intl.NumberFormat("id-ID", {
+    currency,
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value);
+}
+
+function ratingStars(averageRating: number | null): string {
+  if (averageRating === null) {
+    return "New";
+  }
+
+  return "★".repeat(Math.max(1, Math.round(averageRating)));
+}
+
+function locationParts(location: string | null): string[] {
+  if (!location) {
+    return ["Indonesia"];
+  }
+
+  return location.split(/[·,]/).map((part) => part.trim()).filter(Boolean);
+}
+
+function mapPhotographer(profile: BackendPhotographerDirectoryItem): PhotographerProfile {
+  const parts = locationParts(profile.location);
+  const firstPackage = profile.packages[0];
+  const latestImages = profile.latestMoments
+    .map((moment) => moment.imageUrl)
+    .filter((imageUrl): imageUrl is string => Boolean(imageUrl));
+  const averageRating = profile.stats.averageRating;
+  const ratingMeta =
+    averageRating === null
+      ? `No reviews yet · ${profile.stats.reviewsCount}`
+      : `${averageRating.toFixed(1)} · ${profile.stats.reviewsCount}`;
+
   return {
-    hero: {
-      eyebrow: "The directory · 142 photographers · Indonesia",
-      headline: "Meet the eyes",
-      headlineEmphasis: "behind the lens",
-      description:
-        "Independent street photographers, working specific corners of specific cities. Browse their portfolios, read their philosophies, and book a private session on the streets they know best.",
-      stats: [
-        { value: "142", label: "Photographers in residence", emphasized: true },
-        { value: "38", label: "Cities covered" },
-        { value: "4.9", label: "Avg session rating" },
-      ],
-    },
-    filters: [
-      { label: "All", count: "142" },
-      { label: "Bandung", count: "34" },
-      { label: "Jakarta", count: "52" },
-      { label: "Bogor", count: "14" },
-      { label: "Bali", count: "22" },
-      { label: "Surabaya", count: "12" },
-      { label: "Yogya", count: "8" },
-    ],
-    visibleCountLabel: "Showing 6 of 142",
-    sortLabel: "Most active this week",
-    photographers: [
-      {
-        slug: "sari-pradipta",
-        name: "Sari Pradipta",
-        spec: "Bandung · Braga · Asia Afrika",
-        avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop",
-        isLive: true,
-        ratingStars: "★★★★★",
-        ratingMeta: "4.96 · 218",
-        quote: "I photograph Braga at golden hour, when the colonial awnings turn copper.",
-        thumbnails: [...sharedThumbs],
-        tags: ["Heritage", "Golden hour", "Documentary"],
-        momentsCaptured: "4,820",
-        sessionsBooked: "218",
-        hourlyRate: "Rp 450k",
-      },
-      {
-        slug: "reza-ardiansyah",
-        name: "Reza Ardiansyah",
-        spec: "Jakarta · Sudirman · GBK",
-        avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop",
-        ratingStars: "★★★★★",
-        ratingMeta: "4.92 · 314",
-        quote: "The Sudirman crowd has a rhythm. I just try to be standing in the right second.",
-        thumbnails: [
-          "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=300&q=80&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=300&q=80&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=300&q=80&auto=format&fit=crop",
-        ],
-        tags: ["Sport", "Run clubs", "Motorbike"],
-        momentsCaptured: "7,140",
-        sessionsBooked: "314",
-        hourlyRate: "Rp 600k",
-      },
-      {
-        slug: "alya-permatasari",
-        name: "Alya Permatasari",
-        spec: "Bandung · Dago · Cihampelas",
-        avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80&auto=format&fit=crop",
-        isLive: true,
-        ratingStars: "★★★★★",
-        ratingMeta: "4.88 · 142",
-        quote: "Late light up Dago when the warungs flicker on — that's when the city softens.",
-        thumbnails: [
-          "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=300&q=80&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=300&q=80&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=300&q=80&auto=format&fit=crop",
-        ],
-        tags: ["Café culture", "Vespa", "Editorial"],
-        momentsCaptured: "3,210",
-        sessionsBooked: "142",
-        hourlyRate: "Rp 380k",
-      },
-      {
-        slug: "bagus-wirawan",
-        name: "Bagus Wirawan",
-        spec: "Yogyakarta · Malioboro · Kotagede",
-        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80&auto=format&fit=crop",
-        ratingStars: "★★★★",
-        mutedStars: "★",
-        ratingMeta: "4.81 · 96",
-        quote: "Becak drivers, silver-smiths, the nightly andong line — Yogya's slow theatre.",
-        thumbnails: [
-          sharedThumbs[0],
-          sharedThumbs[2],
-          "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=300&q=80&auto=format&fit=crop",
-        ],
-        tags: ["Heritage", "Black & white", "Slow shutter"],
-        momentsCaptured: "2,180",
-        sessionsBooked: "96",
-        hourlyRate: "Rp 320k",
-      },
-      {
-        slug: "komang-suarya",
-        name: "Komang Suarya",
-        spec: "Bali · Canggu · Ubud",
-        avatarUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&q=80&auto=format&fit=crop",
-        isLive: true,
-        ratingStars: "★★★★★",
-        ratingMeta: "4.94 · 271",
-        quote: "I work the rice-paddy roads at dawn. Mopeds. Mist. Old men in sarongs.",
-        thumbnails: [
-          "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=300&q=80&auto=format&fit=crop",
-          sharedThumbs[1],
-          "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=300&q=80&auto=format&fit=crop",
-        ],
-        tags: ["Dawn", "Travel", "Ritual"],
-        momentsCaptured: "5,640",
-        sessionsBooked: "271",
-        hourlyRate: "Rp 520k",
-      },
-      {
-        slug: "tessa-kuswandi",
-        name: "Tessa Kuswandi",
-        spec: "Surabaya · Tunjungan · Old Town",
-        avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80&auto=format&fit=crop",
-        ratingStars: "★★★★★",
-        ratingMeta: "4.90 · 124",
-        quote: "Surabaya's old quarter is mostly forgotten. I make a case for it, frame by frame.",
-        thumbnails: [
-          "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=300&q=80&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=300&q=80&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=300&q=80&auto=format&fit=crop",
-        ],
-        tags: ["Architecture", "Family", "Editorial"],
-        momentsCaptured: "2,980",
-        sessionsBooked: "124",
-        hourlyRate: "Rp 420k",
-      },
-    ],
+    avatarUrl: profile.avatarUrl ?? IMAGE_PLACEHOLDER,
+    hourlyRate: firstPackage ? formatPrice(firstPackage.price, firstPackage.currency) : "Rates pending",
+    isLive: profile.latestMoments.length > 0,
+    momentsCaptured: formatCount(profile.stats.momentsCount),
+    mutedStars: averageRating === null ? undefined : "★".repeat(Math.max(0, 5 - Math.round(averageRating))),
+    name: profile.name,
+    quote: profile.bio ?? "Portfolio details are being prepared by this photographer.",
+    ratingMeta,
+    ratingStars: ratingStars(averageRating),
+    sessionsBooked: formatCount(profile.stats.reviewsCount),
+    slug: profile.slug,
+    spec: parts.join(" · "),
+    tags: profile.latestMoments.flatMap((moment) => moment.tags).slice(0, 3),
+    thumbnails:
+      latestImages.length > 0
+        ? latestImages
+        : [IMAGE_PLACEHOLDER, IMAGE_PLACEHOLDER, IMAGE_PLACEHOLDER],
+  };
+}
+
+function buildFilters(profiles: BackendPhotographerDirectoryItem[], total: number) {
+  const counts = profiles.reduce<Map<string, number>>((acc, profile) => {
+    const city = locationParts(profile.location)[0] ?? "Indonesia";
+
+    acc.set(city, (acc.get(city) ?? 0) + 1);
+
+    return acc;
+  }, new Map<string, number>());
+
+  return [
+    { label: "All", count: formatCount(total) },
+    ...Array.from(counts.entries()).map(([label, count]) => ({
+      count: formatCount(count),
+      label,
+    })),
+  ];
+}
+
+export async function getPhotographersPageContent(): Promise<PhotographersPage> {
+  const response = await serverApiRequest<BackendPhotographersResponse>(
+    "/photographers?limit=24&offset=1",
+    { revalidate: false }
+  );
+  const photographers = response.data.map(mapPhotographer);
+
+  return {
     booking: {
-      eyebrow: "Private booking · simple as a postcard",
+      brief:
+        "Tell the photographer what you want to remember, which street matters, and whether any vehicle or plate privacy constraints need attention.",
+      description:
+        "Choose a photographer, a window of light, and a stretch of city. Booking requests will route into the photographer workflow as the supply-side module matures.",
+      eyebrow: "Private booking · request-first",
       headline: "Book a session.",
       headlineEmphasis: "Walk a street.",
-      description:
-        "Choose a photographer, a window of light, and a stretch of city. They'll meet you on the corner. Ninety minutes later, you'll have a roll of frames you'd never have made on your phone.",
-      quote:
-        "She was patient. We walked Braga twice. The third time around, the light caught a man arguing with a parking attendant and I have it forever now.",
-      quoteBy: "— Adit R., on a session with Sari, March 2026",
+      locations: ["Pick from the photographer profile", "Share a custom route"],
+      quote: "Reviews and booking stories will appear as photographers receive real sessions.",
+      quoteBy: "Captura sessions",
       sessionTypes: ["Personal", "Family", "Vehicle", "Event"],
       timeSlots: [
-        { label: "06:30 dawn", disabled: true },
+        { label: "06:30 dawn" },
         { label: "09:00 morning" },
-        { label: "12:30 midday" },
         { label: "17:00 golden hour" },
         { label: "18:30 dusk" },
-        { label: "21:00 night", disabled: true },
       ],
-      locations: [
-        "Jalan Braga · colonial stretch",
-        "Asia Afrika · Hotel Savoy area",
-        "Alun-Alun · old market",
-        "Open to suggestion · we'll plan together",
-      ],
-      brief:
-        "A walk for two. We're celebrating my parents' 35th — they grew up around Braga. Documentary style. Quiet, no posing. We'll come dressed in something they'd have worn in 1991.",
     },
+    filters: buildFilters(response.data, response.total),
+    hero: {
+      description:
+        "Independent street photographers with approved Captura profiles. Browse real portfolios, packages, reviews, and recently indexed moments from the API.",
+      eyebrow: `The directory · ${formatCount(response.total)} photographers · Indonesia`,
+      headline: "Meet the eyes",
+      headlineEmphasis: "behind the lens",
+      stats: [
+        { emphasized: true, label: "Approved photographers", value: formatCount(response.total) },
+        { label: "Profiles on this page", value: formatCount(photographers.length) },
+        { label: "Avg session rating", value: "API-backed" },
+      ],
+    },
+    photographers,
+    sortLabel: "Newest approved profiles",
+    visibleCountLabel: `Showing ${formatCount(photographers.length)} of ${formatCount(response.total)}`,
   };
 }

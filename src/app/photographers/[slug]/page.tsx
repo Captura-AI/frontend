@@ -1,10 +1,7 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import { generateDynamicSeo } from "@/application/seo";
-import {
-  getPhotographerDetail,
-  getPhotographerSlugs,
-} from "@/domains/photographers";
+import { getPhotographerDetail } from "@/domains/photographers/services/PhotographerDetailService";
 import { PhotographerDetailPageView } from "@/presentation/features/photographers/detail";
 import { JsonLd } from "@/presentation/base/components/seo/JsonLd";
 import { seoConfig } from "@/shared/config/seo.config";
@@ -13,15 +10,13 @@ interface PhotographerDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return getPhotographerSlugs().map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
 }: PhotographerDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const detail = getPhotographerDetail(slug);
+  const detail = await getPhotographerDetail(slug);
 
   if (!detail) {
     return {
@@ -50,10 +45,11 @@ export default async function PhotographerDetailPage({
   params,
 }: PhotographerDetailPageProps) {
   const { slug } = await params;
-  const detail = getPhotographerDetail(slug);
+  const detail = await getPhotographerDetail(slug);
 
   if (!detail) notFound();
 
+  const ratingValue = Number(detail.ratingMeta.split(" · ")[0]);
   const jsonLdPerson = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -67,10 +63,10 @@ export default async function PhotographerDetailPage({
       addressLocality: detail.city,
     },
     aggregateRating:
-      detail.reviews.length > 0
+      detail.reviews.length > 0 && Number.isFinite(ratingValue)
         ? {
             "@type": "AggregateRating",
-            ratingValue: detail.rating,
+            ratingValue,
             reviewCount: detail.reviews.length,
           }
         : undefined,
