@@ -57,6 +57,9 @@ export interface ExplorerMoment {
   city: string;
   time: string;
   match: MatchBadge;
+  plateIndicator?: string;
+  sceneTags?: string[];
+  vehicleType?: string;
   captionLine1: string;
   captionLine2: string;
 }

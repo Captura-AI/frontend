@@ -13,8 +13,12 @@ export const metadata: Metadata = generatePageSeo({
   keywords: ["street photography", "explorer", "moments", "search"],
 });
 
-export default function ExplorerPage() {
-  const content = getExplorerPageContent();
+interface ExplorerPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function ExplorerPage({ searchParams }: ExplorerPageProps) {
+  const content = await getExplorerPageContent(await searchParams);
 
   const jsonLdCollection = {
     "@context": "https://schema.org",

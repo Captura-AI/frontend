@@ -102,6 +102,21 @@ function MomentCard({
       <div
         className="absolute bottom-[18px] left-[18px] right-[18px] z-20 text-bg-soft opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-[transform,opacity] duration-[450ms]"
       >
+        {(moment.vehicleType || moment.plateIndicator || moment.sceneTags?.length) && (
+          <div className="mb-3 flex flex-wrap gap-2 font-mono text-[9px] uppercase tracking-[0.08em]">
+            {moment.vehicleType && (
+              <span className="rounded-[4px] bg-bg-soft/15 px-2 py-1">{moment.vehicleType}</span>
+            )}
+            {moment.plateIndicator && (
+              <span className="rounded-[4px] bg-bg-soft/15 px-2 py-1">{moment.plateIndicator}</span>
+            )}
+            {moment.sceneTags?.slice(0, 2).map((tag) => (
+              <span key={tag} className="rounded-[4px] bg-bg-soft/15 px-2 py-1">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         <p className="font-serif italic text-[17px] leading-[1.2] tracking-[-0.01em]">
           {moment.captionLine1}
         </p>
