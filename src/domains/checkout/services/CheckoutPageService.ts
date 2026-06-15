@@ -1,132 +1,271 @@
-import { type CheckoutPage } from "../entities/CheckoutPage";
+import { serverApiRequest } from "@/shared/api/serverApi";
+import { type CheckoutPage, type PaymentTab } from "../entities/CheckoutPage";
 
-/**
- * Returns static mock content for the Checkout page.
- *
- * TODO: When the backend is ready, replace this with IOrdersRepository:
- *   import { type IOrdersRepository } from "@/infrastructure/repositories/IOrdersRepository";
- *   return ordersRepository.getCheckoutPageContent();
- */
-export function getCheckoutPageContent(): CheckoutPage {
+// ─── Backend contracts (public moment + license, authed user) ───────────────
+
+interface BackendCheckoutPhotographer {
+  artistName?: string | null;
+}
+
+interface BackendCheckoutMoment {
+  id?: string | null;
+  caption?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  cameraInfo?: string | null;
+  photographerProfile?: BackendCheckoutPhotographer | null;
+}
+
+interface BackendCheckoutLicenseType {
+  name?: string | null;
+}
+
+interface BackendCheckoutLicense {
+  id: string;
+  price: number | string;
+  currency: string;
+  isActive: boolean;
+  licenseType?: BackendCheckoutLicenseType | null;
+}
+
+interface BackendCheckoutUser {
+  email?: string | null;
+  name?: string | null;
+  phoneNumber?: string | null;
+}
+
+const SERVICE_FEE_PCT = 0.05;
+const TAX_PCT = 0.11;
+
+// ─── Presentational template (payment UI is a preview; Midtrans Snap hosts the
+// real method selection on redirect). ───────────────────────────────────────
+
+const PAYMENT_TABS: PaymentTab[] = [
+  {
+    id: "local",
+    label: "Indonesia",
+    methods: [
+      {
+        id: "qris",
+        logo: "QRIS",
+        title: "QRIS · scan with any Indonesian app",
+        subtitle: "GoPay · OVO · DANA · ShopeePay · LinkAja · BCA · Mandiri · BRI",
+        meta: "No fee · Instant",
+        feeType: "free",
+        darkLogo: true,
+      },
+      {
+        id: "va",
+        logo: "VA",
+        title: "Virtual Account · BCA, Mandiri, BNI, BRI, Permata",
+        subtitle: "Pay from any Indonesian bank · 24-hour window",
+        meta: "+ Rp 4,000 · ~5 min",
+        feeType: "fee",
+      },
+      {
+        id: "gopay",
+        logo: "GoPay",
+        title: "GoPay direct",
+        subtitle: "Open Gojek app · approve · done",
+        meta: "No fee · Instant",
+        feeType: "free",
+      },
+      {
+        id: "ovo",
+        logo: "OVO",
+        title: "OVO direct",
+        subtitle: "Receive a push notification in OVO app",
+        meta: "No fee · Instant",
+        feeType: "free",
+      },
+      {
+        id: "dana",
+        logo: "DANA",
+        title: "DANA",
+        subtitle: "Approve from your DANA balance",
+        meta: "No fee · Instant",
+        feeType: "free",
+      },
+    ],
+  },
+  {
+    id: "card",
+    label: "Card",
+    methods: [
+      {
+        id: "card",
+        logo: "VISA",
+        title: "Credit / Debit card",
+        subtitle: "Visa · Mastercard · JCB · American Express",
+        darkLogo: true,
+      },
+    ],
+  },
+];
+
+const QRIS_APPS = [
+  "GoPay",
+  "OVO",
+  "DANA",
+  "ShopeePay",
+  "LinkAja",
+  "BCA Mobile",
+  "Livin' Mandiri",
+  "BRImo",
+];
+
+const CARD_BRANDS = ["VISA", "MC", "JCB", "AMEX"];
+
+const COUNTRIES = ["Indonesia", "Singapore", "Malaysia", "United States", "Japan", "Australia"];
+
+function checkoutTemplate(): CheckoutPage {
   return {
     header: {
       title: "Almost",
       emphasis: "yours",
-      status: "Order will complete in under a minute",
+      status: "Order completes after payment confirmation",
     },
     contact: {
-      email: "ayaka@captura.studio",
-      countries: ["Indonesia", "Singapore", "United States", "Japan", "United Kingdom", "Germany", "Australia"],
+      email: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      countries: COUNTRIES,
     },
     payment: {
-      tabs: [
-        {
-          id: "local",
-          label: "Indonesia",
-          methods: [
-            {
-              id: "qris",
-              logo: "QRIS",
-              title: "QRIS · scan with any Indonesian app",
-              subtitle: "GoPay · OVO · DANA · ShopeePay · LinkAja · BCA · Mandiri · BRI",
-              meta: "No fee · Instant",
-              feeType: "free",
-              darkLogo: true,
-            },
-            {
-              id: "va",
-              logo: "VA",
-              title: "Virtual Account · BCA, Mandiri, BNI, BRI, Permata",
-              subtitle: "Pay from any Indonesian bank · 24-hour window",
-              meta: "+ Rp 4,000 · ~5 min",
-              feeType: "fee",
-            },
-            {
-              id: "gopay",
-              logo: "GoPay",
-              title: "GoPay direct",
-              subtitle: "Open Gojek app · approve · done",
-              meta: "No fee · Instant",
-              feeType: "free",
-            },
-            {
-              id: "ovo",
-              logo: "OVO",
-              title: "OVO direct",
-              subtitle: "Receive a push notification in OVO app",
-              meta: "No fee · Instant",
-              feeType: "free",
-            },
-            {
-              id: "dana",
-              logo: "DANA",
-              title: "DANA",
-              subtitle: "Approve from your DANA balance",
-              meta: "No fee · Instant",
-              feeType: "free",
-            },
-            {
-              id: "alfamart",
-              logo: "A·M",
-              title: "Alfamart / Indomaret · over the counter",
-              subtitle: "Pay cash at any minimarket within 24 hours",
-              meta: "+ Rp 5,000 · <= 24h",
-              feeType: "fee",
-            },
-          ],
-        },
-        {
-          id: "card",
-          label: "Card",
-          methods: [
-            {
-              id: "card",
-              logo: "VISA",
-              title: "Credit / Debit card",
-              subtitle: "Visa · Mastercard · JCB · American Express · Discover",
-              darkLogo: true,
-            },
-          ],
-        },
-        {
-          id: "wallet",
-          label: "E-wallet",
-          methods: [
-            { id: "apple", logo: "Pay", title: "Apple Pay", subtitle: "Authenticate with Face ID · one tap", meta: "No fee · Instant", feeType: "free", darkLogo: true },
-            { id: "google", logo: "G·Pay", title: "Google Pay", subtitle: "Approve from Android · one tap", meta: "No fee · Instant", feeType: "free" },
-            { id: "paypal", logo: "PayPal", title: "PayPal", subtitle: "Log in to your PayPal account in a new window", meta: "+ 1.5% · Instant", feeType: "fee" },
-            { id: "alipay", logo: "Ali", title: "Alipay", subtitle: "Scan from the Alipay app", meta: "No fee · Instant", feeType: "free" },
-          ],
-        },
-        {
-          id: "bank",
-          label: "Bank transfer",
-          methods: [
-            { id: "sepa", logo: "SEPA", title: "SEPA bank transfer · EU", subtitle: "For accounts in 36 European countries", meta: "No fee · 1-2 days", feeType: "free" },
-            { id: "wise", logo: "Wise", title: "Wise (international)", subtitle: "Mid-market rate · 40+ currencies", meta: "+ 0.4% · Same day", feeType: "fee" },
-            { id: "ach", logo: "ACH", title: "ACH transfer · US", subtitle: "Verify with your US bank login", meta: "No fee · 2-3 days", feeType: "free" },
-          ],
-        },
-      ],
-      qrisApps: ["GoPay", "OVO", "DANA", "ShopeePay", "LinkAja", "BCA Mobile", "Livin' Mandiri", "BRImo", "Jenius"],
-      cardBrands: ["VISA", "MC", "JCB", "AMEX"],
+      tabs: PAYMENT_TABS,
+      qrisApps: QRIS_APPS,
+      cardBrands: CARD_BRANDS,
     },
     summary: {
       eyebrow: "Order summary · 1 moment",
-      imageUrl: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=200&q=70&auto=format&fit=crop",
-      title: "Seen near Shibuya,",
-      emphasis: "just before dusk",
-      photographer: "By Ayaka Mori",
-      license: "Personal print",
-      edition: "Edition 1/25",
-      file: "6720 x 8400 · TIFF",
-      frame: "Frame No. 01428",
-      subtotal: 48,
-      serviceFeePct: 0.05,
-      taxPct: 0.11,
-      rateToIdr: 15750,
-      promoCode: "DUSK15",
-      promoPct: 0.15,
+      imageUrl: "/window.svg",
+      title: "Select a",
+      emphasis: "moment",
+      photographer: "—",
+      license: "—",
+      edition: "Single moment",
+      file: "Full-resolution",
+      frame: "—",
+      subtotal: 0,
+      serviceFeePct: SERVICE_FEE_PCT,
+      taxPct: TAX_PCT,
     },
+    purchase: {
+      momentId: "",
+      licenseId: "",
+    },
+  };
+}
+
+function splitName(name: string | null | undefined): { firstName: string; lastName: string } {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+
+  const firstName = parts[0] ?? "";
+  const lastName = parts.slice(1).join(" ");
+
+  return { firstName, lastName };
+}
+
+async function fetchMoment(momentId: string): Promise<BackendCheckoutMoment | null> {
+  try {
+    return await serverApiRequest<BackendCheckoutMoment>(`/moments/${momentId}`, {
+      revalidate: false,
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function fetchLicenses(momentId: string): Promise<BackendCheckoutLicense[]> {
+  try {
+    return await serverApiRequest<BackendCheckoutLicense[]>(`/moments/${momentId}/licenses`, {
+      revalidate: false,
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function fetchUser(): Promise<BackendCheckoutUser | null> {
+  try {
+    return await serverApiRequest<BackendCheckoutUser>("/users/me", {
+      auth: true,
+      revalidate: false,
+    });
+  } catch {
+    return null;
+  }
+}
+
+function applyContact(template: CheckoutPage, user: BackendCheckoutUser | null): CheckoutPage["contact"] {
+  if (!user) {
+    return template.contact;
+  }
+
+  const { firstName, lastName } = splitName(user.name);
+
+  return {
+    ...template.contact,
+    email: user.email ?? "",
+    firstName,
+    lastName,
+    phone: user.phoneNumber ?? "",
+  };
+}
+
+function applySummary(
+  template: CheckoutPage,
+  moment: BackendCheckoutMoment,
+  license: BackendCheckoutLicense
+): CheckoutPage["summary"] {
+  return {
+    ...template.summary,
+    imageUrl: moment.thumbnailUrl ?? moment.imageUrl ?? template.summary.imageUrl,
+    title: moment.caption ?? moment.description ?? "Captura moment",
+    emphasis: "",
+    photographer: moment.photographerProfile?.artistName ?? "Captura photographer",
+    license: license.licenseType?.name ?? "Standard license",
+    file: moment.cameraInfo ?? "Full-resolution",
+    frame: "Numbered edition",
+    subtotal: Number(license.price),
+  };
+}
+
+/**
+ * Builds the checkout page for a specific moment + license. The summary and
+ * billing prefill come from real data; the payment-method UI is a preview
+ * (Midtrans Snap hosts the real selection after redirect). If the moment or
+ * license cannot be loaded, an inert template is returned so the page still
+ * renders, with an empty `purchase` that disables the pay action.
+ */
+export async function getCheckoutPageContent(
+  momentId: string | undefined,
+  licenseId: string | undefined
+): Promise<CheckoutPage> {
+  const template = checkoutTemplate();
+
+  if (!momentId || !licenseId) {
+    return template;
+  }
+
+  const [moment, licenses, user] = await Promise.all([
+    fetchMoment(momentId),
+    fetchLicenses(momentId),
+    fetchUser(),
+  ]);
+
+  const license = licenses.find((candidate) => candidate.id === licenseId && candidate.isActive);
+
+  if (!moment || !license) {
+    return { ...template, contact: applyContact(template, user) };
+  }
+
+  return {
+    ...template,
+    contact: applyContact(template, user),
+    summary: applySummary(template, moment, license),
+    purchase: { momentId: moment.id ?? momentId, licenseId: license.id },
   };
 }
