@@ -12,7 +12,11 @@ export const metadata: Metadata = generatePageSeo({
   noFollow: true,
 });
 
-export default function AccountProfilePage() {
-  const content = getAccountProfilePageContent();
+// Per-user authenticated page — always render on demand, never prerender.
+export const dynamic = "force-dynamic";
+
+export default async function AccountProfilePage() {
+  const content = await getAccountProfilePageContent();
+
   return <AccountProfilePageView content={content} />;
 }

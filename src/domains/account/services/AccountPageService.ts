@@ -4,91 +4,178 @@ import {
   type AccountProfilePage,
   type DownloadStatus,
   type LibraryItem,
+  type LinkedAccount,
   type OrderStatus,
+  type VerificationState,
 } from "../entities/AccountPage";
 
-/**
- * Returns static mock content for the Account Profile and Library pages.
- *
- * TODO: When the backend is ready, replace these with IAccountRepository:
- *   import { type IAccountRepository } from "@/infrastructure/repositories/IAccountRepository";
- *   const profile = await accountRepository.getProfile();
- *   const library = await accountRepository.getLibrary();
- */
-export function getAccountProfilePageContent(): AccountProfilePage {
+// ─── Profile: real identity from GET /users/me ──────────────────────────────
+// Account settings (preferences/privacy/shortcuts) have no backend store yet,
+// so they stay as presentational defaults — never claimed as saved user state.
+
+interface BackendUserPhotographerProfile {
+  location?: string | null;
+}
+
+interface BackendUser {
+  name?: string | null;
+  username?: string | null;
+  email?: string | null;
+  phoneNumber?: string | null;
+  avatar?: string | null;
+  providers?: string[] | null;
+  isEmailVerified?: boolean | null;
+  isPhoneVerified?: boolean | null;
+  createdAt?: number | null; // Unix ms
+  photographerProfile?: BackendUserPhotographerProfile | null;
+}
+
+const PROFILE_PREFERENCES: AccountProfilePage["preferences"] = [
+  {
+    label: "Default search city",
+    value: "Jakarta",
+    helper: "Explorer opens with Jakarta and nearby hotspots first.",
+  },
+  {
+    label: "Language",
+    value: "English",
+    helper: "Receipts, download notes, and account emails.",
+  },
+  {
+    label: "Notification channel",
+    value: "Email + WhatsApp",
+    helper: "Payment receipts, order readiness, and removal updates.",
+  },
+];
+
+const PROFILE_PRIVACY: AccountProfilePage["privacy"] = [
+  {
+    label: "Mask plate numbers in public views",
+    enabled: true,
+    description: "Full plate metadata stays private unless needed for verified matching.",
+  },
+  {
+    label: "Keep saved searches private",
+    enabled: true,
+    description: "Saved search terms never appear on photographer dashboards.",
+  },
+  {
+    label: "Require approval before public use",
+    enabled: false,
+    description: "Ask Captura support to review any image where you are clearly identifiable.",
+  },
+];
+
+const PROFILE_SHORTCUTS: AccountProfilePage["shortcuts"] = [
+  {
+    label: "Open library",
+    href: "/account/library",
+    description: "Downloads, invoices, and license details.",
+  },
+  {
+    label: "Request removal",
+    href: "/privacy/removal",
+    description: "Ask Captura to hide or review a public moment.",
+  },
+  {
+    label: "Payment support",
+    href: "/support",
+    description: "Refund, receipt, and failed payment help.",
+  },
+];
+
+const PROFILE_EMPTY_STATE: AccountProfilePage["emptyState"] = {
+  title: "Your profile is ready enough to search.",
+  description:
+    "Add a phone number and preferred city when you want faster payment confirmation and local photographer recommendations.",
+  ctaLabel: "Find a moment",
+  ctaHref: "/explorer",
+};
+
+function toAvatarInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
+
+  if (parts.length === 0) {
+    return "·";
+  }
+
+  return parts.map((part) => part.charAt(0).toUpperCase()).join("");
+}
+
+function formatMemberSince(createdAt: number | null | undefined): string {
+  if (!createdAt) {
+    return "Recently joined";
+  }
+
+  return new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(
+    new Date(createdAt)
+  );
+}
+
+function toVerificationState(user: BackendUser): VerificationState {
+  if (user.isEmailVerified) {
+    return "verified";
+  }
+
+  return "pending";
+}
+
+function toLinkedAccounts(user: BackendUser): LinkedAccount[] {
+  const providers = user.providers ?? [];
+  const hasGoogle = providers.includes("google");
+  const hasApple = providers.includes("apple");
+
+  return [
+    {
+      provider: "Google",
+      value: hasGoogle ? user.email ?? "Connected" : "Not connected",
+      status: hasGoogle ? "Connected" : "Optional",
+    },
+    {
+      provider: "Apple",
+      value: hasApple ? "Connected" : "Not connected",
+      status: hasApple ? "Connected" : "Optional",
+    },
+    {
+      provider: "Phone",
+      value: user.phoneNumber ?? "Not added",
+      status: user.isPhoneVerified ? "Verified" : "Optional",
+    },
+  ];
+}
+
+function toProfileUser(user: BackendUser): AccountProfilePage["user"] {
+  const name = user.name ?? user.username ?? "Captura member";
+
   return {
-    user: {
-      name: "Ayaka Tan",
-      email: "ayaka@captura.studio",
-      phone: "+62 812 3456 7890",
-      city: "Jakarta Selatan",
-      avatarInitials: "AT",
-      memberSince: "Apr 2026",
-      verification: "verified",
-    },
-    preferences: [
-      {
-        label: "Default search city",
-        value: "Jakarta",
-        helper: "Explorer opens with Jakarta and nearby hotspots first.",
-      },
-      {
-        label: "Language",
-        value: "English",
-        helper: "Receipts, download notes, and account emails.",
-      },
-      {
-        label: "Notification channel",
-        value: "Email + WhatsApp",
-        helper: "Payment receipts, order readiness, and removal updates.",
-      },
-    ],
-    privacy: [
-      {
-        label: "Mask plate numbers in public views",
-        enabled: true,
-        description: "Full plate metadata stays private unless needed for verified matching.",
-      },
-      {
-        label: "Keep saved searches private",
-        enabled: true,
-        description: "Saved search terms never appear on photographer dashboards.",
-      },
-      {
-        label: "Require approval before public use",
-        enabled: false,
-        description: "Ask Captura support to review any image where you are clearly identifiable.",
-      },
-    ],
-    shortcuts: [
-      {
-        label: "Open library",
-        href: "/account/library",
-        description: "Downloads, invoices, and license details.",
-      },
-      {
-        label: "Request removal",
-        href: "/privacy/removal",
-        description: "Ask Captura to hide or review a public moment.",
-      },
-      {
-        label: "Payment support",
-        href: "/support",
-        description: "Refund, receipt, and failed payment help.",
-      },
-    ],
-    linkedAccounts: [
-      { provider: "Google", value: "ayaka@captura.studio", status: "Connected" },
-      { provider: "WhatsApp", value: "+62 812 3456 7890", status: "Receipt alerts" },
-      { provider: "Apple", value: "Not connected", status: "Optional" },
-    ],
-    emptyState: {
-      title: "Your profile is ready enough to search.",
-      description:
-        "Add a phone number and preferred city when you want faster payment confirmation and local photographer recommendations.",
-      ctaLabel: "Find a moment",
-      ctaHref: "/explorer",
-    },
+    name,
+    email: user.email ?? "—",
+    phone: user.phoneNumber ?? "Not added",
+    city: user.photographerProfile?.location ?? "—",
+    avatarInitials: toAvatarInitials(name),
+    memberSince: formatMemberSince(user.createdAt),
+    verification: toVerificationState(user),
+  };
+}
+
+/**
+ * Loads the signed-in buyer's identity from `GET /users/me`. A failed request
+ * (expired session, unreachable backend) propagates to the route error
+ * boundary rather than rendering a placeholder identity.
+ */
+export async function getAccountProfilePageContent(): Promise<AccountProfilePage> {
+  const user = await serverApiRequest<BackendUser>("/users/me", {
+    auth: true,
+    revalidate: false,
+  });
+
+  return {
+    user: toProfileUser(user),
+    preferences: PROFILE_PREFERENCES,
+    privacy: PROFILE_PRIVACY,
+    shortcuts: PROFILE_SHORTCUTS,
+    linkedAccounts: toLinkedAccounts(user),
+    emptyState: PROFILE_EMPTY_STATE,
   };
 }
 
