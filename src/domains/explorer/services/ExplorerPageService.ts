@@ -1,4 +1,163 @@
-import { type ExplorerPage } from "../entities/ExplorerPage";
+import { serverApiRequest } from "@/shared/api/serverApi";
+import { type ExplorerActiveFilter, type ExplorerMoment, type ExplorerPage } from "../entities/ExplorerPage";
+
+type SearchParamsValue = string | string[] | undefined;
+
+export type ExplorerSearchParams = Record<string, SearchParamsValue>;
+
+interface BackendPaginate<T> {
+  content: T[];
+  meta?: {
+    hasNextPage?: boolean;
+    page?: number;
+    size?: number;
+    totalData?: number;
+  };
+}
+
+interface BackendMoment {
+  id: string;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  capturedAt?: number | null;
+  caption?: string | null;
+  city?: string | null;
+  district?: string | null;
+  description?: string | null;
+  licensePlate?: string | null;
+  tags?: string[] | null;
+  vehicleType?: string | null;
+  photographer?: {
+    firstName?: string | null;
+    lastName?: string | null;
+  } | null;
+}
+
+interface BackendMomentSearchMatch {
+  isPlateMatch: boolean;
+  isSemanticMatch: boolean;
+  label: "semantic" | "plate-exact" | "plate-partial" | "text" | "recent";
+  score: number;
+}
+
+interface BackendMomentSearchResult {
+  match: BackendMomentSearchMatch;
+  moment: BackendMoment;
+}
+
+interface BackendSearchBody {
+  licensePlate?: string;
+  limit: number;
+  location?: {
+    city?: string;
+    district?: string;
+  };
+  offset: number;
+  query?: string;
+  vehicleTypes?: string[];
+}
+
+const PARAM_LABELS: Record<string, string> = {
+  area: "area",
+  location: "where",
+  photographer: "photographer",
+  plate: "plate",
+  q: "query",
+  time: "when",
+  vehicleType: "vehicle",
+};
+
+function firstParam(value: SearchParamsValue): string | undefined {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+}
+
+function cleanParam(value: SearchParamsValue): string | undefined {
+  const rawValue = firstParam(value)?.trim();
+
+  return rawValue ? rawValue : undefined;
+}
+
+function parsePositiveInt(value: SearchParamsValue, fallback: number): number {
+  const parsed = Number(cleanParam(value));
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function formatCapturedTime(capturedAt?: number | null): string {
+  if (!capturedAt) {
+    return "Time TBA";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Jakarta",
+  }).format(new Date(capturedAt * 1000));
+}
+
+function formatScore(score: number): string {
+  return `${Math.round(Math.min(Math.max(score, 0), 1) * 100)}%`;
+}
+
+function photographerName(moment: BackendMoment): string {
+  const names = [moment.photographer?.firstName, moment.photographer?.lastName].filter(
+    (name): name is string => Boolean(name)
+  );
+
+  return names.length > 0 ? names.join(" ") : "Captura photographer";
+}
+
+function toBackendSearchBody(searchParams: ExplorerSearchParams): BackendSearchBody {
+  const query = cleanParam(searchParams["q"]);
+  const location = cleanParam(searchParams["location"]);
+  const plate = cleanParam(searchParams["plate"]);
+  const vehicleType = cleanParam(searchParams["vehicleType"]);
+  const page = parsePositiveInt(searchParams["page"], 1);
+  const limit = Math.min(parsePositiveInt(searchParams["limit"], 12), 100);
+
+  return {
+    ...(query ? { query } : {}),
+    ...(location ? { location: { city: location } } : {}),
+    ...(plate ? { licensePlate: plate } : {}),
+    ...(vehicleType ? { vehicleTypes: [vehicleType] } : {}),
+    limit,
+    offset: page,
+  };
+}
+
+function buildActiveFilters(searchParams: ExplorerSearchParams): ExplorerActiveFilter[] {
+  return Object.entries(PARAM_LABELS).flatMap(([key, keyLabel]) => {
+    const value = cleanParam(searchParams[key]);
+
+    return value ? [{ key, keyLabel, value }] : [];
+  });
+}
+
+function toExplorerMoment(result: BackendMomentSearchResult): ExplorerMoment {
+  const { match, moment } = result;
+  const city = [moment.city, moment.district].filter(Boolean).join(" · ") || "Location TBA";
+  const sceneTags = moment.tags?.slice(0, 3) ?? [];
+
+  return {
+    id: moment.id,
+    imageUrl: moment.thumbnailUrl ?? moment.imageUrl ?? "/window.svg",
+    city,
+    time: formatCapturedTime(moment.capturedAt),
+    match:
+      match.label === "plate-partial"
+        ? { type: "partial", label: "Plate · partial" }
+        : { type: "match", score: formatScore(match.score) },
+    plateIndicator: match.isPlateMatch ? moment.licensePlate ?? "Plate match" : undefined,
+    sceneTags,
+    vehicleType: moment.vehicleType ?? undefined,
+    captionLine1: moment.caption ?? moment.description ?? "A searchable Captura moment.",
+    captionLine2: `By ${photographerName(moment)}`,
+  };
+}
 
 /**
  * Returns static mock content for the Explorer page.
@@ -8,7 +167,7 @@ import { type ExplorerPage } from "../entities/ExplorerPage";
  *   const repo = createExplorerRepository(httpClient);
  *   return repo.getExplorerPageContent(filters);
  */
-export function getExplorerPageContent(): ExplorerPage {
+function getStaticExplorerPageContent(): ExplorerPage {
   return {
     title: {
       eyebrow: "Explorer · a quiet search",
@@ -254,4 +413,50 @@ export function getExplorerPageContent(): ExplorerPage {
       ],
     },
   };
+}
+
+export async function getExplorerPageContent(
+  searchParams: ExplorerSearchParams = {}
+): Promise<ExplorerPage> {
+  const fallback = getStaticExplorerPageContent();
+  const activeFilters = buildActiveFilters(searchParams);
+  const hasSearchParams = activeFilters.length > 0;
+
+  if (!hasSearchParams) {
+    return fallback;
+  }
+
+  try {
+    const response = await serverApiRequest<BackendPaginate<BackendMomentSearchResult>>(
+      "/moments/search",
+      {
+        body: toBackendSearchBody(searchParams),
+        method: "POST",
+        revalidate: false,
+      }
+    );
+    const moments = response.content.map(toExplorerMoment);
+    const totalData = response.meta?.totalData ?? moments.length;
+    const hasNextPage = response.meta?.hasNextPage ?? false;
+
+    return {
+      ...fallback,
+      activeFilters,
+      results: {
+        ...fallback.results,
+        count: `${totalData.toLocaleString("en")} ranked matches`,
+        loadMoreCount: hasNextPage ? "More available" : "End of matches",
+        moments,
+      },
+    };
+  } catch {
+    return {
+      ...fallback,
+      activeFilters,
+      results: {
+        ...fallback.results,
+        count: "Backend unavailable · showing reference moments",
+      },
+    };
+  }
 }
