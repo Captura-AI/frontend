@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import { Cormorant_Garamond, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { AppShell } from "@/presentation/base/layout/AppShell";
+import { Providers } from "@/app/providers";
 import { seoConfig } from "@/shared/config/seo.config";
 import "./globals.css";
 
@@ -64,7 +65,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable}`}>
       <body className="flex min-h-screen flex-col bg-bg text-ink antialiased">
-        <AppShell>{children}</AppShell>
+        <Providers>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );
