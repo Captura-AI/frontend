@@ -15,6 +15,9 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+/** Mirrors the backend `UserRoleEnum` (user | photographer | admin). */
+export type UserRole = "user" | "photographer" | "admin";
+
 export interface AuthUser {
   id: string;
   email: string | null;
@@ -25,6 +28,11 @@ export interface AuthUser {
   providers?: string[];
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
+  /**
+   * Role from `GET /authentication/profile`, used to drive role-based route
+   * access (buyer vs photographer vs admin). Optional for backward safety.
+   */
+  role?: UserRole;
 }
 
 export interface PhoneInitPayload {
