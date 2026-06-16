@@ -11,7 +11,10 @@ export const metadata: Metadata = generatePageSeo({
   noFollow: true,
 });
 
-export default function AccountSavedSearchesPage() {
-  const content = getAccountSavedSearchesPageContent();
+export const dynamic = "force-dynamic";
+
+export default async function AccountSavedSearchesPage() {
+  const content = await getAccountSavedSearchesPageContent();
+
   return <AccountSavedSearchesPageView content={content} />;
 }
