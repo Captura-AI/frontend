@@ -1,21 +1,19 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getHotspotDetail, getHotspotIds } from "@/domains/hotspot";
+import { getHotspotDetailBySlug } from "@/domains/hotspot";
 import { HotspotDetailView } from "@/presentation/features/hotspot/components/HotspotDetailView";
+
+export const dynamic = "force-dynamic";
 
 interface HotspotDetailPageProps {
   params: Promise<{ id: string }>;
-}
-
-export function generateStaticParams() {
-  return getHotspotIds().map((id) => ({ id }));
 }
 
 export async function generateMetadata({
   params,
 }: HotspotDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const detail = getHotspotDetail(id);
+  const detail = await getHotspotDetailBySlug(id);
 
   if (!detail) {
     return {
@@ -33,7 +31,7 @@ export default async function HotspotDetailPage({
   params,
 }: HotspotDetailPageProps) {
   const { id } = await params;
-  const detail = getHotspotDetail(id);
+  const detail = await getHotspotDetailBySlug(id);
 
   if (!detail) notFound();
 
