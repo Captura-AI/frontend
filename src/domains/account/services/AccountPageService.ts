@@ -223,6 +223,7 @@ interface BackendOrdersResult {
 
 const PAID_STATUS = "PAID";
 const PENDING_STATUS = "PENDING";
+const REFUNDED_STATUS = "REFUNDED";
 
 const LIBRARY_HEADER: AccountLibraryPage["header"] = {
   title: "Your purchased",
@@ -259,6 +260,10 @@ function formatPurchaseDate(createdAt: number | null): string {
   }).format(new Date(createdAt));
 }
 
+// Backend order statuses: PAID, PENDING, FAILED, EXPIRED, CANCELLED (+ REFUNDED
+// once refunds ship in Phase 19). PAID → ready, PENDING → in-flight, REFUNDED →
+// refunded; every terminal-unfulfilled status (FAILED/EXPIRED/CANCELLED) shows
+// as failed so the library never implies a download that isn't available.
 function toOrderStatus(status: string): OrderStatus {
   if (status === PAID_STATUS) {
     return "ready";
@@ -266,6 +271,10 @@ function toOrderStatus(status: string): OrderStatus {
 
   if (status === PENDING_STATUS) {
     return "processing";
+  }
+
+  if (status === REFUNDED_STATUS) {
+    return "refunded";
   }
 
   return "failed";
@@ -278,6 +287,10 @@ function toDownloadStatus(status: string): DownloadStatus {
 
   if (status === PENDING_STATUS) {
     return "pending";
+  }
+
+  if (status === REFUNDED_STATUS) {
+    return "refunded";
   }
 
   return "failed";
