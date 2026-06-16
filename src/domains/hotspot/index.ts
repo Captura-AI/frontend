@@ -1,5 +1,7 @@
-export { getHotspotPageData } from "./services/HotspotPageService";
-export { getHotspotDetail, getHotspotIds } from "./services/HotspotDetailService";
+export {
+  getHotspotPageContent,
+  getHotspotDetailBySlug,
+} from "./services/HotspotApiService";
 export type {
   HotspotPage,
   Hotspot,
