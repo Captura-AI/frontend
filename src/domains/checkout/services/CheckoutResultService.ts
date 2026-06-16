@@ -45,6 +45,9 @@ interface BackendOrderDetail {
 const VALID_STATUSES: CheckoutResultStatus[] = ["success", "pending", "failed"];
 const PAID_STATUS = "PAID";
 const PENDING_STATUS = "PENDING";
+const EXPIRED_STATUS = "EXPIRED";
+const CANCELLED_STATUS = "CANCELLED";
+const REFUNDED_STATUS = "REFUNDED";
 
 function formatIdr(amount: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -78,7 +81,70 @@ function availabilityFor(status: CheckoutResultStatus): string {
   return "Not available — payment did not complete";
 }
 
-function buildStates(momentHref: string): CheckoutResultPage["states"] {
+type ResultStateCopy = CheckoutResultPage["states"]["failed"];
+
+/**
+ * The "failed" bucket covers every non-success, non-pending backend status.
+ * Each terminal reason (failed / expired / cancelled / refunded) gets accurate
+ * copy so the buyer sees what actually happened — never a generic catch-all.
+ */
+function failedStateCopy(rawStatus: string | undefined): ResultStateCopy {
+  if (rawStatus === EXPIRED_STATUS) {
+    return {
+      eyebrow: "Payment expired",
+      title: "The payment window",
+      emphasis: "closed",
+      description:
+        "The order is saved, but the payment window expired before it completed. Start a new checkout to try again.",
+      primaryLabel: "Start a new checkout",
+      primaryHref: "/checkout",
+      secondaryLabel: "Contact support",
+      secondaryHref: "/support",
+    };
+  }
+
+  if (rawStatus === CANCELLED_STATUS) {
+    return {
+      eyebrow: "Order cancelled",
+      title: "This order was",
+      emphasis: "cancelled",
+      description:
+        "No payment was taken. You can start a fresh checkout whenever you're ready.",
+      primaryLabel: "Back to Explorer",
+      primaryHref: "/explorer",
+      secondaryLabel: "Contact support",
+      secondaryHref: "/support",
+    };
+  }
+
+  if (rawStatus === REFUNDED_STATUS) {
+    return {
+      eyebrow: "Payment refunded",
+      title: "This order was",
+      emphasis: "refunded",
+      description:
+        "The amount is being returned to your original payment method on your bank's timeline. Reach out if you have any questions.",
+      primaryLabel: "Contact support",
+      primaryHref: "/support",
+      secondaryLabel: "Back to Explorer",
+      secondaryHref: "/explorer",
+    };
+  }
+
+  return {
+    eyebrow: "Payment failed",
+    title: "No charge went",
+    emphasis: "through",
+    description:
+      "The order is saved, but payment did not complete. Try another method or contact support if the bank shows a hold.",
+    primaryLabel: "Retry checkout",
+    primaryHref: "/checkout",
+    secondaryLabel: "Contact support",
+    secondaryHref: "/support",
+  };
+}
+
+function buildStates(momentHref: string, rawStatus?: string): CheckoutResultPage["states"] {
   return {
     success: {
       eyebrow: "Payment confirmed",
@@ -102,17 +168,7 @@ function buildStates(momentHref: string): CheckoutResultPage["states"] {
       secondaryLabel: "Payment support",
       secondaryHref: "/support",
     },
-    failed: {
-      eyebrow: "Payment failed",
-      title: "No charge went",
-      emphasis: "through",
-      description:
-        "The order is saved, but payment did not complete. Try another method or contact support if the bank shows a hold.",
-      primaryLabel: "Retry checkout",
-      primaryHref: "/checkout",
-      secondaryLabel: "Contact support",
-      secondaryHref: "/support",
-    },
+    failed: failedStateCopy(rawStatus),
   };
 }
 
@@ -158,7 +214,7 @@ function toResultPage(order: BackendOrderDetail): CheckoutResultPage {
       email,
       estimatedAvailability: availabilityFor(status),
     },
-    states: buildStates(momentId ? `/explorer/${momentId}` : "/explorer"),
+    states: buildStates(momentId ? `/explorer/${momentId}` : "/explorer", order.status),
     nextSteps: buildNextSteps(email),
     support: SUPPORT_BLOCK,
   };
