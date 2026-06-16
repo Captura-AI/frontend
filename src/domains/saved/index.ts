@@ -1,7 +1,7 @@
 export {
   getAccountSavedPageContent,
   getAccountSavedSearchesPageContent,
-} from "./services/SavedService";
+} from "./services/SavedApiService";
 export type {
   SavedMoment,
   SavedSearch,
