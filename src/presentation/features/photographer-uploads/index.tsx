@@ -9,6 +9,7 @@ import {
   type VehicleType,
 } from "@/domains/photographer-uploads";
 import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
+import { UploadDropzone } from "./components/UploadDropzone";
 import styles from "./PhotographerUploadsPage.module.css";
 
 interface PhotographerUploadsPageViewProps {
@@ -91,17 +92,12 @@ export function PhotographerUploadsPageView({ content }: PhotographerUploadsPage
 
       <section className={styles.uploadSection}>
         <SectionHead title="New upload" meta="Drag & drop or browse" />
-        <div className={styles.dropzone}>
-          <label className={styles.dropzoneLabel}>
-            <input className={styles.visuallyHidden} type="file" multiple accept="image/jpeg,image/png,.raw" />
-            <span className={styles.primaryButton}>Browse files</span>
-          </label>
-          <p>{content.uploadPanel.helperText}</p>
-          <small>
-            {content.uploadPanel.acceptedFormats.join(" · ")} · up to {content.uploadPanel.maxFileSizeMb}MB per file ·
-            max {content.uploadPanel.maxBatchSize} frames per batch
-          </small>
-        </div>
+        <UploadDropzone
+          helperText={content.uploadPanel.helperText}
+          acceptedFormats={content.uploadPanel.acceptedFormats}
+          maxFileSizeMb={content.uploadPanel.maxFileSizeMb}
+          maxBatchSize={content.uploadPanel.maxBatchSize}
+        />
       </section>
 
       <section className={styles.batchSection}>
