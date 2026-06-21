@@ -11,7 +11,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PhotographerUploadsPage() {
-  const content = getPhotographerUploadsPageContent();
+export const dynamic = "force-dynamic";
+
+export default async function PhotographerUploadsPage() {
+  const content = await getPhotographerUploadsPageContent();
   return <PhotographerUploadsPageView content={content} />;
 }

@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createHttpClient, createSessionStore } from "@/infrastructure";
+import { apiConfig } from "@/shared";
 import {
   createInitialOnboardingFormState,
   type OnboardingFormState,
@@ -36,12 +39,20 @@ function isStepValid(stepId: string, formState: OnboardingFormState): boolean {
 }
 
 export function OnboardingPhotographerPageView({ content }: OnboardingPhotographerPageViewProps) {
+  const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [formState, setFormState] = useState<OnboardingFormState>(createInitialOnboardingFormState());
   const [completed, setCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { ref: layoutRef, isVisible: layoutVisible } = useScrollReveal<HTMLDivElement>();
   const { ref: completionRef, isVisible: completionVisible } = useScrollReveal<HTMLDivElement>();
+
+  const http = useMemo(() => {
+    const session = createSessionStore();
+    return createHttpClient(apiConfig.baseUrl, session);
+  }, []);
 
   const currentStep = content.steps[stepIndex] ?? content.steps[0];
 
@@ -60,17 +71,39 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
     setStepIndex((index) => Math.max(0, index - 1));
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     if (!canContinue) {
       return;
     }
 
-    if (isLastStep) {
-      setCompleted(true);
+    if (!isLastStep) {
+      setStepIndex((index) => Math.min(content.steps.length - 1, index + 1));
       return;
     }
 
-    setStepIndex((index) => Math.min(content.steps.length - 1, index + 1));
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      await http.post("/photographers/onboard", {
+        artistName: formState.profile.name.trim(),
+        bio: formState.profile.bio.trim() || undefined,
+        location: formState.profile.city.trim() || undefined,
+      });
+
+      setCompleted(true);
+
+      setTimeout(() => {
+        router.push("/dashboard/photographer");
+      }, 3000);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Gagal mendaftar sebagai fotografer. Coba lagi.";
+      setSubmitError(message);
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -167,10 +200,16 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
                 ) : null}
               </div>
 
+              {submitError ? (
+                <p className={styles.errorText} role="alert">
+                  {submitError}
+                </p>
+              ) : null}
+
               <div className={styles.footerNav}>
                 <button
                   className={styles.ghostButton}
-                  disabled={stepIndex === 0}
+                  disabled={stepIndex === 0 || isSubmitting}
                   onClick={handleBack}
                   type="button"
                 >
@@ -178,11 +217,15 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
                 </button>
                 <button
                   className={styles.primaryButton}
-                  disabled={!canContinue}
+                  disabled={!canContinue || isSubmitting}
                   onClick={handleContinue}
                   type="button"
                 >
-                  {isLastStep ? "Complete setup" : "Continue"}
+                  {isSubmitting
+                    ? "Mendaftarkan…"
+                    : isLastStep
+                      ? "Complete setup"
+                      : "Continue"}
                 </button>
               </div>
             </div>

@@ -1,240 +1,260 @@
-import { type PhotographerDashboardPage } from "../entities/PhotographerDashboardPage";
+import { serverApiRequest } from "@/shared/api/serverApi";
+import {
+  type BookingSummaryItem,
+  type DashboardNavItem,
+  type PhotographerDashboardPage,
+} from "../entities/PhotographerDashboardPage";
 
-/**
- * Returns static mock content for the Photographer Dashboard overview.
- *
- * TODO: When the backend is ready, replace this with IPhotographerDashboardRepository:
- *   import { type IPhotographerDashboardRepository } from "@/infrastructure/repositories/IPhotographerDashboardRepository";
- *   return dashboardRepository.getDashboardPageContent();
- */
-export function getPhotographerDashboardPageContent(): PhotographerDashboardPage {
+// ─── Backend shapes ───────────────────────────────────────────────────────────
+
+interface BackendUser {
+  name?: string | null;
+  username?: string | null;
+  photographerProfile?: { location?: string | null; artistName?: string | null } | null;
+}
+
+interface BackendEarningsSummary {
+  currency: string;
+  orderCount: number;
+  photographerShare: number;
+  platformFee: number;
+  totalRevenue: number;
+}
+
+interface BackendPackage {
+  name?: string | null;
+}
+
+interface BackendBooking {
+  id: string;
+  status: string;
+  proposedDate: number;
+  location?: string | null;
+  package?: BackendPackage | null;
+  user?: { name?: string | null; username?: string | null } | null;
+}
+
+interface BackendBookingsResult {
+  data: BackendBooking[];
+  total: number;
+}
+
+interface BackendMomentsResult {
+  total: number;
+}
+
+// ─── Static page fragments (no backend equivalent yet) ────────────────────────
+
+const DASHBOARD_ALERTS: PhotographerDashboardPage["alerts"] = [
+  {
+    title: "Lengkapi profil publikmu",
+    description:
+      "Tambahkan paket dan bio agar calon klien bisa langsung booking. Profil lengkap meningkatkan konversi.",
+    actionLabel: "Lihat profil publik",
+    actionHref: "/photographers",
+    tone: "neutral",
+  },
+];
+
+const DASHBOARD_QUICK_ACTIONS: PhotographerDashboardPage["quickActions"] = [
+  {
+    label: "Upload batch",
+    description: "Mulai set foto baru dan masukkan ke pipeline AI.",
+    href: "/dashboard/photographer/uploads",
+    meta: "Studio workflow",
+    tone: "accent",
+  },
+  {
+    label: "Kelola moments",
+    description: "Edit visibilitas, lisensi, harga, dan cerita publik.",
+    href: "/dashboard/photographer/moments",
+    meta: "Catalog",
+    tone: "neutral",
+  },
+  {
+    label: "Lihat bookings",
+    description: "Terima, tolak, atau usulkan waktu sesi baru.",
+    href: "/dashboard/photographer/bookings",
+    meta: "Requests",
+    tone: "success",
+  },
+  {
+    label: "Cek earnings",
+    description: "Pantau payout, riwayat order, dan revenue split.",
+    href: "/dashboard/photographer/earnings",
+    meta: "Keuangan",
+    tone: "neutral",
+  },
+];
+
+const PROFILE_COMPLETION: PhotographerDashboardPage["profileCompletion"] = {
+  percentage: 60,
+  summary: "Lengkapi profil agar buyer bisa menemukan dan memesan sesimu.",
+  actionHref: "/photographers",
+  items: [
+    { label: "Profil publik tersedia", done: true },
+    { label: "Satu paket booking tersedia", done: false },
+    { label: "Bio fotografer diisi", done: false },
+    { label: "Payout identity siap", done: false },
+  ],
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function toPhotographerName(user: BackendUser): string {
+  return (
+    user.photographerProfile?.artistName ??
+    user.name ??
+    user.username ??
+    "Fotografer Captura"
+  );
+}
+
+function toPhotographerHandle(user: BackendUser): string {
+  const base = user.username ?? user.name ?? "photographer";
+  return `@${base.toLowerCase().replace(/\s+/g, ".")}`;
+}
+
+function formatIdr(amount: number): string {
+  if (amount >= 1_000_000) {
+    return `Rp ${(amount / 1_000_000).toFixed(1)}jt`;
+  }
+  if (amount >= 1_000) {
+    return `Rp ${(amount / 1_000).toFixed(0)}rb`;
+  }
+
+  return `Rp ${amount.toLocaleString("id-ID")}`;
+}
+
+function formatUnixSeconds(seconds: number): { date: string; time: string; label: string } {
+  const d = new Date(seconds * 1000);
+  const date = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  const time = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+  return { date, label: `${date} · ${time}`, time };
+}
+
+
+function toBookingSummaryItem(booking: BackendBooking): BookingSummaryItem {
+  const { label: scheduleLabel } = formatUnixSeconds(booking.proposedDate);
+  const clientName =
+    booking.user?.name ?? booking.user?.username ?? "Klien";
+
+  return {
+    id: booking.id,
+    client: clientName,
+    location: booking.location ?? "—",
+    packageName: booking.package?.name ?? "Custom session",
+    schedule: scheduleLabel,
+    status: booking.status as BookingSummaryItem["status"],
+  };
+}
+
+function buildNav(
+  pendingCount: number,
+  totalMoments: number,
+  photographerShare: number,
+  analysingCount: number,
+): DashboardNavItem[] {
+  return [
+    { label: "Overview", href: "/dashboard/photographer", status: "Live" },
+    {
+      label: "Uploads",
+      href: "/dashboard/photographer/uploads",
+      status: analysingCount > 0 ? `${analysingCount} queued` : "—",
+    },
+    {
+      label: "Moments",
+      href: "/dashboard/photographer/moments",
+      status: totalMoments > 0 ? String(totalMoments) : "—",
+    },
+    {
+      label: "Bookings",
+      href: "/dashboard/photographer/bookings",
+      status: pendingCount > 0 ? `${pendingCount} pending` : "—",
+    },
+    {
+      label: "Earnings",
+      href: "/dashboard/photographer/earnings",
+      status: photographerShare > 0 ? formatIdr(photographerShare) : "—",
+    },
+  ];
+}
+
+// ─── Service ──────────────────────────────────────────────────────────────────
+
+export async function getPhotographerDashboardPageContent(): Promise<PhotographerDashboardPage> {
+  const [user, earningsSummary, bookingsResult, momentsResult] = await Promise.all([
+    serverApiRequest<BackendUser>("/users/me", { auth: true, revalidate: false }),
+    serverApiRequest<BackendEarningsSummary>("/photographers/me/earnings", {
+      auth: true,
+      revalidate: false,
+    }).catch((): BackendEarningsSummary => ({
+      currency: "IDR",
+      orderCount: 0,
+      photographerShare: 0,
+      platformFee: 0,
+      totalRevenue: 0,
+    })),
+    serverApiRequest<BackendBookingsResult>("/bookings?limit=5", {
+      auth: true,
+      revalidate: false,
+    }).catch((): BackendBookingsResult => ({ data: [], total: 0 })),
+    serverApiRequest<BackendMomentsResult>("/photographers/moments?limit=1", {
+      auth: true,
+      revalidate: false,
+    }).catch((): BackendMomentsResult => ({ total: 0 })),
+  ]);
+
+  const bookings = bookingsResult.data ?? [];
+  const pendingCount = bookings.filter((b) => b.status === "pending").length;
+  const totalMoments = momentsResult.total ?? 0;
+
   return {
     photographer: {
-      name: "Sari Pradipta",
-      area: "Braga · Asia Afrika · Alun-alun",
-      handle: "@sari.frames",
-      availability: "Open for late-afternoon walks",
+      name: toPhotographerName(user),
+      area: user.photographerProfile?.location ?? "Jakarta",
+      handle: toPhotographerHandle(user),
+      availability: "Siap menerima request",
     },
-    periodLabel: "May 2026 performance",
-    nav: [
-      { label: "Overview", href: "/dashboard/photographer", status: "Live" },
-      { label: "Uploads", href: "/dashboard/photographer/uploads", status: "8 queued" },
-      { label: "Moments", href: "/dashboard/photographer/moments", status: "214" },
-      { label: "Bookings", href: "/dashboard/photographer/bookings", status: "3 new" },
-      { label: "Earnings", href: "/dashboard/photographer/earnings", status: "Rp 8.4m" },
-    ],
+    periodLabel: "Semua waktu",
+    nav: buildNav(pendingCount, totalMoments, earningsSummary.photographerShare, 0),
     stats: [
       {
         label: "Revenue",
-        value: "Rp 8.4m",
-        helper: "70% photographer share after platform split",
-        trend: "+18% vs Apr",
+        value: formatIdr(earningsSummary.photographerShare),
+        helper: "70% share fotografer setelah platform split",
+        trend: `${earningsSummary.orderCount} total penjualan`,
         tone: "accent",
       },
       {
         label: "Sales",
-        value: "126",
-        helper: "Personal, editorial, and commercial licenses",
-        trend: "32 repeat buyers",
+        value: String(earningsSummary.orderCount),
+        helper: "Lisensi yang sudah terjual",
+        trend: "Lihat riwayat lengkap →",
         tone: "success",
       },
       {
-        label: "Uploads",
-        value: "418",
-        helper: "Frames processed through AI metadata review",
-        trend: "46 awaiting publish",
+        label: "Moments",
+        value: String(totalMoments),
+        helper: "Total foto di katalogmu",
+        trend: "Kelola di halaman Moments",
         tone: "neutral",
       },
       {
         label: "Bookings",
-        value: "9",
-        helper: "Private walks requested from profile packages",
-        trend: "3 need response",
-        tone: "warning",
-      },
-      {
-        label: "Review queue",
-        value: "18",
-        helper: "Frames need metadata confirmation before public search",
-        trend: "4 plate masks",
-        tone: "danger",
+        value: String(bookingsResult.total ?? 0),
+        helper: "Total booking request yang masuk",
+        trend: pendingCount > 0 ? `${pendingCount} menunggu respons` : "Semua sudah direspons",
+        tone: pendingCount > 0 ? "warning" : "neutral",
       },
     ],
-    alerts: [
-      {
-        title: "AI review is blocking tonight's Braga batch",
-        description:
-          "18 frames have partial plate OCR or missing route context. Review them before publishing to keep public metadata safe.",
-        actionLabel: "Review metadata",
-        actionHref: "/dashboard/photographer/uploads",
-        tone: "warning",
-      },
-      {
-        title: "Profile package copy is almost complete",
-        description:
-          "Add one cancellation note and a sample delivery promise so booking requests arrive with clearer expectations.",
-        actionLabel: "Complete profile",
-        actionHref: "/photographers/sari-pradipta#booking",
-        tone: "neutral",
-      },
-    ],
-    quickActions: [
-      {
-        label: "Upload batch",
-        description: "Start a new street set and route images into AI parsing.",
-        href: "/dashboard/photographer/uploads",
-        meta: "Studio workflow",
-        tone: "accent",
-      },
-      {
-        label: "Review AI metadata",
-        description: "Confirm public tags, masked plates, location, and confidence.",
-        href: "/dashboard/photographer/uploads",
-        meta: "18 waiting",
-        tone: "warning",
-      },
-      {
-        label: "Manage moments",
-        description: "Edit visibility, license, price, and public story.",
-        href: "/dashboard/photographer/moments",
-        meta: "214 listed",
-        tone: "neutral",
-      },
-      {
-        label: "View bookings",
-        description: "Accept, decline, or propose a new session time.",
-        href: "/dashboard/photographer/bookings",
-        meta: "3 pending",
-        tone: "success",
-      },
-      {
-        label: "Check earnings",
-        description: "Track payouts, order history, and revenue split.",
-        href: "/dashboard/photographer/earnings",
-        meta: "Rp 2.1m pending",
-        tone: "neutral",
-      },
-    ],
-    recentOrders: [
-      {
-        id: "ORD-2061",
-        title: "Copper awnings after rain",
-        buyer: "Ayaka T.",
-        license: "Editorial web",
-        amount: "Rp 280k",
-        status: "Paid",
-      },
-      {
-        id: "ORD-2058",
-        title: "Blue scooter, old cinema light",
-        buyer: "Nadia P.",
-        license: "Personal archive",
-        amount: "Rp 190k",
-        status: "Ready",
-      },
-      {
-        id: "ORD-2051",
-        title: "Family crossing Asia Afrika",
-        buyer: "Adit R.",
-        license: "Private proofing",
-        amount: "Rp 675k",
-        status: "Processing",
-      },
-    ],
-    uploadQueue: [
-      {
-        id: "batch-braga-0519",
-        batchName: "Braga after rain",
-        status: "needs-review",
-        progress: 72,
-        frames: "86 / 119 frames",
-        helper: "Plate mask and location confidence need approval.",
-      },
-      {
-        id: "batch-alun-0521",
-        batchName: "Alun-alun blue hour",
-        status: "analyzing",
-        progress: 48,
-        frames: "44 / 92 frames",
-        helper: "AI is parsing vehicle type and public tags.",
-      },
-      {
-        id: "batch-savoy-0517",
-        batchName: "Savoy family walk",
-        status: "ready",
-        progress: 100,
-        frames: "38 / 38 frames",
-        helper: "Ready to publish with buyer-safe metadata.",
-      },
-    ],
-    bookings: [
-      {
-        id: "BKG-118",
-        client: "Mika & Dimas",
-        location: "Jalan Braga",
-        schedule: "Jun 12 · 16:45",
-        status: "pending",
-        packageName: "Personal walk",
-      },
-      {
-        id: "BKG-114",
-        client: "Nadia P.",
-        location: "Asia Afrika",
-        schedule: "Jun 14 · 17:00",
-        status: "accepted",
-        packageName: "Vehicle story",
-      },
-      {
-        id: "BKG-109",
-        client: "Adit R.",
-        location: "Alun-alun",
-        schedule: "May 30 · Completed",
-        status: "completed",
-        packageName: "Family archive",
-      },
-    ],
-    recentActivity: [
-      {
-        id: "act-1",
-        kind: "review",
-        label: "Metadata reviewed",
-        description: "12 Braga frames moved from needs review to ready.",
-        time: "18 min ago",
-      },
-      {
-        id: "act-2",
-        kind: "booking",
-        label: "New booking request",
-        description: "Mika & Dimas requested a personal walk next Friday.",
-        time: "42 min ago",
-      },
-      {
-        id: "act-3",
-        kind: "order",
-        label: "License sold",
-        description: "Copper awnings after rain sold as editorial web.",
-        time: "2 hr ago",
-      },
-      {
-        id: "act-4",
-        kind: "upload",
-        label: "Batch uploaded",
-        description: "Alun-alun blue hour entered AI processing.",
-        time: "4 hr ago",
-      },
-    ],
-    profileCompletion: {
-      percentage: 82,
-      summary:
-        "Your public profile converts well. Finish the operational pieces so every booking request lands with fewer manual questions.",
-      actionHref: "/photographers/sari-pradipta#booking",
-      items: [
-        { label: "Portfolio highlights selected", done: true },
-        { label: "Three packages visible", done: true },
-        { label: "Cancellation note added", done: false },
-        { label: "Payout identity ready", done: true },
-        { label: "Upload guide acknowledged", done: false },
-      ],
-    },
+    alerts: DASHBOARD_ALERTS,
+    quickActions: DASHBOARD_QUICK_ACTIONS,
+    recentOrders: [],
+    uploadQueue: [],
+    bookings: bookings.slice(0, 3).map(toBookingSummaryItem),
+    recentActivity: [],
+    profileCompletion: PROFILE_COMPLETION,
   };
 }
