@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PhotographerDashboardPage() {
-  const content = getPhotographerDashboardPageContent();
+export const dynamic = "force-dynamic";
+
+export default async function PhotographerDashboardPage() {
+  const content = await getPhotographerDashboardPageContent();
   return <PhotographerDashboardPageView content={content} />;
 }

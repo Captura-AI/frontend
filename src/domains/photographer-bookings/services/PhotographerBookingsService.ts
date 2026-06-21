@@ -1,225 +1,162 @@
+import { serverApiRequest } from "@/shared/api/serverApi";
 import { type PhotographerBookingsPage } from "../entities/PhotographerBookingsPage";
 
-/**
- * Returns static mock content for the Bookings page.
- *
- * TODO: When the backend is ready, replace this with IPhotographerBookingsRepository:
- *   import { type IPhotographerBookingsRepository } from "@/infrastructure/repositories/IPhotographerBookingsRepository";
- *   return bookingsRepository.getBookingsPageContent();
- */
-export function getPhotographerBookingsPageContent(): PhotographerBookingsPage {
+// ─── Backend shapes ───────────────────────────────────────────────────────────
+
+interface BackendUser {
+  name?: string | null;
+  username?: string | null;
+}
+
+interface BackendPackage {
+  name?: string | null;
+  price?: number | null;
+}
+
+interface BackendBooking {
+  id: string;
+  status: string;
+  proposedDate: number;
+  counterProposedDate?: number | null;
+  location?: string | null;
+  message?: string | null;
+  agreedPrice?: number | null;
+  currency: string;
+  createdAt: number;
+  user?: BackendUser | null;
+  package?: BackendPackage | null;
+}
+
+interface BackendBookingsResult {
+  data: BackendBooking[];
+  total: number;
+}
+
+interface BackendPhotographerUser {
+  name?: string | null;
+  username?: string | null;
+  photographerProfile?: { artistName?: string | null } | null;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatUnixSeconds(seconds: number): { date: string; time: string; label: string } {
+  const d = new Date(seconds * 1000);
+  const date = d.toISOString().slice(0, 10);
+  const time = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const dateLabel = d.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  return { date, label: `${dateLabel} · ${time}`, time };
+}
+
+function formatCreatedAgo(createdAtMs: number): string {
+  const diffMs = Date.now() - createdAtMs;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffHours < 1) {
+    return "Baru saja";
+  }
+
+  if (diffHours < 24) {
+    return `${diffHours} jam lalu`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays === 1) {
+    return "Kemarin";
+  }
+
+  return `${diffDays} hari lalu`;
+}
+
+function toBookingRequest(booking: BackendBooking): PhotographerBookingsPage["requests"][number] {
+  const { date, time, label: scheduleLabel } = formatUnixSeconds(booking.proposedDate);
+  const clientName = booking.user?.name ?? booking.user?.username ?? "Klien";
+
+  return {
+    id: booking.id,
+    client: clientName,
+    duration: "TBD",
+    location: booking.location ?? "—",
+    notes: booking.message ?? "—",
+    packageName: booking.package?.name ?? "Custom session",
+    price: booking.package?.price ?? booking.agreedPrice ?? 0,
+    requestedAgo: formatCreatedAgo(booking.createdAt),
+    scheduleDate: date,
+    scheduleLabel,
+    scheduleTime: time,
+    status: booking.status as PhotographerBookingsPage["requests"][number]["status"],
+  };
+}
+
+function toPhotographerName(user: BackendPhotographerUser): string {
+  return (
+    user.photographerProfile?.artistName ??
+    user.name ??
+    user.username ??
+    "Fotografer Captura"
+  );
+}
+
+function toPhotographerHandle(user: BackendPhotographerUser): string {
+  const base = user.username ?? user.name ?? "photographer";
+  return `@${base.toLowerCase().replace(/\s+/g, ".")}`;
+}
+
+// ─── Service ──────────────────────────────────────────────────────────────────
+
+export async function getPhotographerBookingsPageContent(): Promise<PhotographerBookingsPage> {
+  const [user, bookingsResult] = await Promise.all([
+    serverApiRequest<BackendPhotographerUser>("/users/me", { auth: true, revalidate: false }),
+    serverApiRequest<BackendBookingsResult>("/bookings?limit=50", {
+      auth: true,
+      revalidate: false,
+    }).catch((): BackendBookingsResult => ({ data: [], total: 0 })),
+  ]);
+
+  const bookings = bookingsResult.data ?? [];
+  const requests = bookings.map(toBookingRequest);
+  const pendingCount = requests.filter((r) => r.status === "pending").length;
+
   return {
     photographer: {
-      name: "Sari Pradipta",
-      handle: "@sari.frames",
+      name: toPhotographerName(user),
+      handle: toPhotographerHandle(user),
     },
     nav: [
       { label: "Overview", href: "/dashboard/photographer", status: "Live" },
-      { label: "Uploads", href: "/dashboard/photographer/uploads", status: "8 queued" },
-      { label: "Moments", href: "/dashboard/photographer/moments", status: "214" },
-      { label: "Bookings", href: "/dashboard/photographer/bookings", status: "3 new" },
-      { label: "Earnings", href: "/dashboard/photographer/earnings", status: "Rp 8.4m" },
+      { label: "Uploads", href: "/dashboard/photographer/uploads" },
+      { label: "Moments", href: "/dashboard/photographer/moments" },
+      {
+        label: "Bookings",
+        href: "/dashboard/photographer/bookings",
+        status: pendingCount > 0 ? `${pendingCount} pending` : "—",
+      },
+      { label: "Earnings", href: "/dashboard/photographer/earnings" },
     ],
     summary: [
-      { id: "pending", label: "Pending", helper: "Awaiting your response" },
-      { id: "accepted", label: "Accepted", helper: "Confirmed on your schedule" },
-      { id: "declined", label: "Declined", helper: "Not moving forward" },
-      { id: "completed", label: "Completed", helper: "Delivered and archived" },
-      { id: "cancelled", label: "Cancelled", helper: "Cancelled by client or you" },
+      { id: "pending", label: "Pending", helper: "Menunggu responsmu" },
+      { id: "accepted", label: "Accepted", helper: "Terkonfirmasi di jadwalmu" },
+      { id: "declined", label: "Declined", helper: "Tidak dilanjutkan" },
+      { id: "completed", label: "Completed", helper: "Selesai dan diarsipkan" },
+      { id: "cancelled", label: "Cancelled", helper: "Dibatalkan oleh klien atau kamu" },
     ],
     filters: [
-      { id: "all", label: "All" },
+      { id: "all", label: "Semua" },
       { id: "pending", label: "Pending" },
       { id: "accepted", label: "Accepted" },
       { id: "declined", label: "Declined" },
       { id: "completed", label: "Completed" },
       { id: "cancelled", label: "Cancelled" },
     ],
-    requests: [
-      {
-        id: "BKG-118",
-        client: "Mika & Dimas",
-        packageName: "Personal walk",
-        duration: "60–90 min",
-        location: "Jl. Braga, Bandung",
-        scheduleDate: "2026-06-12",
-        scheduleTime: "16:45",
-        scheduleLabel: "12 Jun 2026 · 16:45",
-        status: "pending",
-        price: 350000,
-        notes: "Ingin sesi santai sore hari di sekitar Braga, fokus ke OOTD berdua.",
-        requestedAgo: "Requested 2 hours ago",
-      },
-      {
-        id: "BKG-122",
-        client: "Tegar & Friends",
-        packageName: "Group hangout",
-        duration: "90 min",
-        location: "Dago Pakar, Bandung",
-        scheduleDate: "2026-06-15",
-        scheduleTime: "09:00",
-        scheduleLabel: "15 Jun 2026 · 09:00",
-        status: "pending",
-        price: 500000,
-        notes: "Komunitas motor touring pagi — butuh foto grup dan beberapa solo shot.",
-        requestedAgo: "Requested 5 hours ago",
-      },
-      {
-        id: "BKG-121",
-        client: "Putri Wulandari",
-        packageName: "Vehicle story",
-        duration: "60 min",
-        location: "Jl. Asia Afrika, Bandung",
-        scheduleDate: "2026-06-13",
-        scheduleTime: "17:30",
-        scheduleLabel: "13 Jun 2026 · 17:30",
-        status: "pending",
-        price: 450000,
-        notes: "Dokumentasi mobil vintage untuk konten media sosial, sekitar 1 jam.",
-        requestedAgo: "Requested 1 day ago",
-      },
-      {
-        id: "BKG-114",
-        client: "Nadia P.",
-        packageName: "Vehicle story",
-        duration: "60 min",
-        location: "Jl. Asia Afrika, Bandung",
-        scheduleDate: "2026-06-14",
-        scheduleTime: "17:00",
-        scheduleLabel: "14 Jun 2026 · 17:00",
-        status: "accepted",
-        price: 450000,
-        notes: "Sudah dikonfirmasi — titik kumpul di depan Gedung Merdeka.",
-        requestedAgo: "Requested 3 days ago",
-      },
-      {
-        id: "BKG-117",
-        client: "Reza & Bayu",
-        packageName: "Personal walk",
-        duration: "60–90 min",
-        location: "Dago Pakar, Bandung",
-        scheduleDate: "2026-06-16",
-        scheduleTime: "15:30",
-        scheduleLabel: "16 Jun 2026 · 15:30",
-        status: "accepted",
-        price: 350000,
-        notes: "Sesi santai sore untuk konten video, sudah dikonfirmasi.",
-        requestedAgo: "Requested 4 days ago",
-      },
-      {
-        id: "BKG-109",
-        client: "Adit R.",
-        packageName: "Family archive",
-        duration: "90 min",
-        location: "Alun-alun Bandung",
-        scheduleDate: "2026-05-30",
-        scheduleTime: "10:00",
-        scheduleLabel: "30 May 2026 · 10:00",
-        status: "completed",
-        price: 600000,
-        notes: "Sesi keluarga sudah selesai, menunggu link galeri.",
-        requestedAgo: "Requested 2 weeks ago",
-      },
-      {
-        id: "BKG-105",
-        client: "Yoga Saputra",
-        packageName: "Personal walk",
-        duration: "60–90 min",
-        location: "Jl. Cihampelas, Bandung",
-        scheduleDate: "2026-05-26",
-        scheduleTime: "16:00",
-        scheduleLabel: "26 May 2026 · 16:00",
-        status: "declined",
-        price: 350000,
-        notes: "Jadwal bentrok dengan booking lain di area yang sama — ditolak.",
-        requestedAgo: "Requested 2 weeks ago",
-      },
-      {
-        id: "BKG-098",
-        client: "Lina & Co",
-        packageName: "Group hangout",
-        duration: "90 min",
-        location: "Stasiun Bandung",
-        scheduleDate: "2026-05-20",
-        scheduleTime: "08:00",
-        scheduleLabel: "20 May 2026 · 08:00",
-        status: "cancelled",
-        price: 500000,
-        notes: "Dibatalkan oleh klien karena cuaca buruk.",
-        requestedAgo: "Requested 3 weeks ago",
-      },
-    ],
-    schedule: [
-      {
-        dateLabel: "Sun, 14 Jun 2026",
-        items: [
-          {
-            id: "sch-114",
-            time: "17:00",
-            client: "Nadia P.",
-            packageName: "Vehicle story",
-            location: "Jl. Asia Afrika, Bandung",
-            status: "accepted",
-          },
-        ],
-      },
-      {
-        dateLabel: "Tue, 16 Jun 2026",
-        items: [
-          {
-            id: "sch-117",
-            time: "15:30",
-            client: "Reza & Bayu",
-            packageName: "Personal walk",
-            location: "Dago Pakar, Bandung",
-            status: "accepted",
-          },
-        ],
-      },
-      {
-        dateLabel: "Sat, 30 May 2026",
-        items: [
-          {
-            id: "sch-109",
-            time: "10:00",
-            client: "Adit R.",
-            packageName: "Family archive",
-            location: "Alun-alun Bandung",
-            status: "completed",
-          },
-        ],
-      },
-    ],
-    packages: [
-      {
-        id: "pkg-personal",
-        name: "Personal walk",
-        price: 350000,
-        description: "60–90 minute walk together, up to 25 edited photos delivered within 5 days.",
-        bookingsCount: 14,
-      },
-      {
-        id: "pkg-vehicle",
-        name: "Vehicle story",
-        price: 450000,
-        description: "A focused session documenting your vehicle in motion across two Bandung locations.",
-        bookingsCount: 9,
-      },
-      {
-        id: "pkg-group",
-        name: "Group hangout",
-        price: 500000,
-        description: "For communities — 90 minutes, up to 40 edited photos with group and solo shots.",
-        bookingsCount: 6,
-      },
-      {
-        id: "pkg-family",
-        name: "Family archive",
-        price: 600000,
-        description: "A relaxed family walk and portrait set across one iconic Bandung landmark.",
-        bookingsCount: 4,
-      },
-    ],
-    profileBookingHref: "/photographers/sari-pradipta#booking",
+    requests,
+    schedule: [],
+    packages: [],
+    profileBookingHref: "/photographers",
   };
 }

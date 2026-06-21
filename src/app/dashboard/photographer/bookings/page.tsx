@@ -11,7 +11,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PhotographerBookingsPage() {
-  const content = getPhotographerBookingsPageContent();
+export const dynamic = "force-dynamic";
+
+export default async function PhotographerBookingsPage() {
+  const content = await getPhotographerBookingsPageContent();
   return <PhotographerBookingsPageView content={content} />;
 }

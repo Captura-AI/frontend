@@ -1,35 +1,158 @@
+import { serverApiRequest } from "@/shared/api/serverApi";
 import { type PhotographerMomentsPage } from "../entities/PhotographerMomentsPage";
 
-/**
- * Returns static mock content for the Moment Manager page.
- *
- * TODO: When the backend is ready, replace this with IPhotographerMomentsRepository:
- *   import { type IPhotographerMomentsRepository } from "@/infrastructure/repositories/IPhotographerMomentsRepository";
- *   return momentsRepository.getMomentsPageContent(page, limit);
- */
-export function getPhotographerMomentsPageContent(): PhotographerMomentsPage {
+// ─── Backend shapes ───────────────────────────────────────────────────────────
+
+interface BackendUser {
+  name?: string | null;
+  username?: string | null;
+  photographerProfile?: { artistName?: string | null } | null;
+}
+
+interface BackendMoment {
+  id: string;
+  caption?: string | null;
+  story?: string | null;
+  tags?: string[] | null;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  city?: string | null;
+  district?: string | null;
+  capturedAt?: number | null;
+  vehicleType?: string | null;
+  licensePlate?: string | null;
+  aiAnalysis?: Record<string, unknown> | null;
+}
+
+interface BackendMomentsResult {
+  data: BackendMoment[];
+  total: number;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function toPhotographerName(user: BackendUser): string {
+  return (
+    user.photographerProfile?.artistName ??
+    user.name ??
+    user.username ??
+    "Fotografer Captura"
+  );
+}
+
+function toPhotographerHandle(user: BackendUser): string {
+  const base = user.username ?? user.name ?? "photographer";
+  return `@${base.toLowerCase().replace(/\s+/g, ".")}`;
+}
+
+function maskPlate(plate: string): string {
+  const parts = plate.trim().split(/\s+/);
+
+  if (parts.length < 2) {
+    return `${plate.slice(0, 2)}** ***`;
+  }
+
+  const [prefix, ...rest] = parts;
+  const masked = rest.map((part, i) => (i === 0 ? `${part.slice(0, 2)}**` : "***"));
+
+  return `${prefix} ${masked.join(" ")}`;
+}
+
+function deriveMomentStatus(
+  moment: BackendMoment,
+): PhotographerMomentsPage["moments"][number]["status"] {
+  if (!moment.aiAnalysis) {
+    return "draft";
+  }
+
+  if (moment.aiAnalysis["error"]) {
+    return "needs-metadata";
+  }
+
+  return "published";
+}
+
+function formatCapturedDate(capturedAtSeconds: number | null | undefined): {
+  date: string;
+  time: string;
+} {
+  if (!capturedAtSeconds) {
+    return { date: "—", time: "—" };
+  }
+
+  const d = new Date(capturedAtSeconds * 1000);
+
+  return {
+    date: d.toISOString().slice(0, 10),
+    time: d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false }),
+  };
+}
+
+function toMoment(m: BackendMoment): PhotographerMomentsPage["moments"][number] {
+  const plate = m.licensePlate ?? null;
+  const { date, time } = formatCapturedDate(m.capturedAt);
+
+  return {
+    id: m.id,
+    capturedDate: date,
+    capturedTime: time,
+    dateLabel: date !== "—" ? `${date} · ${time}` : "Waktu tidak tersedia",
+    license: "Personal use",
+    location: [m.district, m.city].filter(Boolean).join(", ") || "—",
+    plate: {
+      full: plate ?? "—",
+      masked: plate ? maskPlate(plate) : "—",
+    },
+    price: 0,
+    status: deriveMomentStatus(m),
+    story: m.story ?? "",
+    tags: m.tags ?? [],
+    thumbnailUrl: m.thumbnailUrl ?? m.imageUrl ?? "/window.svg",
+    title: m.caption ?? "Moment tanpa judul",
+    vehicleType: (m.vehicleType?.toLowerCase() ?? "other") as PhotographerMomentsPage["moments"][number]["vehicleType"],
+  };
+}
+
+// ─── Service ──────────────────────────────────────────────────────────────────
+
+export async function getPhotographerMomentsPageContent(): Promise<PhotographerMomentsPage> {
+  const [user, result] = await Promise.all([
+    serverApiRequest<BackendUser>("/users/me", { auth: true, revalidate: false }),
+    serverApiRequest<BackendMomentsResult>("/photographers/moments?limit=20&offset=1", {
+      auth: true,
+      revalidate: false,
+    }).catch((): BackendMomentsResult => ({ data: [], total: 0 })),
+  ]);
+
+  const moments = (result.data ?? []).map(toMoment);
+  const totalMoments = result.total ?? 0;
+
   return {
     photographer: {
-      name: "Sari Pradipta",
-      handle: "@sari.frames",
+      name: toPhotographerName(user),
+      handle: toPhotographerHandle(user),
     },
     nav: [
       { label: "Overview", href: "/dashboard/photographer", status: "Live" },
-      { label: "Uploads", href: "/dashboard/photographer/uploads", status: "8 queued" },
-      { label: "Moments", href: "/dashboard/photographer/moments", status: "214" },
-      { label: "Bookings", href: "/dashboard/photographer/bookings", status: "3 new" },
-      { label: "Earnings", href: "/dashboard/photographer/earnings", status: "Rp 8.4m" },
+      { label: "Uploads", href: "/dashboard/photographer/uploads" },
+      {
+        label: "Moments",
+        href: "/dashboard/photographer/moments",
+        status: totalMoments > 0 ? String(totalMoments) : "—",
+      },
+      { label: "Bookings", href: "/dashboard/photographer/bookings" },
+      { label: "Earnings", href: "/dashboard/photographer/earnings" },
     ],
-    catalogTotal: 214,
+    catalogTotal: totalMoments,
     summary: [
-      { id: "draft", label: "Draft", helper: "Not yet visible to buyers" },
-      { id: "published", label: "Published", helper: "Live in explorer search" },
-      { id: "hidden", label: "Hidden", helper: "Saved but pulled from search" },
-      { id: "sold", label: "Sold", helper: "Licensed to a buyer" },
-      { id: "needs-metadata", label: "Needs metadata", helper: "Missing public-safe details" },
+      { id: "draft", label: "Draft", helper: "Belum terlihat oleh buyer" },
+      { id: "published", label: "Published", helper: "Live di explorer search" },
+      { id: "hidden", label: "Hidden", helper: "Tersimpan tapi tidak muncul di search" },
+      { id: "sold", label: "Sold", helper: "Sudah dilisensikan ke buyer" },
+      { id: "needs-metadata", label: "Needs metadata", helper: "Perlu detail publik yang aman" },
     ],
     filters: [
-      { id: "all", label: "All" },
+      { id: "all", label: "Semua" },
       { id: "draft", label: "Draft" },
       { id: "published", label: "Published" },
       { id: "hidden", label: "Hidden" },
@@ -37,168 +160,6 @@ export function getPhotographerMomentsPageContent(): PhotographerMomentsPage {
       { id: "needs-metadata", label: "Needs metadata" },
     ],
     explorerBaseHref: "/explorer",
-    moments: [
-      {
-        id: "mom-001",
-        thumbnailUrl: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=320&q=70&auto=format&fit=crop",
-        title: "Morning peloton through Braga mist",
-        story:
-          "A pack of road cyclists slicing through the early fog on Jl. Braga, just as the street lamps switch off.",
-        tags: ["Cycling group", "Morning light"],
-        location: "Jl. Braga, Bandung",
-        capturedDate: "2026-05-28",
-        capturedTime: "06:18",
-        dateLabel: "28 Mei 2026 · 06:18",
-        vehicleType: "bicycle",
-        plate: { masked: "—", full: "—" },
-        price: 75000,
-        license: "Editorial",
-        status: "published",
-      },
-      {
-        id: "mom-002",
-        thumbnailUrl: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=320&q=70&auto=format&fit=crop",
-        title: "Yellow Vespa waiting at Asia Afrika crossing",
-        story: "A rider in a mustard jacket pauses at the lights, Gedung Merdeka reflected in her mirror.",
-        tags: ["Vespa", "Street style"],
-        location: "Jl. Asia Afrika, Bandung",
-        capturedDate: "2026-05-27",
-        capturedTime: "17:05",
-        dateLabel: "27 Mei 2026 · 17:05",
-        vehicleType: "motorcycle",
-        plate: { masked: "D 12** **A", full: "D 1284 KZA" },
-        price: 50000,
-        license: "Personal use",
-        status: "needs-metadata",
-      },
-      {
-        id: "mom-003",
-        thumbnailUrl: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=320&q=70&auto=format&fit=crop",
-        title: "Family walk past Savoy Homann at dusk",
-        story: "Three generations crossing Asia Afrika together as the art deco facades light up for the evening.",
-        tags: ["Family", "Golden hour"],
-        location: "Jl. Asia Afrika, Bandung",
-        capturedDate: "2026-05-26",
-        capturedTime: "18:02",
-        dateLabel: "26 Mei 2026 · 18:02",
-        vehicleType: "other",
-        plate: { masked: "—", full: "—" },
-        price: 250000,
-        license: "Commercial",
-        status: "published",
-      },
-      {
-        id: "mom-004",
-        thumbnailUrl: "https://images.unsplash.com/photo-1561361398-a8b5b3a3c1d3?w=320&q=70&auto=format&fit=crop",
-        title: "Red pickup unloading at Alun-alun market",
-        story: "Early vendors stack crates of produce beside the square before the morning crowd arrives.",
-        tags: ["Market", "Vehicle"],
-        location: "Alun-alun Bandung",
-        capturedDate: "2026-05-25",
-        capturedTime: "05:40",
-        dateLabel: "25 Mei 2026 · 05:40",
-        vehicleType: "truck",
-        plate: { masked: "D 77** **B", full: "D 7741 PQB" },
-        price: 90000,
-        license: "Editorial",
-        status: "draft",
-      },
-      {
-        id: "mom-005",
-        thumbnailUrl: "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=320&q=70&auto=format&fit=crop",
-        title: "Marathon runner crossing Jalan Banceuy",
-        story: "A solo runner mid-stride, race bib catching the light against the shuttered shopfronts.",
-        tags: ["Marathon", "Motion blur"],
-        location: "Jl. Banceuy, Bandung",
-        capturedDate: "2026-05-24",
-        capturedTime: "06:55",
-        dateLabel: "24 Mei 2026 · 06:55",
-        vehicleType: "other",
-        plate: { masked: "—", full: "—" },
-        price: 65000,
-        license: "Editorial",
-        status: "needs-metadata",
-      },
-      {
-        id: "mom-006",
-        thumbnailUrl: "https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=320&q=70&auto=format&fit=crop",
-        title: "Black sedan idling near Gedung Sate",
-        story: "A polished sedan waits curbside while its passenger photographs the ministry building.",
-        tags: ["Sedan", "Landmark"],
-        location: "Jl. Diponegoro, Bandung",
-        capturedDate: "2026-05-20",
-        capturedTime: "09:30",
-        dateLabel: "20 Mei 2026 · 09:30",
-        vehicleType: "car",
-        plate: { masked: "D 90** **C", full: "D 9012 LMC" },
-        price: 450000,
-        license: "Exclusive",
-        status: "sold",
-      },
-      {
-        id: "mom-007",
-        thumbnailUrl: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=320&q=70&auto=format&fit=crop",
-        title: "City bus pulling into Stasiun Bandung",
-        story: "Commuters board a Damri bus as the station clock tower frames the background.",
-        tags: ["Public transit", "Commute"],
-        location: "Jl. Stasiun Timur, Bandung",
-        capturedDate: "2026-05-18",
-        capturedTime: "07:15",
-        dateLabel: "18 Mei 2026 · 07:15",
-        vehicleType: "bus",
-        plate: { masked: "D 75** **D", full: "D 7510 BSD" },
-        price: 60000,
-        license: "Personal use",
-        status: "hidden",
-      },
-      {
-        id: "mom-008",
-        thumbnailUrl: "https://images.unsplash.com/photo-1558980664-1ee79b51c4cb?w=320&q=70&auto=format&fit=crop",
-        title: "Motovlog crew pausing at Dago Pakar overlook",
-        story: "A trio of touring motorcycles parked along the ridge, helmets off, taking in the city view.",
-        tags: ["Motovlog", "Overlook"],
-        location: "Dago Pakar, Bandung",
-        capturedDate: "2026-05-17",
-        capturedTime: "16:20",
-        dateLabel: "17 Mei 2026 · 16:20",
-        vehicleType: "motorcycle",
-        plate: { masked: "D 33** **E", full: "D 3392 RKE" },
-        price: 120000,
-        license: "Editorial",
-        status: "published",
-      },
-      {
-        id: "mom-009",
-        thumbnailUrl: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=320&q=70&auto=format&fit=crop",
-        title: "Cyclist silhouette under Jembatan Pasupati",
-        story: "A lone cyclist crosses beneath the cable-stayed bridge as afternoon light streams through the pylons.",
-        tags: ["Bridge", "Silhouette"],
-        location: "Pasupati, Bandung",
-        capturedDate: "2026-05-15",
-        capturedTime: "16:48",
-        dateLabel: "15 Mei 2026 · 16:48",
-        vehicleType: "bicycle",
-        plate: { masked: "—", full: "—" },
-        price: 45000,
-        license: "Personal use",
-        status: "needs-metadata",
-      },
-      {
-        id: "mom-010",
-        thumbnailUrl: "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=320&q=70&auto=format&fit=crop",
-        title: "White MPV navigating Cihampelas night traffic",
-        story: "Brake lights streak past the themed storefronts as a family MPV merges into evening traffic.",
-        tags: ["Night", "Traffic"],
-        location: "Jl. Cihampelas, Bandung",
-        capturedDate: "2026-05-12",
-        capturedTime: "20:10",
-        dateLabel: "12 Mei 2026 · 20:10",
-        vehicleType: "car",
-        plate: { masked: "D 51** **F", full: "D 5188 NTF" },
-        price: 180000,
-        license: "Commercial",
-        status: "draft",
-      },
-    ],
+    moments,
   };
 }
