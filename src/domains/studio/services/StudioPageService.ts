@@ -168,26 +168,29 @@ const EMPTY_FRAME: FrameData = {
 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
+function buildDateRangeParams(fromDate?: string): string {
+  if (!fromDate) return "";
+
+  // Convert YYYY-MM-DD to start-of-day / end-of-day Unix seconds (UTC)
+  const startDate = Math.floor(new Date(`${fromDate}T00:00:00Z`).getTime() / 1000);
+  const endDate = Math.floor(new Date(`${fromDate}T23:59:59Z`).getTime() / 1000);
+
+  return `&startDate=${startDate}&endDate=${endDate}`;
+}
+
 export async function getStudioPageData(fromDate?: string): Promise<StudioPage> {
+  const dateParams = buildDateRangeParams(fromDate);
+
   const result = await serverApiRequest<BackendMomentsResult>(
-    "/photographers/moments?limit=50&offset=1",
+    `/photographers/moments?limit=50&offset=1${dateParams}`,
     { auth: true, revalidate: false },
   ).catch((): BackendMomentsResult => ({ data: [], total: 0 }));
 
-  const allMoments = result.data ?? [];
+  const moments = result.data ?? [];
+  const total = moments.length;
 
-  const moments = fromDate
-    ? allMoments.filter((m) => {
-        const ts = m.capturedAt ? m.capturedAt * 1000 : null;
-        return ts ? new Date(ts).toISOString().slice(0, 10) === fromDate : false;
-      })
-    : allMoments;
-
-  const displayMoments = moments.length > 0 ? moments : allMoments;
-  const total = displayMoments.length;
-
-  const aiParsed = displayMoments.filter((m) => m.aiAnalysis && !m.aiAnalysis["error"]).length;
-  const needReview = displayMoments.filter(
+  const aiParsed = moments.filter((m) => m.aiAnalysis && !m.aiAnalysis["error"]).length;
+  const needReview = moments.filter(
     (m) =>
       m.aiAnalysis &&
       !m.aiAnalysis["error"] &&
@@ -195,14 +198,14 @@ export async function getStudioPageData(fromDate?: string): Promise<StudioPage> 
       (m.aiAnalysis["vehicle_confidence"] as number) < 0.5,
   ).length;
 
-  const queue: QueueItem[] = displayMoments.map((m, i) => ({
+  const queue: QueueItem[] = moments.map((m, i) => ({
     badge: toQueueBadge(m, i === 0),
     id: m.id,
     imageUrl: resolveImageUrl(m.thumbnailUrl) ?? resolveImageUrl(m.imageUrl) ?? "/window.svg",
     status: toQueueStatus(m, i === 0),
   }));
 
-  const firstMoment = displayMoments[0];
+  const firstMoment = moments[0];
   const currentFrame = firstMoment ? toFrameData(firstMoment, 0, total) : EMPTY_FRAME;
 
   const batchName = fromDate
@@ -219,9 +222,9 @@ export async function getStudioPageData(fromDate?: string): Promise<StudioPage> 
     },
     batch: {
       avgTimePerFrame: "—",
-      locationsResolved: displayMoments.filter((m) => m.city).length,
+      locationsResolved: moments.filter((m) => m.city).length,
       name: batchName,
-      platesParsed: displayMoments.filter((m) => m.licensePlate).length,
+      platesParsed: moments.filter((m) => m.licensePlate).length,
       processed: aiParsed,
       total,
     },
