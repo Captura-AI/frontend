@@ -9,7 +9,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function StudioPage() {
-  const data = getStudioPageData();
+export const dynamic = "force-dynamic";
+
+export default async function StudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const { from } = await searchParams;
+  const data = await getStudioPageData(from);
+
   return <StudioView data={data} />;
 }

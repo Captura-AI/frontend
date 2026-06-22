@@ -104,7 +104,7 @@ export function PhotographerUploadsPageView({ content }: PhotographerUploadsPage
         <SectionHead title="Processing queue" meta={`${content.batches.length} batches`} />
         <div className={styles.batchList}>
           {content.batches.map((batch) => (
-            <BatchCard key={batch.id} batch={batch} studioHref={content.studioHref} />
+            <BatchCard key={batch.id} batch={batch} />
           ))}
         </div>
       </section>
@@ -130,7 +130,8 @@ function SummaryCard({ label, value, tone }: { label: string; value: number; ton
   );
 }
 
-function BatchCard({ batch, studioHref }: { batch: UploadBatch; studioHref: string }) {
+function BatchCard({ batch }: { batch: UploadBatch }) {
+  const studioHref = batch.studioHref;
   const remainingFrames = batch.totalFrames - batch.frames.length;
 
   return (

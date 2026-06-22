@@ -169,16 +169,19 @@ function toBatch(
 
   const firstMoment = moments[0];
   const batchDate = firstMoment?.capturedAt ?? firstMoment?.createdAt ?? null;
+  const batchMs = typeof batchDate === "number" && batchDate < 1e12 ? batchDate * 1000 : (batchDate ?? null);
+  const batchDateIso = batchMs ? new Date(batchMs).toISOString().slice(0, 10) : null;
 
   return {
     id: `batch-${index}-${firstMoment?.id?.slice(0, 8) ?? index}`,
-    createdAt: formatDate(typeof batchDate === "number" && batchDate < 1e12 ? batchDate * 1000 : batchDate),
+    createdAt: formatDate(batchMs),
     frames: frames.slice(0, 5),
     location: [firstMoment?.district, firstMoment?.city].filter(Boolean).join(", ") || "—",
-    name: `Sesi ${new Date(typeof batchDate === "number" && batchDate < 1e12 ? batchDate * 1000 : batchDate ?? Date.now()).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}`,
+    name: `Sesi ${new Date(batchMs ?? Date.now()).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}`,
     processedFrames,
     progress: frames.length > 0 ? Math.round((processedFrames / frames.length) * 100) : 0,
     status: worstStatus,
+    studioHref: batchDateIso ? `/studio?from=${batchDateIso}` : "/studio",
     totalFrames: moments.length,
   };
 }
