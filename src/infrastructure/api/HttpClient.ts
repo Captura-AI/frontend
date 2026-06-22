@@ -5,7 +5,7 @@ import axios, {
   type InternalAxiosRequestConfig,
   isAxiosError,
 } from "axios";
-import { type SessionStore } from "@/infrastructure/session/SessionCookieStore";
+import { AUTH_SESSION_EXPIRED_EVENT, type SessionStore } from "@/infrastructure/session/SessionCookieStore";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -66,6 +66,9 @@ function attachResponseInterceptor(instance: AxiosInstance, session: SessionStor
         const path = error.config?.url ?? "";
 
         if (status === 401) {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
+          }
           session.clearSession();
         }
 

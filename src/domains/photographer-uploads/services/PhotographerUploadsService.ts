@@ -132,15 +132,27 @@ function toUploadFrame(moment: BackendMoment): PhotographerUploadsPage["batches"
   };
 }
 
+// Converts a raw timestamp (seconds or ms, number or string) to a YYYY-MM-DD key.
+// Applies the < 1e12 heuristic to distinguish seconds from milliseconds — same
+// logic used by toBatch() below. Guards against NaN/invalid dates.
+function toDateKey(ts: number | null | undefined): string | null {
+  if (!ts) return null;
+
+  const n = Number(ts);
+
+  if (!isFinite(n) || n <= 0) return null;
+
+  const ms = n < 1e12 ? n * 1000 : n;
+  const d = new Date(ms);
+
+  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+}
+
 function groupByDate(moments: BackendMoment[]): BackendMoment[][] {
   const groups = new Map<string, BackendMoment[]>();
 
   for (const m of moments) {
-    const key = m.capturedAt
-      ? new Date(m.capturedAt * 1000).toISOString().slice(0, 10)
-      : m.createdAt
-        ? new Date(m.createdAt).toISOString().slice(0, 10)
-        : "unknown";
+    const key = toDateKey(m.capturedAt) ?? toDateKey(m.createdAt) ?? "unknown";
 
     const group = groups.get(key) ?? [];
     group.push(m);

@@ -2,6 +2,9 @@ const ACCESS_TOKEN_KEY = "fe_access_token";
 const REFRESH_TOKEN_KEY = "fe_refresh_token";
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const AUTH_SESSION_EVENT = "captura-auth-session-change";
+// Fired specifically when a 401 clears the session (token expired/revoked).
+// Distinct from AUTH_SESSION_EVENT so listeners can differentiate expiry from logout.
+export const AUTH_SESSION_EXPIRED_EVENT = "captura-session-expired";
 
 export interface SessionStore {
   getAccessToken: () => string | null;

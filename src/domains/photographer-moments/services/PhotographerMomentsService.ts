@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { resolveImageUrl } from "@/shared/api/resolveImageUrl";
 import { type PhotographerMomentsPage } from "../entities/PhotographerMomentsPage";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ function toMoment(m: BackendMoment): PhotographerMomentsPage["moments"][number] 
     status: deriveMomentStatus(m),
     story: m.story ?? "",
     tags: m.tags ?? [],
-    thumbnailUrl: m.thumbnailUrl ?? m.imageUrl ?? "/window.svg",
+    thumbnailUrl: resolveImageUrl(m.thumbnailUrl) ?? resolveImageUrl(m.imageUrl) ?? "/window.svg",
     title: m.caption ?? "Moment tanpa judul",
     vehicleType: (m.vehicleType?.toLowerCase() ?? "other") as PhotographerMomentsPage["moments"][number]["vehicleType"],
   };

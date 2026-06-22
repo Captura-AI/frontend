@@ -1,6 +1,6 @@
 export { createHttpClient } from "./api/HttpClient";
 export type { HttpClient, HttpMethod, HttpRequestOptions } from "./api/HttpClient";
-export { AUTH_SESSION_EVENT, createSessionStore } from "./session/SessionCookieStore";
+export { AUTH_SESSION_EVENT, AUTH_SESSION_EXPIRED_EVENT, createSessionStore } from "./session/SessionCookieStore";
 export type { SessionStore } from "./session/SessionCookieStore";
 export { createAuthRepository } from "./repositories/AuthRepository";
 export type {
