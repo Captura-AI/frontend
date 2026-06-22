@@ -1,172 +1,236 @@
-import type { StudioPage } from "../entities/StudioPage";
+import { serverApiRequest } from "@/shared/api/serverApi";
+import { resolveImageUrl } from "@/shared/api/resolveImageUrl";
+import type {
+  AiLogChip,
+  FrameData,
+  QueueBadgeType,
+  QueueItem,
+  QueueItemStatus,
+  StudioPage,
+  VehicleType,
+} from "../entities/StudioPage";
 
-const STUDIO_DATA: StudioPage = {
-  balance: {
-    currency: "Rp",
-    amount: "2.840.000",
-    period: "This month",
-    salesCount: 28,
-  },
-  avatarUrl:
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=70&auto=format&fit=crop",
-  stats: {
-    inQueue: 142,
-    aiParsed: 96,
-    needReview: 12,
-  },
-  batch: {
-    name: "Batch 04 · tonight",
-    processed: 96,
-    total: 142,
-    platesParsed: 92,
-    locationsResolved: 142,
-    avgTimePerFrame: "1.4s",
-  },
-  queue: [
-    {
-      id: "1",
-      imageUrl:
-        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=240&q=70&auto=format&fit=crop",
-      status: "active",
-      badge: "ai",
-    },
-    {
-      id: "2",
-      imageUrl:
-        "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=240&q=70&auto=format&fit=crop",
-      status: "scanning",
-      badge: "scanning",
-    },
-    {
-      id: "3",
-      imageUrl:
-        "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=240&q=70&auto=format&fit=crop",
+interface BackendMoment {
+  id: string;
+  caption?: string | null;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  city?: string | null;
+  district?: string | null;
+  capturedAt?: number | null;
+  vehicleType?: string | null;
+  licensePlate?: string | null;
+  cameraInfo?: string | null;
+  tags?: string[] | null;
+  aiAnalysis?: Record<string, unknown> | null;
+}
+
+interface BackendMomentsResult {
+  data: BackendMoment[];
+  total: number;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function toVehicleType(raw: string | null | undefined): VehicleType {
+  const v = (raw ?? "").toLowerCase();
+
+  if (v === "bicycle") return "bicycle";
+  if (v === "bus") return "bus";
+  if (v === "car") return "car";
+  if (v === "motorcycle") return "motorcycle";
+  if (v === "truck") return "truck";
+
+  return "other";
+}
+
+function formatTime(tsSeconds: number | null | undefined): string {
+  if (!tsSeconds) return "—";
+
+  return new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(tsSeconds * 1000));
+}
+
+function formatDate(tsSeconds: number | null | undefined): string {
+  if (!tsSeconds) return "—";
+
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(tsSeconds * 1000));
+}
+
+function toQueueBadge(moment: BackendMoment, isFirst: boolean): QueueBadgeType {
+  if (isFirst) return "ai";
+  if (!moment.aiAnalysis || moment.aiAnalysis["error"]) return "scanning";
+  return "ok";
+}
+
+function toQueueStatus(moment: BackendMoment, isFirst: boolean): QueueItemStatus {
+  if (isFirst) return "active";
+  if (!moment.aiAnalysis || moment.aiAnalysis["error"]) return "scanning";
+  return "done";
+}
+
+function toAiLogChips(moment: BackendMoment, plateConf: number): AiLogChip[] {
+  const chips: AiLogChip[] = [];
+
+  if (moment.vehicleType) {
+    chips.push({
+      id: "v",
+      type: "AI",
       status: "done",
-      badge: "ok",
-    },
-    {
-      id: "4",
-      imageUrl:
-        "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=240&q=70&auto=format&fit=crop",
-      status: "scanning",
-      badge: "scanning",
-    },
-    {
-      id: "5",
-      imageUrl:
-        "https://images.unsplash.com/photo-1551913902-c92207136625?w=240&q=70&auto=format&fit=crop",
+      content: `Vehicle detected · ${moment.vehicleType.toLowerCase()}`,
+    });
+  }
+
+  if (moment.licensePlate) {
+    chips.push({
+      id: "p",
+      type: "AI",
       status: "done",
-      badge: "ok",
-    },
-    {
-      id: "6",
-      imageUrl:
-        "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=240&q=70&auto=format&fit=crop",
+      content: `Plate · ${moment.licensePlate} · ${plateConf}% confidence`,
+    });
+  }
+
+  if (moment.city) {
+    chips.push({
+      id: "g",
+      type: "GPS",
       status: "done",
-      badge: "ok",
-    },
-    {
-      id: "7",
-      imageUrl:
-        "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=240&q=70&auto=format&fit=crop",
-      status: "done",
-      badge: "ok",
-    },
-    {
-      id: "8",
-      imageUrl:
-        "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=240&q=70&auto=format&fit=crop",
-      status: "scanning",
-      badge: "scanning",
-    },
-    {
-      id: "9",
-      imageUrl:
-        "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=240&q=70&auto=format&fit=crop",
-      status: "done",
-      badge: "ok",
-    },
-  ],
-  currentFrame: {
-    frameNumber: 32,
-    totalFrames: 142,
-    fileName: "IMG_4729.jpg",
-    fileSizeMb: 18.4,
-    imageUrl:
-      "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=900&q=85&auto=format&fit=crop",
-    cameraMeta: "Sony A7 III · 35mm · f/1.8 · 1/640s · ISO 400",
-    shootDate: "2026-05-02",
-    shootTime: "17:42",
-    aiLogChips: [
-      {
-        id: "1",
-        type: "AI",
-        status: "done",
-        content: "Vehicle detected · motorcycle",
-      },
-      {
-        id: "2",
-        type: "AI",
-        status: "done",
-        content: "Plate · D 1428 NA · 94% confidence",
-      },
-      {
-        id: "3",
-        type: "GPS",
-        status: "done",
-        content: "Bandung · Coblong · Dago",
-      },
-      {
-        id: "4",
-        type: "AI",
-        status: "thinking",
-        content: "Drafting caption",
-      },
-    ],
-    caption: "A vintage Vespa parked in the gold light of Jalan Dago.",
-    story:
-      "The owner stepped inside the kopi shop just before I lifted the camera. The light was already going. It felt like the kind of street you only get one frame of.",
-    capturedAt: "2026-05-02 · 17:42 WIB",
-    camera: "Sony A7 III · 35mm f/1.8",
-    city: "Bandung",
-    district: "Coblong · Dago",
-    vehicleType: "motorcycle",
-    licensePlate: "D 1428 NA",
-    plateConfidence: 94,
-    tags: [
-      { id: "1", label: "vespa", isAi: true },
-      { id: "2", label: "silver", isAi: true },
-      { id: "3", label: "golden hour", isAi: true },
-      { id: "4", label: "street", isAi: true },
-      { id: "5", label: "parked", isAi: true },
-      { id: "6", label: "dago", isAi: false },
-    ],
-    priceTiers: [
-      {
-        id: "1",
-        licenseType: "Personal use",
-        description: "Print · social · non-commercial",
-        currency: "IDR",
-        amount: "35.000",
-      },
-      {
-        id: "2",
-        licenseType: "Editorial",
-        description: "Press · magazines · books",
-        currency: "IDR",
-        amount: "120.000",
-      },
-      {
-        id: "3",
-        licenseType: "Commercial",
-        description: "Ads · brand · merchandise",
-        currency: "IDR",
-        amount: "450.000",
-      },
-    ],
-  },
+      content: [moment.city, moment.district].filter(Boolean).join(" · "),
+    });
+  }
+
+  return chips;
+}
+
+function toFrameData(moment: BackendMoment, index: number, total: number): FrameData {
+  const ai = moment.aiAnalysis as Record<string, unknown> | null;
+  const hasAi = ai != null && !ai["error"];
+
+  const plateConf =
+    hasAi && typeof ai["plate_confidence"] === "number"
+      ? Math.round((ai["plate_confidence"] as number) * 100)
+      : 0;
+
+  return {
+    aiLogChips: hasAi ? toAiLogChips(moment, plateConf) : [],
+    camera: moment.cameraInfo ?? "—",
+    cameraMeta: moment.cameraInfo ?? "—",
+    capturedAt: moment.capturedAt
+      ? `${formatDate(moment.capturedAt)} · ${formatTime(moment.capturedAt)} WIB`
+      : "—",
+    caption: moment.caption ?? "",
+    city: moment.city ?? "—",
+    district: moment.district ?? "—",
+    fileSizeMb: 0,
+    fileName: moment.caption ?? `moment-${moment.id.slice(0, 8)}`,
+    frameNumber: index + 1,
+    imageUrl: resolveImageUrl(moment.imageUrl) ?? "/window.svg",
+    licensePlate: moment.licensePlate ?? "—",
+    plateConfidence: plateConf,
+    priceTiers: [],
+    shootDate: formatDate(moment.capturedAt),
+    shootTime: formatTime(moment.capturedAt),
+    story: "",
+    tags: (moment.tags ?? []).map((label, i) => ({ id: `t-${i}`, isAi: true, label })),
+    totalFrames: total,
+    vehicleType: toVehicleType(moment.vehicleType),
+  };
+}
+
+const EMPTY_FRAME: FrameData = {
+  aiLogChips: [],
+  camera: "—",
+  cameraMeta: "—",
+  capturedAt: "—",
+  caption: "",
+  city: "—",
+  district: "—",
+  fileSizeMb: 0,
+  fileName: "Tidak ada foto",
+  frameNumber: 0,
+  imageUrl: "/window.svg",
+  licensePlate: "—",
+  plateConfidence: 0,
+  priceTiers: [],
+  shootDate: "—",
+  shootTime: "—",
+  story: "",
+  tags: [],
+  totalFrames: 0,
+  vehicleType: "other",
 };
 
-export function getStudioPageData(): StudioPage {
-  return STUDIO_DATA;
+// ─── Service ──────────────────────────────────────────────────────────────────
+
+export async function getStudioPageData(fromDate?: string): Promise<StudioPage> {
+  const result = await serverApiRequest<BackendMomentsResult>(
+    "/photographers/moments?limit=50&offset=1",
+    { auth: true, revalidate: false },
+  ).catch((): BackendMomentsResult => ({ data: [], total: 0 }));
+
+  const allMoments = result.data ?? [];
+
+  const moments = fromDate
+    ? allMoments.filter((m) => {
+        const ts = m.capturedAt ? m.capturedAt * 1000 : null;
+        return ts ? new Date(ts).toISOString().slice(0, 10) === fromDate : false;
+      })
+    : allMoments;
+
+  const displayMoments = moments.length > 0 ? moments : allMoments;
+  const total = displayMoments.length;
+
+  const aiParsed = displayMoments.filter((m) => m.aiAnalysis && !m.aiAnalysis["error"]).length;
+  const needReview = displayMoments.filter(
+    (m) =>
+      m.aiAnalysis &&
+      !m.aiAnalysis["error"] &&
+      typeof m.aiAnalysis["vehicle_confidence"] === "number" &&
+      (m.aiAnalysis["vehicle_confidence"] as number) < 0.5,
+  ).length;
+
+  const queue: QueueItem[] = displayMoments.map((m, i) => ({
+    badge: toQueueBadge(m, i === 0),
+    id: m.id,
+    imageUrl: resolveImageUrl(m.thumbnailUrl) ?? resolveImageUrl(m.imageUrl) ?? "/window.svg",
+    status: toQueueStatus(m, i === 0),
+  }));
+
+  const firstMoment = displayMoments[0];
+  const currentFrame = firstMoment ? toFrameData(firstMoment, 0, total) : EMPTY_FRAME;
+
+  const batchName = fromDate
+    ? `Sesi ${new Date(fromDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}`
+    : "Semua sesi";
+
+  return {
+    avatarUrl: "/window.svg",
+    balance: {
+      amount: "—",
+      currency: "Rp",
+      period: "This month",
+      salesCount: 0,
+    },
+    batch: {
+      avgTimePerFrame: "—",
+      locationsResolved: displayMoments.filter((m) => m.city).length,
+      name: batchName,
+      platesParsed: displayMoments.filter((m) => m.licensePlate).length,
+      processed: aiParsed,
+      total,
+    },
+    currentFrame,
+    queue,
+    stats: {
+      aiParsed,
+      inQueue: total - aiParsed,
+      needReview,
+    },
+  };
 }

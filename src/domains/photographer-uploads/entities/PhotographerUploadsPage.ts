@@ -50,6 +50,7 @@ export interface UploadBatch {
   totalFrames: number;
   processedFrames: number;
   frames: UploadFrame[];
+  studioHref: string;
 }
 
 export interface UploadPanelConfig {
