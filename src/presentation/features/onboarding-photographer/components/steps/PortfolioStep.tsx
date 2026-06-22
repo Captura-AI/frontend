@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, useState } from "react";
 import { type OnboardingAiWorkflowPoint } from "@/domains/onboarding-photographer";
 import styles from "../../OnboardingPhotographerPage.module.css";
 
@@ -17,17 +20,80 @@ function UploadIcon() {
 }
 
 export function PortfolioStep({ aiWorkflow, acknowledged, onToggleAcknowledged }: PortfolioStepProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  function handleDropzoneClick() {
+    inputRef.current?.click();
+  }
+
+  function handleFilesChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    setSelectedFiles(files);
+  }
+
   return (
     <>
-      <div className={styles.dropzone}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        style={{ display: "none" }}
+        onChange={handleFilesChange}
+      />
+
+      <div
+        className={styles.dropzone}
+        style={{ cursor: "pointer" }}
+        role="button"
+        tabIndex={0}
+        aria-label="Pilih foto sample portfolio"
+        onClick={handleDropzoneClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleDropzoneClick();
+          }
+        }}
+      >
         <span className={styles.dropzoneIcon}>
           <UploadIcon />
         </span>
         <strong>Sample portfolio upload</strong>
-        <p>
-          Drag a few of your best frames here once your profile is approved. For now, this is just a
-          preview of your future uploads workflow.
-        </p>
+
+        {selectedFiles.length > 0 ? (
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, textAlign: "left", width: "100%" }}>
+            {selectedFiles.map((file) => (
+              <li
+                key={file.name}
+                style={{
+                  fontSize: "12.5px",
+                  color: "var(--color-ink)",
+                  padding: "4px 8px",
+                  background: "var(--color-bg)",
+                  borderRadius: "6px",
+                  marginTop: "4px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "8px",
+                }}
+              >
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {file.name}
+                </span>
+                <span style={{ color: "var(--color-ink-soft)", flexShrink: 0 }}>
+                  {(file.size / 1024 / 1024).toFixed(1)} MB
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>
+            Drag a few of your best frames here once your profile is approved. For now, this is just a
+            preview of your future uploads workflow.
+          </p>
+        )}
       </div>
 
       <div>

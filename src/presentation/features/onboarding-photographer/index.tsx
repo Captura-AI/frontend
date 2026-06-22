@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createHttpClient, createSessionStore } from "@/infrastructure";
 import { apiConfig } from "@/shared";
+import { Toast, type ToastData } from "@/presentation/base/components/Toast";
 import {
   createInitialOnboardingFormState,
   type OnboardingFormState,
@@ -44,7 +45,13 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
   const [formState, setFormState] = useState<OnboardingFormState>(createInitialOnboardingFormState());
   const [completed, setCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
+
+  const dismissToast = useCallback(() => setToast(null), []);
+
+  function showToast(message: string, variant: ToastData["variant"]) {
+    setToast({ id: Date.now().toString(), message, variant });
+  }
 
   const { ref: layoutRef, isVisible: layoutVisible } = useScrollReveal<HTMLDivElement>();
   const { ref: completionRef, isVisible: completionVisible } = useScrollReveal<HTMLDivElement>();
@@ -82,7 +89,6 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
     }
 
     setIsSubmitting(true);
-    setSubmitError(null);
 
     try {
       await http.post("/photographers/onboard", {
@@ -91,23 +97,30 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
         location: formState.profile.city.trim() || undefined,
       });
 
+      showToast("Pendaftaran berhasil! Mengarahkan ke dashboard fotografer…", "success");
       setCompleted(true);
 
       setTimeout(() => {
         router.push("/dashboard/photographer");
       }, 3000);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Gagal mendaftar sebagai fotografer. Coba lagi.";
-      setSubmitError(message);
+      const raw = error instanceof Error ? error.message : "";
+      const isAlreadyRegistered = raw.includes("409") || raw.toLowerCase().includes("already registered");
+
+      if (isAlreadyRegistered) {
+        showToast("Kamu sudah terdaftar sebagai fotografer. Mengarahkan ke dashboard…", "warning");
+        setTimeout(() => router.push("/dashboard/photographer"), 2500);
+      } else {
+        showToast(raw || "Gagal mendaftar sebagai fotografer. Coba lagi.", "error");
+      }
+
       setIsSubmitting(false);
     }
   }
 
   return (
     <div className={styles.page}>
+      {toast ? <Toast toast={toast} onDismiss={dismissToast} /> : null}
       <div className={styles.wrap}>
         <section
           className={`${styles.hero} opacity-0`}
@@ -199,12 +212,6 @@ export function OnboardingPhotographerPageView({ content }: OnboardingPhotograph
                   <ReviewStep content={content} formState={formState} />
                 ) : null}
               </div>
-
-              {submitError ? (
-                <p className={styles.errorText} role="alert">
-                  {submitError}
-                </p>
-              ) : null}
 
               <div className={styles.footerNav}>
                 <button
