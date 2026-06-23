@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { resolveImageUrl } from "@/shared/api/resolveImageUrl";
 import { type PhotographerUploadsPage, type UploadQueueStatus } from "../entities/PhotographerUploadsPage";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ function toUploadFrame(moment: BackendMoment): PhotographerUploadsPage["batches"
     fileName: moment.caption ?? `moment-${moment.id.slice(0, 8)}`,
     progress: hasAi ? 100 : status === "analyzing" ? 50 : 0,
     status,
-    thumbnailUrl: moment.thumbnailUrl ?? moment.imageUrl ?? "/window.svg",
+    thumbnailUrl: resolveImageUrl(moment.thumbnailUrl) ?? resolveImageUrl(moment.imageUrl) ?? "/window.svg",
     ai: hasAi
       ? {
           confidence: typeof ai["vehicle_confidence"] === "number" ? Math.round(ai["vehicle_confidence"] * 100) : 80,
@@ -132,15 +133,35 @@ function toUploadFrame(moment: BackendMoment): PhotographerUploadsPage["batches"
   };
 }
 
+// Converts any raw timestamp (number or string, seconds or ms) to safe milliseconds.
+// Postgres bigint columns are sometimes serialised as strings in JSON — Number()
+// coercion handles that. The < 1e12 heuristic distinguishes Unix-seconds from
+// Unix-ms (1e12 ms ≈ year 2001, so any seconds-based 2020+ date is < 1e12).
+function toMs(ts: number | string | null | undefined): number | null {
+  if (ts == null) return null;
+
+  const n = Number(ts);
+
+  if (!isFinite(n) || n <= 0) return null;
+
+  return n < 1e12 ? n * 1000 : n;
+}
+
+function toDateKey(ts: number | string | null | undefined): string | null {
+  const ms = toMs(ts);
+
+  if (!ms) return null;
+
+  const d = new Date(ms);
+
+  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+}
+
 function groupByDate(moments: BackendMoment[]): BackendMoment[][] {
   const groups = new Map<string, BackendMoment[]>();
 
   for (const m of moments) {
-    const key = m.capturedAt
-      ? new Date(m.capturedAt * 1000).toISOString().slice(0, 10)
-      : m.createdAt
-        ? new Date(m.createdAt).toISOString().slice(0, 10)
-        : "unknown";
+    const key = toDateKey(m.capturedAt) ?? toDateKey(m.createdAt) ?? "unknown";
 
     const group = groups.get(key) ?? [];
     group.push(m);
@@ -168,8 +189,7 @@ function toBatch(
     statusPriority.find((s) => frames.some((f) => f.status === s)) ?? "ready";
 
   const firstMoment = moments[0];
-  const batchDate = firstMoment?.capturedAt ?? firstMoment?.createdAt ?? null;
-  const batchMs = typeof batchDate === "number" && batchDate < 1e12 ? batchDate * 1000 : (batchDate ?? null);
+  const batchMs = toMs(firstMoment?.capturedAt) ?? toMs(firstMoment?.createdAt) ?? null;
   const batchDateIso = batchMs ? new Date(batchMs).toISOString().slice(0, 10) : null;
 
   return {

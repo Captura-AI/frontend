@@ -2,9 +2,10 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AUTH_SESSION_EVENT,
+  AUTH_SESSION_EXPIRED_EVENT,
   createAuthRepository,
   createHttpClient,
   createSessionStore,
@@ -12,6 +13,7 @@ import {
 } from "@/infrastructure";
 import { cn } from "@/presentation/lib/utils";
 import { apiConfig } from "@/shared";
+import { NotificationModal } from "@/presentation/base/components/NotificationModal";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -54,7 +56,9 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const authRepository = useMemo(() => {
     const session = createSessionStore();
     const http = createHttpClient(apiConfig.baseUrl, session);
@@ -90,8 +94,15 @@ export function Header() {
       void refreshAuthState();
     });
 
+    const onSessionExpired = () => setShowExpiredModal(true);
+
     window.addEventListener(AUTH_SESSION_EVENT, refreshAuthState);
-    return () => window.removeEventListener(AUTH_SESSION_EVENT, refreshAuthState);
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, onSessionExpired);
+
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EVENT, refreshAuthState);
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, onSessionExpired);
+    };
   }, [refreshAuthState]);
 
   async function handleLogout() {
@@ -105,6 +116,7 @@ export function Header() {
   }
 
   return (
+    <>
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-[100]",
@@ -211,5 +223,25 @@ export function Header() {
         </Link>
       )}
     </header>
+
+    {showExpiredModal && (
+      <NotificationModal
+        config={{
+          variant: "warning",
+          title: "Sesi kamu telah berakhir",
+          message: "Token login sudah kedaluwarsa. Silakan masuk kembali untuk melanjutkan.",
+          confirmLabel: "Ke Halaman Utama",
+          onConfirm: () => {
+            setShowExpiredModal(false);
+            router.push("/");
+          },
+        }}
+        onClose={() => {
+          setShowExpiredModal(false);
+          router.push("/");
+        }}
+      />
+    )}
+    </>
   );
 }
