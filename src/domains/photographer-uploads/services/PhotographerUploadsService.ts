@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { resolveImageUrl } from "@/shared/api/resolveImageUrl";
 import { type PhotographerUploadsPage, type UploadQueueStatus } from "../entities/PhotographerUploadsPage";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ function toUploadFrame(moment: BackendMoment): PhotographerUploadsPage["batches"
     fileName: moment.caption ?? `moment-${moment.id.slice(0, 8)}`,
     progress: hasAi ? 100 : status === "analyzing" ? 50 : 0,
     status,
-    thumbnailUrl: moment.thumbnailUrl ?? moment.imageUrl ?? "/window.svg",
+    thumbnailUrl: resolveImageUrl(moment.thumbnailUrl) ?? resolveImageUrl(moment.imageUrl) ?? "/window.svg",
     ai: hasAi
       ? {
           confidence: typeof ai["vehicle_confidence"] === "number" ? Math.round(ai["vehicle_confidence"] * 100) : 80,
