@@ -51,6 +51,7 @@ export interface PriceTier {
 }
 
 export interface FrameData {
+  momentId: string;
   frameNumber: number;
   totalFrames: number;
   fileName: string;

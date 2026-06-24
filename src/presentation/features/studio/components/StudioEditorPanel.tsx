@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { FrameData, VehicleType, FrameTag, PriceTier, LicenseType } from "@/domains/studio";
+import { ReanalyzeButton } from "./ReanalyzeButton";
 
 /* ─── Vehicle type definitions ─────────────────────────────── */
 type VehicleOption = { type: VehicleType; label: string; paths: React.ReactNode };
@@ -569,6 +570,7 @@ export default function StudioEditorPanel({ frame, hasPrev, hasNext, onPrev, onN
           </span>
         </div>
         <div className="ml-auto flex gap-2.5">
+          {frame?.momentId ? <ReanalyzeButton momentId={frame.momentId} /> : null}
           <button className="px-4 py-2.5 rounded-lg text-[13px] font-medium border border-line text-ink hover:border-ink transition-colors">
             Skip
           </button>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { StudioPage } from "@/domains/studio";
 import StudioTopBar from "./components/StudioTopBar";
 import StudioPageHeader from "./components/StudioPageHeader";
@@ -8,18 +9,32 @@ import StudioUploadPanel from "./components/StudioUploadPanel";
 import StudioEditorPanel from "./components/StudioEditorPanel";
 
 const EMPTY_FRAME_ID = "";
+const SCAN_POLL_INTERVAL_MS = 4000;
 
 interface Props {
   data: StudioPage;
 }
 
 export default function StudioView({ data }: Props) {
+  const router = useRouter();
   const firstFrameId = data.queue[0]?.id ?? EMPTY_FRAME_ID;
   const [activeId, setActiveId] = useState<string>(firstFrameId);
 
   const activeIndex = data.queue.findIndex((q) => q.id === activeId);
   const safeIndex = activeIndex >= 0 ? activeIndex : 0;
   const currentFrame = data.frames[safeIndex] ?? null;
+
+  const hasScanning = data.queue.some((q) => q.status === "scanning");
+
+  // Auto-refresh while any frame is being re-analyzed so the UI reflects the
+  // analysis result as soon as the backend completes it.
+  useEffect(() => {
+    if (!hasScanning) return;
+
+    const id = setInterval(() => router.refresh(), SCAN_POLL_INTERVAL_MS);
+
+    return () => clearInterval(id);
+  }, [hasScanning, router]);
 
   const handlePrev = () => {
     const prevIndex = Math.max(0, safeIndex - 1);
