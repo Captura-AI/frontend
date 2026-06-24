@@ -142,16 +142,20 @@ const FIELD_AI =
 /* ─── Main component ──────────────────────────────────────────── */
 
 interface Props {
-  frame: FrameData;
+  frame: FrameData | null;
+  hasPrev: boolean;
+  hasNext: boolean;
+  onPrev: () => void;
+  onNext: () => void;
 }
 
-export default function StudioEditorPanel({ frame }: Props) {
+export default function StudioEditorPanel({ frame, hasPrev, hasNext, onPrev, onNext }: Props) {
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleType>(
-    frame.vehicleType
+    frame?.vehicleType ?? "other",
   );
   const [isAiSelection, setIsAiSelection] = useState(true);
-  const [tags, setTags] = useState<FrameTag[]>(frame.tags);
-  const [priceTiers, setPriceTiers] = useState<PriceTier[]>(frame.priceTiers);
+  const [tags, setTags] = useState<FrameTag[]>(frame?.tags ?? []);
+  const [priceTiers, setPriceTiers] = useState<PriceTier[]>(frame?.priceTiers ?? []);
 
   const handleVehicleSelect = (v: VehicleType) => {
     setSelectedVehicle(v);
@@ -176,7 +180,10 @@ export default function StudioEditorPanel({ frame }: Props) {
       },
     ]);
 
-  const frameNum = String(frame.frameNumber).padStart(3, "0");
+  const frameNum = frame ? String(frame.frameNumber).padStart(3, "0") : "000";
+  const totalFrames = frame?.totalFrames ?? 0;
+  const fileName = frame?.fileName ?? "Tidak ada foto";
+  const fileSizeMb = frame?.fileSizeMb ?? 0;
 
   return (
     <section className="bg-bg-soft border border-line rounded-2xl overflow-hidden flex flex-col">
@@ -185,19 +192,21 @@ export default function StudioEditorPanel({ frame }: Props) {
         <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-soft">
           Frame{" "}
           <b className="text-ink font-medium">
-            {frameNum} / {frame.totalFrames}
+            {frameNum} / {totalFrames}
           </b>{" "}
           ·{" "}
-          <b className="text-ink font-medium">{frame.fileName}</b> ·{" "}
-          {frame.fileSizeMb} MB
+          <b className="text-ink font-medium">{fileName}</b> ·{" "}
+          {fileSizeMb} MB
         </span>
         <div className="flex items-center gap-1 ml-auto shrink-0">
           <span className="font-mono text-[11px] px-1.5 whitespace-nowrap">
-            {frameNum} / {frame.totalFrames}
+            {frameNum} / {totalFrames}
           </span>
           <button
-            className="w-7 h-7 border border-line rounded-md inline-flex items-center justify-center text-ink hover:bg-ink hover:text-bg-soft hover:border-ink transition-all"
+            className="w-7 h-7 border border-line rounded-md inline-flex items-center justify-center text-ink hover:bg-ink hover:text-bg-soft hover:border-ink transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Previous"
+            onClick={onPrev}
+            disabled={!hasPrev}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path
@@ -210,8 +219,10 @@ export default function StudioEditorPanel({ frame }: Props) {
             </svg>
           </button>
           <button
-            className="w-7 h-7 border border-line rounded-md inline-flex items-center justify-center text-ink hover:bg-ink hover:text-bg-soft hover:border-ink transition-all"
+            className="w-7 h-7 border border-line rounded-md inline-flex items-center justify-center text-ink hover:bg-ink hover:text-bg-soft hover:border-ink transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Next"
+            onClick={onNext}
+            disabled={!hasNext}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path
@@ -230,13 +241,15 @@ export default function StudioEditorPanel({ frame }: Props) {
       <div className="grid grid-cols-[minmax(280px,1.05fr)_1.1fr] max-[920px]:grid-cols-1 flex-1">
         {/* Photo panel */}
         <div className="relative bg-[#1a1815] aspect-4/5 overflow-hidden border-r border-line-soft max-[920px]:border-r-0 max-[920px]:border-b max-[920px]:border-line-soft">
-          <Image
-            src={frame.imageUrl}
-            alt={frame.caption}
-            fill
-            className="object-cover"
-            sizes="(max-width: 920px) 100vw, 45vw"
-          />
+          {frame ? (
+            <Image
+              src={frame.imageUrl}
+              alt={frame.caption}
+              fill
+              className="object-cover"
+              sizes="(max-width: 920px) 100vw, 45vw"
+            />
+          ) : null}
 
           {/* Big scan line */}
           <div className="studio-photo-scanline absolute left-0 right-0 h-0.75 z-30" />
@@ -262,39 +275,41 @@ export default function StudioEditorPanel({ frame }: Props) {
           </div>
 
           {/* AI log chips */}
-          <div className="absolute top-3.5 left-3.5 flex flex-col gap-1.5 z-40">
-            {frame.aiLogChips.map((chip) => (
-              <div
-                key={chip.id}
-                className="inline-flex items-center gap-2 bg-[rgba(20,19,17,0.78)] backdrop-blur-sm text-bg-soft px-2.5 py-1.5 rounded-md font-mono text-[10.5px] tracking-[0.04em] border border-[rgba(255,255,255,0.08)] whitespace-nowrap w-fit"
-              >
-                <span
-                  className={`text-[8.5px] tracking-widest uppercase px-1.25 py-0.5 rounded-[3px] ${
-                    chip.status === "thinking"
-                      ? "bg-ink-faint text-ink"
-                      : chip.type === "GPS"
-                        ? "bg-ink text-bg-soft"
-                        : "bg-ok text-bg-soft"
-                  }`}
+          {frame ? (
+            <div className="absolute top-3.5 left-3.5 flex flex-col gap-1.5 z-40">
+              {frame.aiLogChips.map((chip) => (
+                <div
+                  key={chip.id}
+                  className="inline-flex items-center gap-2 bg-[rgba(20,19,17,0.78)] backdrop-blur-sm text-bg-soft px-2.5 py-1.5 rounded-md font-mono text-[10.5px] tracking-[0.04em] border border-[rgba(255,255,255,0.08)] whitespace-nowrap w-fit"
                 >
-                  {chip.type}
-                </span>
-                {chip.content}
-                {chip.status === "thinking" && (
-                  <span className="inline-block animate-[aiDots_1.4s_steps(4,end)_infinite] overflow-hidden align-bottom w-4.5">
-                    ···
+                  <span
+                    className={`text-[8.5px] tracking-widest uppercase px-1.25 py-0.5 rounded-[3px] ${
+                      chip.status === "thinking"
+                        ? "bg-ink-faint text-ink"
+                        : chip.type === "GPS"
+                          ? "bg-ink text-bg-soft"
+                          : "bg-ok text-bg-soft"
+                    }`}
+                  >
+                    {chip.type}
                   </span>
-                )}
-              </div>
-            ))}
-          </div>
+                  {chip.content}
+                  {chip.status === "thinking" && (
+                    <span className="inline-block animate-[aiDots_1.4s_steps(4,end)_infinite] overflow-hidden align-bottom w-4.5">
+                      ···
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           {/* Photo meta */}
           <div className="absolute bottom-0 left-0 right-0 px-4 py-3.5 bg-linear-to-t from-[rgba(20,19,17,0.72)] to-transparent text-bg-soft flex justify-between items-end z-30 font-mono text-[10px] tracking-[0.06em] uppercase">
-            <span>{frame.cameraMeta}</span>
+            <span>{frame?.cameraMeta ?? "—"}</span>
             <span>
-              <b className="font-medium">{frame.shootTime}</b> ·{" "}
-              {frame.shootDate}
+              <b className="font-medium">{frame?.shootTime ?? "—"}</b> ·{" "}
+              {frame?.shootDate ?? "—"}
             </span>
           </div>
         </div>
@@ -311,7 +326,7 @@ export default function StudioEditorPanel({ frame }: Props) {
             <input
               className={FIELD_AI}
               type="text"
-              defaultValue={frame.caption}
+              defaultValue={frame?.caption ?? ""}
             />
           </div>
 
@@ -323,7 +338,7 @@ export default function StudioEditorPanel({ frame }: Props) {
             />
             <textarea
               className={`${FIELD_BASE} min-h-19 resize-y leading-[1.45]`}
-              defaultValue={frame.story}
+              defaultValue={frame?.story ?? ""}
             />
           </div>
 
@@ -338,7 +353,7 @@ export default function StudioEditorPanel({ frame }: Props) {
               <input
                 className={FIELD_AI}
                 type="text"
-                defaultValue={frame.capturedAt}
+                defaultValue={frame?.capturedAt ?? ""}
               />
             </div>
             <div>
@@ -346,7 +361,7 @@ export default function StudioEditorPanel({ frame }: Props) {
               <input
                 className={FIELD_AI}
                 type="text"
-                defaultValue={frame.camera}
+                defaultValue={frame?.camera ?? ""}
               />
             </div>
           </div>
@@ -362,7 +377,7 @@ export default function StudioEditorPanel({ frame }: Props) {
               <input
                 className={FIELD_AI}
                 type="text"
-                defaultValue={frame.city}
+                defaultValue={frame?.city ?? ""}
               />
             </div>
             <div>
@@ -370,7 +385,7 @@ export default function StudioEditorPanel({ frame }: Props) {
               <input
                 className={FIELD_AI}
                 type="text"
-                defaultValue={frame.district}
+                defaultValue={frame?.district ?? ""}
               />
             </div>
           </div>
@@ -423,11 +438,11 @@ export default function StudioEditorPanel({ frame }: Props) {
               <input
                 className="flex-1 px-3.5 py-2.5 bg-ink text-[#FFF7DC] border-[1.5px] border-ink rounded-lg font-mono text-[18px] tracking-[0.08em] text-center font-medium outline-none focus:border-accent transition-colors"
                 type="text"
-                defaultValue={frame.licensePlate}
+                defaultValue={frame?.licensePlate ?? ""}
               />
               <div className="shrink-0 bg-bg border border-line rounded-lg px-2.5 py-1.5 flex flex-col items-center justify-center min-w-16">
                 <span className="font-serif text-[18px] leading-none tracking-[-0.01em]">
-                  {frame.plateConfidence}%
+                  {frame?.plateConfidence ?? 0}%
                 </span>
                 <span className="font-mono text-[8.5px] tracking-[0.08em] uppercase text-ink-soft mt-0.5">
                   conf.

@@ -9,7 +9,7 @@ import styles from "../PhotographerUploadsPage.module.css";
 
 type UploadState =
   | { type: "idle" }
-  | { type: "uploading"; current: number; total: number }
+  | { type: "uploading"; current: number; total: number; progress: number }
   | { type: "done"; count: number; errors: string[] }
   | { type: "error"; message: string };
 
@@ -51,26 +51,41 @@ export function UploadDropzone({ helperText, acceptedFormats, maxFileSizeMb, max
       return;
     }
 
-    setState({ type: "uploading", current: 0, total: files.length });
+    setState({ type: "uploading", current: 0, total: files.length, progress: 0 });
 
     const errors: string[] = [];
     let uploaded = 0;
 
-    for (const file of files) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      if (!file) continue;
+
       const caption = file.name.replace(/\.[^.]+$/, "");
       const form = new FormData();
       form.append("caption", caption);
       form.append("image", file);
 
       try {
-        await http.post("/photographers/moments", form);
+        await http.post("/photographers/moments", form, {
+          onUploadProgress: (progressEvent) => {
+            const fileRatio = progressEvent.progress ?? 0;
+            const overall = ((i + fileRatio) / files.length) * 100;
+            setState({ type: "uploading", current: i, total: files.length, progress: overall });
+          },
+        });
         uploaded += 1;
       } catch (error) {
         const msg = error instanceof Error ? error.message : "Upload gagal";
         errors.push(`${file.name}: ${msg}`);
       }
 
-      setState({ type: "uploading", current: uploaded + errors.length, total: files.length });
+      setState({
+        type: "uploading",
+        current: i + 1,
+        total: files.length,
+        progress: ((i + 1) / files.length) * 100,
+      });
     }
 
     setState({ type: "done", count: uploaded, errors });
@@ -157,13 +172,13 @@ export function UploadDropzone({ helperText, acceptedFormats, maxFileSizeMb, max
       {state.type === "uploading" ? (
         <>
           <p style={{ fontWeight: 500 }}>
-            Mengupload {state.current} / {state.total} foto…
+            Mengupload {Math.min(state.current + 1, state.total)} / {state.total} foto…
           </p>
           <div
             role="progressbar"
-            aria-valuenow={state.current}
+            aria-valuenow={Math.round(state.progress)}
             aria-valuemin={0}
-            aria-valuemax={state.total}
+            aria-valuemax={100}
             style={{
               width: "100%",
               maxWidth: "280px",
@@ -176,9 +191,9 @@ export function UploadDropzone({ helperText, acceptedFormats, maxFileSizeMb, max
             <div
               style={{
                 height: "100%",
-                width: `${(state.current / state.total) * 100}%`,
+                width: `${state.progress}%`,
                 background: "var(--color-accent)",
-                transition: "width 0.3s ease",
+                transition: "width 0.1s ease",
               }}
             />
           </div>

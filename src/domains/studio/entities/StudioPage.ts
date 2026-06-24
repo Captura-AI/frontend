@@ -86,5 +86,5 @@ export interface StudioPage {
   stats: StudioHeaderStats;
   batch: BatchStats;
   queue: QueueItem[];
-  currentFrame: FrameData;
+  frames: FrameData[];
 }

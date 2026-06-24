@@ -86,7 +86,6 @@ function attachResponseInterceptor(instance: AxiosInstance, session: SessionStor
 export function createHttpClient(baseUrl: string, session: SessionStore): HttpClient {
   const instance = axios.create({
     baseURL: baseUrl,
-    headers: { "Content-Type": "application/json" },
     withCredentials: true,
   });
 
