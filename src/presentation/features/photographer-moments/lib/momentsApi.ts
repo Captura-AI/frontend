@@ -74,3 +74,16 @@ export async function deleteMoment(momentId: string): Promise<void> {
     throw new Error(`Failed to delete moment (${res.status})`);
   }
 }
+
+export async function bulkDeleteMoments(momentIds: string[]): Promise<void> {
+  const res = await fetch(`${apiConfig.baseUrl}/photographers/moments/bulk-delete`, {
+    method: "DELETE",
+    headers: buildHeaders(),
+    credentials: "include",
+    body: JSON.stringify({ momentIds }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to bulk delete moments (${res.status})`);
+  }
+}

@@ -11,7 +11,7 @@ import {
   type PhotographerMomentsPage,
 } from "@/domains/photographer-moments";
 import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
-import { bulkPublishMoments, bulkSaveDraftMoments, deleteMoment } from "./lib/momentsApi";
+import { bulkDeleteMoments, bulkPublishMoments, bulkSaveDraftMoments, deleteMoment } from "./lib/momentsApi";
 import { BulkActionBar } from "./components/BulkActionBar";
 import { EditMomentDrawer } from "./components/EditMomentDrawer";
 import { MomentRow } from "./components/MomentRow";
@@ -142,7 +142,7 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
     clearSelection();
 
     try {
-      await Promise.all(idsToDelete.map((id) => deleteMoment(id)));
+      await bulkDeleteMoments(idsToDelete);
       router.refresh();
     } catch {
       router.refresh();
