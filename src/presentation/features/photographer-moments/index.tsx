@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   type LicenseType,
   type Moment,
@@ -10,6 +11,7 @@ import {
   type PhotographerMomentsPage,
 } from "@/domains/photographer-moments";
 import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
+import { bulkPublishMoments, bulkSaveDraftMoments, deleteMoment } from "./lib/momentsApi";
 import { BulkActionBar } from "./components/BulkActionBar";
 import { EditMomentDrawer } from "./components/EditMomentDrawer";
 import { MomentRow } from "./components/MomentRow";
@@ -43,12 +45,14 @@ function badgeClass(tone: BadgeTone): string {
 }
 
 export function PhotographerMomentsPageView({ content }: PhotographerMomentsPageViewProps) {
+  const router = useRouter();
   const [moments, setMoments] = useState<Moment[]>(content.moments);
   const [activeFilter, setActiveFilter] = useState<MomentFilterId>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [bulkLicense, setBulkLicense] = useState<LicenseType>("Editorial");
   const [bulkPrice, setBulkPrice] = useState("");
+  const [isMutating, setIsMutating] = useState(false);
 
   const statusCounts = useMemo(() => {
     return moments.reduce<Record<MomentStatus, number>>((acc, moment) => {
@@ -91,8 +95,72 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
     setSelectedIds([]);
   }
 
-  function applyStatusToSelection(status: MomentStatus) {
-    setMoments((prev) => prev.map((moment) => (selectedIds.includes(moment.id) ? { ...moment, status } : moment)));
+  async function handleBulkPublish() {
+    if (isMutating || selectedIds.length === 0) return;
+
+    setIsMutating(true);
+    setMoments((prev) =>
+      prev.map((m) => (selectedIds.includes(m.id) ? { ...m, status: "published" as MomentStatus } : m)),
+    );
+
+    try {
+      await bulkPublishMoments(selectedIds);
+      clearSelection();
+      router.refresh();
+    } catch {
+      router.refresh();
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function handleBulkHide() {
+    if (isMutating || selectedIds.length === 0) return;
+
+    setIsMutating(true);
+    setMoments((prev) =>
+      prev.map((m) => (selectedIds.includes(m.id) ? { ...m, status: "hidden" as MomentStatus } : m)),
+    );
+
+    try {
+      await bulkSaveDraftMoments(selectedIds);
+      clearSelection();
+      router.refresh();
+    } catch {
+      router.refresh();
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (isMutating || selectedIds.length === 0) return;
+
+    setIsMutating(true);
+    const idsToDelete = [...selectedIds];
+    setMoments((prev) => prev.filter((m) => !idsToDelete.includes(m.id)));
+    clearSelection();
+
+    try {
+      await Promise.all(idsToDelete.map((id) => deleteMoment(id)));
+      router.refresh();
+    } catch {
+      router.refresh();
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function handleDeleteMoment(momentId: string) {
+    setMoments((prev) => prev.filter((m) => m.id !== momentId));
+    setSelectedIds((prev) => prev.filter((id) => id !== momentId));
+
+    try {
+      await deleteMoment(momentId);
+      router.refresh();
+    } catch {
+      router.refresh();
+    }
   }
 
   function applyLicenseToSelection() {
@@ -106,6 +174,13 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
     if (!Number.isFinite(value) || value <= 0) return;
     setMoments((prev) => prev.map((moment) => (selectedIds.includes(moment.id) ? { ...moment, price: value } : moment)));
     setBulkPrice("");
+  }
+
+  function handleMomentSaved(momentId: string, updates: Partial<Moment>) {
+    setMoments((prev) =>
+      prev.map((m) => (m.id === momentId ? { ...m, ...updates } : m)),
+    );
+    router.refresh();
   }
 
   return (
@@ -160,12 +235,14 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
           selectedCount={selectedIds.length}
           bulkLicense={bulkLicense}
           bulkPrice={bulkPrice}
+          isMutating={isMutating}
           onLicenseChange={setBulkLicense}
           onPriceChange={setBulkPrice}
           onApplyLicense={applyLicenseToSelection}
           onApplyPrice={applyPriceToSelection}
-          onPublish={() => applyStatusToSelection("published")}
-          onHide={() => applyStatusToSelection("hidden")}
+          onPublish={handleBulkPublish}
+          onHide={handleBulkHide}
+          onDelete={handleBulkDelete}
           onClear={clearSelection}
         />
       ) : null}
@@ -195,6 +272,7 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
                 isSelected={selectedIds.includes(moment.id)}
                 onToggleSelect={() => toggleSelection(moment.id)}
                 onEdit={() => setEditingId(moment.id)}
+                onDelete={() => handleDeleteMoment(moment.id)}
                 explorerBaseHref={content.explorerBaseHref}
               />
             ))}
@@ -210,7 +288,13 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
         </div>
       </section>
 
-      {editingMoment ? <EditMomentDrawer moment={editingMoment} onClose={() => setEditingId(null)} /> : null}
+      {editingMoment ? (
+        <EditMomentDrawer
+          moment={editingMoment}
+          onClose={() => setEditingId(null)}
+          onSaved={handleMomentSaved}
+        />
+      ) : null}
     </DashboardShell>
   );
 }
