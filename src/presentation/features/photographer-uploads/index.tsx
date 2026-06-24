@@ -9,6 +9,9 @@ import {
   type VehicleType,
 } from "@/domains/photographer-uploads";
 import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
+import { AnalysisPoller } from "./components/AnalysisPoller";
+import { PublishBatchButton, SaveDraftButton } from "./components/BulkBatchButton";
+import { RetryBatchButton } from "./components/RetryBatchButton";
 import { UploadDropzone } from "./components/UploadDropzone";
 import styles from "./PhotographerUploadsPage.module.css";
 
@@ -59,6 +62,9 @@ function badgeClass(tone: BadgeTone): string {
 }
 
 export function PhotographerUploadsPageView({ content }: PhotographerUploadsPageViewProps) {
+  const allFrames = content.batches.flatMap((b) => b.frames);
+  const hasAnalyzing = allFrames.some((f) => f.status === "analyzing");
+
   return (
     <DashboardShell
       photographer={content.photographer}
@@ -81,6 +87,8 @@ export function PhotographerUploadsPageView({ content }: PhotographerUploadsPage
           </Link>
         </div>
       </header>
+
+      <AnalysisPoller isActive={hasAnalyzing} />
 
       <section className={styles.summaryGrid} aria-label="Upload queue summary">
         <SummaryCard label="Queued" value={content.summary.totalQueued} tone="neutral" />
@@ -133,6 +141,8 @@ function SummaryCard({ label, value, tone }: { label: string; value: number; ton
 function BatchCard({ batch }: { batch: UploadBatch }) {
   const studioHref = batch.studioHref;
   const remainingFrames = batch.totalFrames - batch.frames.length;
+  const allMomentIds = batch.frames.map((f) => f.id);
+  const failedFrameIds = batch.frames.filter((f) => f.status === "failed").map((f) => f.id);
 
   return (
     <article className={styles.batchCard}>
@@ -173,7 +183,12 @@ function BatchCard({ batch }: { batch: UploadBatch }) {
       </div>
 
       <footer className={styles.batchActions}>
-        <BatchActions status={batch.status} studioHref={studioHref} />
+        <BatchActions
+          status={batch.status}
+          studioHref={studioHref}
+          momentIds={allMomentIds}
+          failedFrameIds={failedFrameIds}
+        />
       </footer>
     </article>
   );
@@ -263,7 +278,14 @@ function AiSummary({ ai }: { ai: AiReviewSummary }) {
   );
 }
 
-function BatchActions({ status, studioHref }: { status: UploadQueueStatus; studioHref: string }) {
+interface BatchActionsProps {
+  status: UploadQueueStatus;
+  studioHref: string;
+  momentIds: string[];
+  failedFrameIds: string[];
+}
+
+function BatchActions({ status, studioHref, momentIds, failedFrameIds }: BatchActionsProps) {
   switch (status) {
     case "uploaded":
       return (
@@ -293,20 +315,14 @@ function BatchActions({ status, studioHref }: { status: UploadQueueStatus; studi
           <Link className={styles.primaryButton} href={studioHref}>
             Review flagged frames
           </Link>
-          <button type="button" className={styles.secondaryButton}>
-            Save as draft
-          </button>
+          <SaveDraftButton momentIds={momentIds} />
         </>
       );
     case "ready":
       return (
         <>
-          <button type="button" className={styles.primaryButton}>
-            Publish batch
-          </button>
-          <button type="button" className={styles.secondaryButton}>
-            Save as draft
-          </button>
+          <PublishBatchButton momentIds={momentIds} />
+          <SaveDraftButton momentIds={momentIds} />
           <Link className={styles.textButton} href={studioHref}>
             Open in AI Studio
           </Link>
@@ -315,9 +331,7 @@ function BatchActions({ status, studioHref }: { status: UploadQueueStatus; studi
     case "failed":
       return (
         <>
-          <button type="button" className={styles.primaryButton}>
-            Retry failed frames
-          </button>
+          <RetryBatchButton failedFrameIds={failedFrameIds} />
           <Link className={styles.secondaryButton} href={studioHref}>
             Edit metadata in Studio
           </Link>

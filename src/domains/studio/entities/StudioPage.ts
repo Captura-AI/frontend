@@ -51,6 +51,7 @@ export interface PriceTier {
 }
 
 export interface FrameData {
+  momentId: string;
   frameNumber: number;
   totalFrames: number;
   fileName: string;
@@ -86,5 +87,5 @@ export interface StudioPage {
   stats: StudioHeaderStats;
   batch: BatchStats;
   queue: QueueItem[];
-  currentFrame: FrameData;
+  frames: FrameData[];
 }

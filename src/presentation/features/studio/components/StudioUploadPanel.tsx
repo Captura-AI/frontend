@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import type { BatchStats, QueueItem } from "@/domains/studio";
 
 interface Props {
   batch: BatchStats;
   queue: QueueItem[];
+  activeId: string;
+  onSelect: (id: string) => void;
 }
 
-export default function StudioUploadPanel({ batch, queue }: Props) {
-  const initialActive = queue.find((q) => q.status === "active")?.id ?? queue[0]?.id ?? "";
-  const [activeId, setActiveId] = useState<string>(initialActive);
+export default function StudioUploadPanel({ batch, queue, activeId, onSelect }: Props) {
 
   const progressPct = batch.total > 0 ? Math.round((batch.processed / batch.total) * 100) : 0;
 
@@ -96,7 +95,7 @@ export default function StudioUploadPanel({ batch, queue }: Props) {
         {queue.map((item) => (
           <div
             key={item.id}
-            onClick={() => setActiveId(item.id)}
+            onClick={() => onSelect(item.id)}
             className={`relative aspect-square rounded-lg overflow-hidden bg-bg border border-line cursor-pointer transition-all ${
               activeId === item.id
                 ? "outline outline-ink outline-offset-1"

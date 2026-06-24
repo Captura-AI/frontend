@@ -132,6 +132,7 @@ function toFrameData(moment: BackendMoment, index: number, total: number): Frame
     frameNumber: index + 1,
     imageUrl: resolveImageUrl(moment.imageUrl) ?? "/window.svg",
     licensePlate: moment.licensePlate ?? "—",
+    momentId: moment.id,
     plateConfidence: plateConf,
     priceTiers: [],
     shootDate: formatDate(moment.capturedAt),
@@ -143,7 +144,8 @@ function toFrameData(moment: BackendMoment, index: number, total: number): Frame
   };
 }
 
-const EMPTY_FRAME: FrameData = {
+/* fallback used by the component layer when no frame is selected */
+export const EMPTY_FRAME: FrameData = {
   aiLogChips: [],
   camera: "—",
   cameraMeta: "—",
@@ -156,6 +158,7 @@ const EMPTY_FRAME: FrameData = {
   frameNumber: 0,
   imageUrl: "/window.svg",
   licensePlate: "—",
+  momentId: "",
   plateConfidence: 0,
   priceTiers: [],
   shootDate: "—",
@@ -198,15 +201,14 @@ export async function getStudioPageData(fromDate?: string): Promise<StudioPage> 
       (m.aiAnalysis["vehicle_confidence"] as number) < 0.5,
   ).length;
 
+  const frames: FrameData[] = moments.map((m, i) => toFrameData(m, i, total));
+
   const queue: QueueItem[] = moments.map((m, i) => ({
     badge: toQueueBadge(m, i === 0),
     id: m.id,
     imageUrl: resolveImageUrl(m.thumbnailUrl) ?? resolveImageUrl(m.imageUrl) ?? "/window.svg",
     status: toQueueStatus(m, i === 0),
   }));
-
-  const firstMoment = moments[0];
-  const currentFrame = firstMoment ? toFrameData(firstMoment, 0, total) : EMPTY_FRAME;
 
   const batchName = fromDate
     ? `Sesi ${new Date(fromDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}`
@@ -228,7 +230,7 @@ export async function getStudioPageData(fromDate?: string): Promise<StudioPage> 
       processed: aiParsed,
       total,
     },
-    currentFrame,
+    frames,
     queue,
     stats: {
       aiParsed,
