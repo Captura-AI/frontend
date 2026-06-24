@@ -22,6 +22,7 @@ interface BackendMoment {
   capturedAt?: number | null;
   vehicleType?: string | null;
   licensePlate?: string | null;
+  isPublished?: boolean | null;
   aiAnalysis?: Record<string, unknown> | null;
 }
 
@@ -68,6 +69,10 @@ function deriveMomentStatus(
 
   if (moment.aiAnalysis["error"]) {
     return "needs-metadata";
+  }
+
+  if (moment.isPublished === false) {
+    return "hidden";
   }
 
   return "published";
