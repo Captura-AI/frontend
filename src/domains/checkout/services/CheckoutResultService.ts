@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { formatIdr } from "@/shared/utils/format.utils";
 import {
   type CheckoutResultPage,
   type CheckoutResultStatus,
@@ -48,14 +49,6 @@ const PENDING_STATUS = "PENDING";
 const EXPIRED_STATUS = "EXPIRED";
 const CANCELLED_STATUS = "CANCELLED";
 const REFUNDED_STATUS = "REFUNDED";
-
-function formatIdr(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    currency: "IDR",
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(amount);
-}
 
 function toResultStatus(status: string): CheckoutResultStatus {
   if (status === PAID_STATUS) {

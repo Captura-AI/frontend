@@ -1,14 +1,11 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
 import { resolveImageUrl } from "@/shared/api/resolveImageUrl";
+import { type BackendMomentsResult, type BackendUser } from "@/shared/types/common";
+import { maskPlate } from "@/shared/utils/plate.utils";
+import { toPhotographerHandle, toPhotographerName } from "@/shared/utils/photographer.utils";
 import { type PhotographerMomentsPage } from "../entities/PhotographerMomentsPage";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
-
-interface BackendUser {
-  name?: string | null;
-  username?: string | null;
-  photographerProfile?: { artistName?: string | null } | null;
-}
 
 interface BackendMoment {
   id: string;
@@ -26,39 +23,7 @@ interface BackendMoment {
   aiAnalysis?: Record<string, unknown> | null;
 }
 
-interface BackendMomentsResult {
-  data: BackendMoment[];
-  total: number;
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function toPhotographerName(user: BackendUser): string {
-  return (
-    user.photographerProfile?.artistName ??
-    user.name ??
-    user.username ??
-    "Fotografer Captura"
-  );
-}
-
-function toPhotographerHandle(user: BackendUser): string {
-  const base = user.username ?? user.name ?? "photographer";
-  return `@${base.toLowerCase().replace(/\s+/g, ".")}`;
-}
-
-function maskPlate(plate: string): string {
-  const parts = plate.trim().split(/\s+/);
-
-  if (parts.length < 2) {
-    return `${plate.slice(0, 2)}** ***`;
-  }
-
-  const [prefix, ...rest] = parts;
-  const masked = rest.map((part, i) => (i === 0 ? `${part.slice(0, 2)}**` : "***"));
-
-  return `${prefix} ${masked.join(" ")}`;
-}
 
 function deriveMomentStatus(
   moment: BackendMoment,
@@ -124,10 +89,10 @@ function toMoment(m: BackendMoment): PhotographerMomentsPage["moments"][number] 
 export async function getPhotographerMomentsPageContent(): Promise<PhotographerMomentsPage> {
   const [user, result] = await Promise.all([
     serverApiRequest<BackendUser>("/users/me", { auth: true, revalidate: false }),
-    serverApiRequest<BackendMomentsResult>("/photographers/moments?limit=20&offset=1", {
+    serverApiRequest<BackendMomentsResult<BackendMoment>>("/photographers/moments?limit=20&offset=1", {
       auth: true,
       revalidate: false,
-    }).catch((): BackendMomentsResult => ({ data: [], total: 0 })),
+    }).catch((): BackendMomentsResult<BackendMoment> => ({ data: [], total: 0 })),
   ]);
 
   const moments = (result.data ?? []).map(toMoment);

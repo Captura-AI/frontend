@@ -1,5 +1,6 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
 import { resolveImageUrl } from "@/shared/api/resolveImageUrl";
+import { type BackendMomentsResult } from "@/shared/types/common";
 import type {
   AiLogChip,
   FrameData,
@@ -23,11 +24,6 @@ interface BackendMoment {
   cameraInfo?: string | null;
   tags?: string[] | null;
   aiAnalysis?: Record<string, unknown> | null;
-}
-
-interface BackendMomentsResult {
-  data: BackendMoment[];
-  total: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -184,10 +180,10 @@ function buildDateRangeParams(fromDate?: string): string {
 export async function getStudioPageData(fromDate?: string): Promise<StudioPage> {
   const dateParams = buildDateRangeParams(fromDate);
 
-  const result = await serverApiRequest<BackendMomentsResult>(
+  const result = await serverApiRequest<BackendMomentsResult<BackendMoment>>(
     `/photographers/moments?limit=50&offset=1${dateParams}`,
     { auth: true, revalidate: false },
-  ).catch((): BackendMomentsResult => ({ data: [], total: 0 }));
+  ).catch((): BackendMomentsResult<BackendMoment> => ({ data: [], total: 0 }));
 
   const moments = result.data ?? [];
   const total = moments.length;

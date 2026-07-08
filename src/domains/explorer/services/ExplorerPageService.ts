@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { JAKARTA_TIME_ZONE } from "@/shared/config/datetime.config";
 import { type ExplorerActiveFilter, type ExplorerMoment, type ExplorerPage } from "../entities/ExplorerPage";
 
 type SearchParamsValue = string | string[] | undefined;
@@ -95,7 +96,7 @@ function formatCapturedTime(capturedAt?: number | null): string {
   return new Intl.DateTimeFormat("en", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Asia/Jakarta",
+    timeZone: JAKARTA_TIME_ZONE,
   }).format(new Date(capturedAt * 1000));
 }
 

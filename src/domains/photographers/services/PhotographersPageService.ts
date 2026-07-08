@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { formatCount, formatPrice, locationParts, ratingStars } from "@/shared/utils/format.utils";
 
 import { type PhotographerProfile, type PhotographersPage } from "../entities/PhotographersPage";
 
@@ -55,34 +56,6 @@ interface BackendPhotographersResponse {
 
 const IMAGE_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f1eee8'/%3E%3Cpath d='M112 276h376L386 146l-76 92-48-54-150 92Z' fill='%23cbc3b4'/%3E%3Ccircle cx='188' cy='132' r='34' fill='%23d8d1c5'/%3E%3C/svg%3E";
-
-function formatCount(value: number): string {
-  return new Intl.NumberFormat("id-ID").format(value);
-}
-
-function formatPrice(value: number, currency: string): string {
-  return new Intl.NumberFormat("id-ID", {
-    currency,
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(value);
-}
-
-function ratingStars(averageRating: number | null): string {
-  if (averageRating === null) {
-    return "New";
-  }
-
-  return "★".repeat(Math.max(1, Math.round(averageRating)));
-}
-
-function locationParts(location: string | null): string[] {
-  if (!location) {
-    return ["Indonesia"];
-  }
-
-  return location.split(/[·,]/).map((part) => part.trim()).filter(Boolean);
-}
 
 function mapPhotographer(profile: BackendPhotographerDirectoryItem): PhotographerProfile {
   const parts = locationParts(profile.location);

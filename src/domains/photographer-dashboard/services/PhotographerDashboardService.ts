@@ -1,4 +1,7 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { type BackendMomentsResult, type BackendUser } from "@/shared/types/common";
+import { formatIdr } from "@/shared/utils/format.utils";
+import { toPhotographerHandle, toPhotographerName } from "@/shared/utils/photographer.utils";
 import {
   type BookingSummaryItem,
   type DashboardNavItem,
@@ -6,12 +9,6 @@ import {
 } from "../entities/PhotographerDashboardPage";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
-
-interface BackendUser {
-  name?: string | null;
-  username?: string | null;
-  photographerProfile?: { location?: string | null; artistName?: string | null } | null;
-}
 
 interface BackendEarningsSummary {
   currency: string;
@@ -36,10 +33,6 @@ interface BackendBooking {
 
 interface BackendBookingsResult {
   data: BackendBooking[];
-  total: number;
-}
-
-interface BackendMomentsResult {
   total: number;
 }
 
@@ -100,31 +93,6 @@ const PROFILE_COMPLETION: PhotographerDashboardPage["profileCompletion"] = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function toPhotographerName(user: BackendUser): string {
-  return (
-    user.photographerProfile?.artistName ??
-    user.name ??
-    user.username ??
-    "Fotografer Captura"
-  );
-}
-
-function toPhotographerHandle(user: BackendUser): string {
-  const base = user.username ?? user.name ?? "photographer";
-  return `@${base.toLowerCase().replace(/\s+/g, ".")}`;
-}
-
-function formatIdr(amount: number): string {
-  if (amount >= 1_000_000) {
-    return `Rp ${(amount / 1_000_000).toFixed(1)}jt`;
-  }
-  if (amount >= 1_000) {
-    return `Rp ${(amount / 1_000).toFixed(0)}rb`;
-  }
-
-  return `Rp ${amount.toLocaleString("id-ID")}`;
-}
 
 function formatUnixSeconds(seconds: number): { date: string; time: string; label: string } {
   const d = new Date(seconds * 1000);
@@ -200,10 +168,10 @@ export async function getPhotographerDashboardPageContent(): Promise<Photographe
       auth: true,
       revalidate: false,
     }).catch((): BackendBookingsResult => ({ data: [], total: 0 })),
-    serverApiRequest<BackendMomentsResult>("/photographers/moments?limit=1", {
+    serverApiRequest<BackendMomentsResult<unknown>>("/photographers/moments?limit=1", {
       auth: true,
       revalidate: false,
-    }).catch((): BackendMomentsResult => ({ total: 0 })),
+    }).catch((): BackendMomentsResult<unknown> => ({ data: [], total: 0 })),
   ]);
 
   const bookings = bookingsResult.data ?? [];

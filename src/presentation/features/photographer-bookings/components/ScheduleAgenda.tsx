@@ -1,21 +1,7 @@
 import { type ScheduleDay } from "@/domains/photographer-bookings";
-import { type BadgeTone, scheduleStatusLabels, statusTone } from "../lib/booking-helpers";
+import { badgeClass } from "@/presentation/lib/utils";
+import { scheduleStatusLabels, statusTone } from "../lib/booking-helpers";
 import styles from "../PhotographerBookingsPage.module.css";
-
-function badgeClass(tone: BadgeTone): string {
-  switch (tone) {
-    case "accent":
-      return styles.badgeAccent ?? "";
-    case "warning":
-      return styles.badgeWarning ?? "";
-    case "success":
-      return styles.badgeSuccess ?? "";
-    case "danger":
-      return styles.badgeDanger ?? "";
-    default:
-      return "";
-  }
-}
 
 interface ScheduleAgendaProps {
   schedule: ScheduleDay[];
@@ -39,7 +25,7 @@ export function ScheduleAgenda({ schedule }: ScheduleAgendaProps) {
                 <p>
                   {item.packageName} · {item.location}
                 </p>
-                <span className={`${styles.badge} ${badgeClass(statusTone[item.status])}`}>
+                <span className={`${styles.badge} ${badgeClass(statusTone[item.status], styles)}`}>
                   {scheduleStatusLabels[item.status]}
                 </span>
               </div>

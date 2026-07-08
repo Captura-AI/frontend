@@ -9,6 +9,7 @@ import {
   type VehicleType,
 } from "@/domains/photographer-uploads";
 import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
+import { type BadgeTone, badgeClass } from "@/presentation/lib/utils";
 import { AnalysisPoller } from "./components/AnalysisPoller";
 import { PublishBatchButton, SaveDraftButton } from "./components/BulkBatchButton";
 import { RetryBatchButton } from "./components/RetryBatchButton";
@@ -18,8 +19,6 @@ import styles from "./PhotographerUploadsPage.module.css";
 interface PhotographerUploadsPageViewProps {
   content: PhotographerUploadsPage;
 }
-
-type BadgeTone = "neutral" | "accent" | "warning" | "success" | "danger";
 
 const statusLabels: Record<UploadQueueStatus, string> = {
   uploaded: "Uploaded",
@@ -45,21 +44,6 @@ const vehicleLabels: Record<VehicleType, string> = {
   truck: "Truck",
   other: "Other",
 };
-
-function badgeClass(tone: BadgeTone): string {
-  switch (tone) {
-    case "accent":
-      return styles.badgeAccent ?? "";
-    case "warning":
-      return styles.badgeWarning ?? "";
-    case "danger":
-      return styles.badgeDanger ?? "";
-    case "success":
-      return styles.badgeSuccess ?? "";
-    case "neutral":
-      return "";
-  }
-}
 
 export function PhotographerUploadsPageView({ content }: PhotographerUploadsPageViewProps) {
   const allFrames = content.batches.flatMap((b) => b.frames);
@@ -132,7 +116,7 @@ function SectionHead({ title, meta }: { title: string; meta: string }) {
 function SummaryCard({ label, value, tone }: { label: string; value: number; tone: BadgeTone }) {
   return (
     <article className={styles.summaryCard}>
-      <span className={`${styles.badge} ${badgeClass(tone)}`}>{label}</span>
+      <span className={`${styles.badge} ${badgeClass(tone, styles)}`}>{label}</span>
       <strong>{value}</strong>
     </article>
   );
@@ -148,7 +132,7 @@ function BatchCard({ batch }: { batch: UploadBatch }) {
     <article className={styles.batchCard}>
       <header className={styles.batchHeader}>
         <div>
-          <span className={`${styles.badge} ${badgeClass(statusTone[batch.status])}`}>{statusLabels[batch.status]}</span>
+          <span className={`${styles.badge} ${badgeClass(statusTone[batch.status], styles)}`}>{statusLabels[batch.status]}</span>
           <h2>{batch.name}</h2>
           <p>
             {batch.location} · {batch.createdAt}
@@ -203,7 +187,7 @@ function FrameRow({ frame }: { frame: UploadFrame }) {
       <div className={styles.frameBody}>
         <div className={styles.frameTop}>
           <strong>{frame.fileName}</strong>
-          <span className={`${styles.badge} ${badgeClass(statusTone[frame.status])}`}>{statusLabels[frame.status]}</span>
+          <span className={`${styles.badge} ${badgeClass(statusTone[frame.status], styles)}`}>{statusLabels[frame.status]}</span>
         </div>
 
         {frame.status === "analyzing" ? (

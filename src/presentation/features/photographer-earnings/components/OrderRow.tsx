@@ -1,21 +1,7 @@
 import { type EarningsOrder } from "@/domains/photographer-earnings";
-import { type BadgeTone, formatPrice, orderStatusLabels, orderStatusTone } from "../lib/earnings-helpers";
+import { badgeClass } from "@/presentation/lib/utils";
+import { formatPrice, orderStatusLabels, orderStatusTone } from "../lib/earnings-helpers";
 import styles from "../PhotographerEarningsPage.module.css";
-
-function badgeClass(tone: BadgeTone): string {
-  switch (tone) {
-    case "accent":
-      return styles.badgeAccent ?? "";
-    case "warning":
-      return styles.badgeWarning ?? "";
-    case "success":
-      return styles.badgeSuccess ?? "";
-    case "danger":
-      return styles.badgeDanger ?? "";
-    default:
-      return "";
-  }
-}
 
 interface OrderRowProps {
   order: EarningsOrder;
@@ -31,7 +17,7 @@ export function OrderRow({ order }: OrderRowProps) {
       <span className={styles.orderLicense}>{order.license}</span>
       <span className={styles.orderDate}>{order.date}</span>
       <span className={styles.orderAmount}>{formatPrice(order.amount)}</span>
-      <span className={`${styles.badge} ${badgeClass(orderStatusTone[order.status])}`}>
+      <span className={`${styles.badge} ${badgeClass(orderStatusTone[order.status], styles)}`}>
         {orderStatusLabels[order.status]}
       </span>
     </div>

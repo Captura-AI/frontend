@@ -1,13 +1,9 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { type BackendUser } from "@/shared/types/common";
+import { toPhotographerHandle, toPhotographerName } from "@/shared/utils/photographer.utils";
 import { type PhotographerEarningsPage } from "../entities/PhotographerEarningsPage";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
-
-interface BackendUser {
-  name?: string | null;
-  username?: string | null;
-  photographerProfile?: { artistName?: string | null } | null;
-}
 
 interface BackendEarningsSummary {
   currency: string;
@@ -31,20 +27,6 @@ interface BackendEarningsHistoryResult {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function toPhotographerName(user: BackendUser): string {
-  return (
-    user.photographerProfile?.artistName ??
-    user.name ??
-    user.username ??
-    "Fotografer Captura"
-  );
-}
-
-function toPhotographerHandle(user: BackendUser): string {
-  const base = user.username ?? user.name ?? "photographer";
-  return `@${base.toLowerCase().replace(/\s+/g, ".")}`;
-}
 
 function formatPurchaseDate(createdAtMs: number): string {
   return new Intl.DateTimeFormat("id-ID", {

@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { type Moment } from "@/domains/photographer-moments";
-import { type BadgeTone, formatPrice, statusLabels, statusTone, vehicleLabels } from "../lib/moment-helpers";
+import { badgeClass } from "@/presentation/lib/utils";
+import { formatPrice, statusLabels, statusTone, vehicleLabels } from "../lib/moment-helpers";
 import styles from "../PhotographerMomentsPage.module.css";
 
 interface MomentRowProps {
@@ -17,20 +18,6 @@ interface MomentRowProps {
 }
 
 type DeleteState = "idle" | "confirm" | "pending";
-
-function badgeClass(tone: BadgeTone): string {
-  switch (tone) {
-    case "accent":
-      return styles.badgeAccent ?? "";
-    case "warning":
-      return styles.badgeWarning ?? "";
-    case "success":
-      return styles.badgeSuccess ?? "";
-    case "danger":
-    case "neutral":
-      return "";
-  }
-}
 
 export function MomentRow({ moment, isSelected, onToggleSelect, onEdit, onDelete, explorerBaseHref }: MomentRowProps) {
   const [deleteState, setDeleteState] = useState<DeleteState>("idle");
@@ -65,7 +52,7 @@ export function MomentRow({ moment, isSelected, onToggleSelect, onEdit, onDelete
 
       <div className={styles.rowBody}>
         <div className={styles.rowTop}>
-          <span className={`${styles.badge} ${badgeClass(statusTone[moment.status])}`}>
+          <span className={`${styles.badge} ${badgeClass(statusTone[moment.status], styles)}`}>
             {statusLabels[moment.status]}
           </span>
           <span className={styles.rowMeta}>
