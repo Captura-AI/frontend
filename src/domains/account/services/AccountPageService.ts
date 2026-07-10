@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { formatIdr } from "@/shared/utils/format.utils";
 import {
   type AccountLibraryPage,
   type AccountProfilePage,
@@ -239,14 +240,6 @@ const LIBRARY_EMPTY_STATE: AccountLibraryPage["emptyState"] = {
   ctaLabel: "Explore photos",
   ctaHref: "/explorer",
 };
-
-function formatIdr(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    currency: "IDR",
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(amount);
-}
 
 function formatPurchaseDate(createdAt: number | null): string {
   if (!createdAt) {

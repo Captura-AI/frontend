@@ -1,6 +1,8 @@
 import { type BookingRequestStatus, type ScheduleStatus } from "@/domains/photographer-bookings";
+import { type BadgeTone, formatPrice } from "@/presentation/lib/utils";
 
-export type BadgeTone = "neutral" | "accent" | "warning" | "success" | "danger";
+export type { BadgeTone };
+export { formatPrice };
 
 export const statusLabels: Record<BookingRequestStatus, string> = {
   pending: "Pending",
@@ -22,7 +24,3 @@ export const scheduleStatusLabels: Record<ScheduleStatus, string> = {
   accepted: "Confirmed",
   completed: "Completed",
 };
-
-export function formatPrice(value: number): string {
-  return `Rp ${value.toLocaleString("id-ID")}`;
-}

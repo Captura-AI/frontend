@@ -1,6 +1,8 @@
 import { type LicenseType, type MomentStatus, type VehicleType } from "@/domains/photographer-moments";
+import { type BadgeTone, formatPrice } from "@/presentation/lib/utils";
 
-export type BadgeTone = "neutral" | "accent" | "warning" | "success" | "danger";
+export type { BadgeTone };
+export { formatPrice };
 
 export const vehicleLabels: Record<VehicleType, string> = {
   bicycle: "Bicycle",
@@ -28,7 +30,3 @@ export const statusTone: Record<MomentStatus, BadgeTone> = {
 };
 
 export const LICENSE_OPTIONS: LicenseType[] = ["Personal use", "Editorial", "Commercial", "Exclusive"];
-
-export function formatPrice(value: number): string {
-  return `Rp ${value.toLocaleString("id-ID")}`;
-}

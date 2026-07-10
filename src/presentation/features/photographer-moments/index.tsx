@@ -11,11 +11,12 @@ import {
   type PhotographerMomentsPage,
 } from "@/domains/photographer-moments";
 import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
+import { badgeClass } from "@/presentation/lib/utils";
 import { bulkDeleteMoments, bulkPublishMoments, bulkSaveDraftMoments, deleteMoment } from "./lib/momentsApi";
 import { BulkActionBar } from "./components/BulkActionBar";
 import { EditMomentDrawer } from "./components/EditMomentDrawer";
 import { MomentRow } from "./components/MomentRow";
-import { type BadgeTone, statusTone } from "./lib/moment-helpers";
+import { statusTone } from "./lib/moment-helpers";
 import styles from "./PhotographerMomentsPage.module.css";
 
 interface PhotographerMomentsPageViewProps {
@@ -29,20 +30,6 @@ const EMPTY_STATUS_COUNTS: Record<MomentStatus, number> = {
   sold: 0,
   "needs-metadata": 0,
 };
-
-function badgeClass(tone: BadgeTone): string {
-  switch (tone) {
-    case "accent":
-      return styles.badgeAccent ?? "";
-    case "warning":
-      return styles.badgeWarning ?? "";
-    case "success":
-      return styles.badgeSuccess ?? "";
-    case "danger":
-    case "neutral":
-      return "";
-  }
-}
 
 export function PhotographerMomentsPageView({ content }: PhotographerMomentsPageViewProps) {
   const router = useRouter();
@@ -207,7 +194,7 @@ export function PhotographerMomentsPageView({ content }: PhotographerMomentsPage
       <section className={styles.summaryGrid} aria-label="Catalog status summary">
         {content.summary.map((stat) => (
           <article key={stat.id} className={styles.summaryCard}>
-            <span className={`${styles.badge} ${badgeClass(statusTone[stat.id])}`}>{stat.label}</span>
+            <span className={`${styles.badge} ${badgeClass(statusTone[stat.id], styles)}`}>{stat.label}</span>
             <strong>{statusCounts[stat.id]}</strong>
             <p>{stat.helper}</p>
           </article>

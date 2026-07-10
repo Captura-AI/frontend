@@ -1,12 +1,9 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { type BackendUser } from "@/shared/types/common";
+import { toPhotographerHandle, toPhotographerName } from "@/shared/utils/photographer.utils";
 import { type PhotographerBookingsPage } from "../entities/PhotographerBookingsPage";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
-
-interface BackendUser {
-  name?: string | null;
-  username?: string | null;
-}
 
 interface BackendPackage {
   name?: string | null;
@@ -30,12 +27,6 @@ interface BackendBooking {
 interface BackendBookingsResult {
   data: BackendBooking[];
   total: number;
-}
-
-interface BackendPhotographerUser {
-  name?: string | null;
-  username?: string | null;
-  photographerProfile?: { artistName?: string | null } | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -94,25 +85,11 @@ function toBookingRequest(booking: BackendBooking): PhotographerBookingsPage["re
   };
 }
 
-function toPhotographerName(user: BackendPhotographerUser): string {
-  return (
-    user.photographerProfile?.artistName ??
-    user.name ??
-    user.username ??
-    "Fotografer Captura"
-  );
-}
-
-function toPhotographerHandle(user: BackendPhotographerUser): string {
-  const base = user.username ?? user.name ?? "photographer";
-  return `@${base.toLowerCase().replace(/\s+/g, ".")}`;
-}
-
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export async function getPhotographerBookingsPageContent(): Promise<PhotographerBookingsPage> {
   const [user, bookingsResult] = await Promise.all([
-    serverApiRequest<BackendPhotographerUser>("/users/me", { auth: true, revalidate: false }),
+    serverApiRequest<BackendUser>("/users/me", { auth: true, revalidate: false }),
     serverApiRequest<BackendBookingsResult>("/bookings?limit=50", {
       auth: true,
       revalidate: false,

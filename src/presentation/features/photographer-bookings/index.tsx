@@ -9,9 +9,10 @@ import {
   type PhotographerBookingsPage,
 } from "@/domains/photographer-bookings";
 import { DashboardShell } from "@/presentation/features/dashboard-shell/DashboardShell";
+import { badgeClass } from "@/presentation/lib/utils";
 import { BookingRequestCard } from "./components/BookingRequestCard";
 import { ScheduleAgenda } from "./components/ScheduleAgenda";
-import { type BadgeTone, formatPrice, statusTone } from "./lib/booking-helpers";
+import { formatPrice, statusTone } from "./lib/booking-helpers";
 import styles from "./PhotographerBookingsPage.module.css";
 
 interface PhotographerBookingsPageViewProps {
@@ -25,21 +26,6 @@ const EMPTY_STATUS_COUNTS: Record<BookingRequestStatus, number> = {
   completed: 0,
   cancelled: 0,
 };
-
-function badgeClass(tone: BadgeTone): string {
-  switch (tone) {
-    case "accent":
-      return styles.badgeAccent ?? "";
-    case "warning":
-      return styles.badgeWarning ?? "";
-    case "success":
-      return styles.badgeSuccess ?? "";
-    case "danger":
-      return styles.badgeDanger ?? "";
-    default:
-      return "";
-  }
-}
 
 export function PhotographerBookingsPageView({ content }: PhotographerBookingsPageViewProps) {
   const [requests, setRequests] = useState<BookingRequest[]>(content.requests);
@@ -89,7 +75,7 @@ export function PhotographerBookingsPageView({ content }: PhotographerBookingsPa
       <section className={styles.summaryGrid} aria-label="Booking status summary">
         {content.summary.map((stat) => (
           <article key={stat.id} className={styles.summaryCard}>
-            <span className={`${styles.badge} ${badgeClass(statusTone[stat.id])}`}>{stat.label}</span>
+            <span className={`${styles.badge} ${badgeClass(statusTone[stat.id], styles)}`}>{stat.label}</span>
             <strong>{statusCounts[stat.id]}</strong>
             <p>{stat.helper}</p>
           </article>

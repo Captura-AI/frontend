@@ -1,6 +1,8 @@
 import { type OrderStatus, type PayoutStatus } from "@/domains/photographer-earnings";
+import { type BadgeTone, formatPrice } from "@/presentation/lib/utils";
 
-export type BadgeTone = "neutral" | "accent" | "warning" | "success" | "danger";
+export type { BadgeTone };
+export { formatPrice };
 
 export const orderStatusLabels: Record<OrderStatus, string> = {
   paid: "Paid",
@@ -28,6 +30,3 @@ export const payoutStatusTone: Record<PayoutStatus, BadgeTone> = {
   paid: "success",
 };
 
-export function formatPrice(value: number): string {
-  return `Rp ${value.toLocaleString("id-ID")}`;
-}

@@ -9,6 +9,7 @@ import {
   type CheckoutPaymentMethod,
 } from "@/domains/checkout/services/createOrder";
 import { useScrollReveal } from "@/presentation/lib/useScrollReveal";
+import { formatIdr } from "@/shared/utils/format.utils";
 import styles from "./CheckoutPage.module.css";
 
 interface CheckoutPageViewProps {
@@ -427,14 +428,6 @@ function Line({ label, value, info, className }: { label: string; value: string;
 
 function Reassure({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return <div className={styles.reassure}>{icon}<h3>{title}</h3><p>{text}</p></div>;
-}
-
-function formatIdr(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    currency: "IDR",
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(value);
 }
 
 function LockIcon() {

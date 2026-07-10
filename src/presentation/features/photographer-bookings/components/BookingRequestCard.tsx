@@ -4,23 +4,9 @@ import { useMemo, useState } from "react";
 import { type BookingRequest } from "@/domains/photographer-bookings";
 import { createHttpClient, createSessionStore } from "@/infrastructure";
 import { apiConfig } from "@/shared";
-import { type BadgeTone, formatPrice, statusLabels, statusTone } from "../lib/booking-helpers";
+import { badgeClass } from "@/presentation/lib/utils";
+import { formatPrice, statusLabels, statusTone } from "../lib/booking-helpers";
 import styles from "../PhotographerBookingsPage.module.css";
-
-function badgeClass(tone: BadgeTone): string {
-  switch (tone) {
-    case "accent":
-      return styles.badgeAccent ?? "";
-    case "warning":
-      return styles.badgeWarning ?? "";
-    case "success":
-      return styles.badgeSuccess ?? "";
-    case "danger":
-      return styles.badgeDanger ?? "";
-    default:
-      return "";
-  }
-}
 
 interface BookingRequestCardProps {
   request: BookingRequest;
@@ -92,7 +78,7 @@ export function BookingRequestCard({ request, onAccept, onDecline }: BookingRequ
     <article className={styles.requestCard}>
       <div className={styles.requestHead}>
         <div className={styles.requestHeadInfo}>
-          <span className={`${styles.badge} ${badgeClass(statusTone[request.status])}`}>
+          <span className={`${styles.badge} ${badgeClass(statusTone[request.status], styles)}`}>
             {statusLabels[request.status]}
           </span>
           <span className={styles.requestId}>{request.id}</span>

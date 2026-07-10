@@ -1,5 +1,7 @@
 import { ApiError } from "@/shared/api/envelope";
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { JAKARTA_TIME_ZONE } from "@/shared/config/datetime.config";
+import { formatCount, formatPrice, locationParts, ratingStars } from "@/shared/utils/format.utils";
 
 import {
   type PhotographerDetail,
@@ -68,18 +70,6 @@ interface BackendPhotographerDetail {
 const IMAGE_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'%3E%3Crect width='900' height='600' fill='%23f1eee8'/%3E%3Cpath d='M154 418h592L590 202l-110 136-78-84-248 164Z' fill='%23cbc3b4'/%3E%3Ccircle cx='282' cy='204' r='54' fill='%23d8d1c5'/%3E%3C/svg%3E";
 
-function formatCount(value: number): string {
-  return new Intl.NumberFormat("id-ID").format(value);
-}
-
-function formatPrice(value: number, currency: string): string {
-  return new Intl.NumberFormat("id-ID", {
-    currency,
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(value);
-}
-
 function formatTime(timestamp: number | null): string {
   if (!timestamp) {
     return "Time pending";
@@ -88,24 +78,8 @@ function formatTime(timestamp: number | null): string {
   return new Intl.DateTimeFormat("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Asia/Jakarta",
+    timeZone: JAKARTA_TIME_ZONE,
   }).format(new Date(timestamp * 1000));
-}
-
-function locationParts(location: string | null): string[] {
-  if (!location) {
-    return ["Indonesia"];
-  }
-
-  return location.split(/[·,]/).map((part) => part.trim()).filter(Boolean);
-}
-
-function ratingStars(averageRating: number | null): string {
-  if (averageRating === null) {
-    return "New";
-  }
-
-  return "★".repeat(Math.max(1, Math.round(averageRating)));
 }
 
 function mapPortfolioItem(moment: BackendPhotographerMoment): PhotographerPortfolioItem {

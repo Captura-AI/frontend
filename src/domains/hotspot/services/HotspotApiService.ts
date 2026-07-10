@@ -1,5 +1,7 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
 import { ApiError } from "@/shared/api/envelope";
+import { JAKARTA_TIME_ZONE } from "@/shared/config/datetime.config";
+import { formatTimeAgo } from "@/shared/utils/time.utils";
 
 import type {
   ActivePhotographer,
@@ -89,49 +91,16 @@ const IMAGE_PLACEHOLDER =
 const AVATAR_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23e7e2d8'/%3E%3Ccircle cx='60' cy='46' r='22' fill='%23c9c1b2'/%3E%3Cpath d='M20 110a40 40 0 0 1 80 0Z' fill='%23c9c1b2'/%3E%3C/svg%3E";
 
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = 3600;
-const SECONDS_PER_DAY = 86_400;
-
 const timeFormatter = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",
   hour12: false,
   minute: "2-digit",
-  timeZone: "Asia/Jakarta",
+  timeZone: JAKARTA_TIME_ZONE,
 });
-
-function nowInSeconds(): number {
-  return Math.floor(Date.now() / 1000);
-}
 
 /** Wall-clock label (HH:MM, Jakarta time) for a captured/created moment. */
 function formatClock(seconds: number): string {
   return timeFormatter.format(new Date(seconds * 1000));
-}
-
-/** Relative "x ago" label derived from a unix-second timestamp. */
-function formatTimeAgo(seconds: number): string {
-  const elapsed = Math.max(0, nowInSeconds() - seconds);
-
-  if (elapsed < SECONDS_PER_MINUTE) {
-    return "just now";
-  }
-
-  if (elapsed < SECONDS_PER_HOUR) {
-    const minutes = Math.floor(elapsed / SECONDS_PER_MINUTE);
-
-    return `${minutes} min ago`;
-  }
-
-  if (elapsed < SECONDS_PER_DAY) {
-    const hours = Math.floor(elapsed / SECONDS_PER_HOUR);
-
-    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  }
-
-  const days = Math.floor(elapsed / SECONDS_PER_DAY);
-
-  return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
 function mapFeedMoment(moment: BackendFeedMoment): FeedMoment {

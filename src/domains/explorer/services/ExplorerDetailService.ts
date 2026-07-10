@@ -1,4 +1,5 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { JAKARTA_TIME_ZONE } from "@/shared/config/datetime.config";
 import {
   type DetailFact,
   type DetectedItem,
@@ -236,7 +237,6 @@ interface BackendSimilarMoment {
 
 // ─── Formatting helpers ─────────────────────────────────────────────────────
 
-const JAKARTA_TIME_ZONE = "Asia/Jakarta";
 const DETAIL_REVALIDATE_SECONDS = 300;
 
 function formatClockTime(capturedAt: number | null): string {

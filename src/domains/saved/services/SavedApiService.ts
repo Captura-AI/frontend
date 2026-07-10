@@ -1,4 +1,6 @@
 import { serverApiRequest } from "@/shared/api/serverApi";
+import { JAKARTA_TIME_ZONE } from "@/shared/config/datetime.config";
+import { formatTimeAgo } from "@/shared/utils/time.utils";
 
 import type { ExplorerActiveFilter } from "@/domains/explorer";
 import type {
@@ -34,26 +36,18 @@ interface BackendSavedSearch {
 const IMAGE_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f1eee8'/%3E%3Cpath d='M112 276h376L386 146l-76 92-48-54-150 92Z' fill='%23cbc3b4'/%3E%3Ccircle cx='188' cy='132' r='34' fill='%23d8d1c5'/%3E%3C/svg%3E";
 
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = 3600;
-const SECONDS_PER_DAY = 86_400;
-
 const clockFormatter = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",
   hour12: false,
   minute: "2-digit",
-  timeZone: "Asia/Jakarta",
+  timeZone: JAKARTA_TIME_ZONE,
 });
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",
-  timeZone: "Asia/Jakarta",
+  timeZone: JAKARTA_TIME_ZONE,
 });
-
-function nowInSeconds(): number {
-  return Math.floor(Date.now() / 1000);
-}
 
 /** "17:42 · Apr 12" style capture label, or empty when unknown. */
 function formatCaptureLabel(seconds: number | null): string {
@@ -64,30 +58,6 @@ function formatCaptureLabel(seconds: number | null): string {
   const date = new Date(seconds * 1000);
 
   return `${clockFormatter.format(date)} · ${dateFormatter.format(date)}`;
-}
-
-function formatTimeAgo(seconds: number): string {
-  const elapsed = Math.max(0, nowInSeconds() - seconds);
-
-  if (elapsed < SECONDS_PER_MINUTE) {
-    return "just now";
-  }
-
-  if (elapsed < SECONDS_PER_HOUR) {
-    const minutes = Math.floor(elapsed / SECONDS_PER_MINUTE);
-
-    return `${minutes} min ago`;
-  }
-
-  if (elapsed < SECONDS_PER_DAY) {
-    const hours = Math.floor(elapsed / SECONDS_PER_HOUR);
-
-    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  }
-
-  const days = Math.floor(elapsed / SECONDS_PER_DAY);
-
-  return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
 function mapSavedMoment(moment: BackendSavedMoment): SavedMoment {
